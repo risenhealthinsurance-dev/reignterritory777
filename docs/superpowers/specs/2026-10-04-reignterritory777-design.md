@@ -24,7 +24,7 @@ Use the exported application as the implementation baseline instead of recreatin
 
 The codebase will remain a client-side prototype with deterministic sample data. React state owns screen navigation, route-stop state, drafts, approval decisions, and sync labels. No external database or API is introduced in this release.
 
-The repository target is `risenhealthinsurance/reignterritory777`.
+The repository target is `risenhealthinsurance-dev/reignterritory777`.
 
 ## Application Structure
 
@@ -136,7 +136,7 @@ Run TypeScript checking, the complete test suite, formatting checks, and a produ
 - `.env.example` without secrets.
 - README with installation, development, testing, build, and Mapbox configuration instructions.
 - Git ignore rules that exclude dependencies, build output, local environment files, and editor artifacts.
-- GitHub repository at `risenhealthinsurance/reignterritory777`.
+- GitHub repository at `risenhealthinsurance-dev/reignterritory777`.
 
 Deployment, CI/CD, production authentication, analytics, and backend services are outside this release.
 

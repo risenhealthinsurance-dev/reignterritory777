@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the Figma Make Reign Territory experience as a tested React application in `risenhealthinsurance/reignterritory777`.
+**Goal:** Ship the Figma Make Reign Territory experience as a tested React application in `risenhealthinsurance-dev/reignterritory777`.
 
 **Architecture:** Import the exported Figma Make React application as the visual and behavioral baseline, then harden it in small test-first slices. Keep navigation and domain mutations local to the React application, isolate Mapbox behind a token-aware component, and preserve every designed approval boundary.
 
@@ -21,7 +21,7 @@
 - Read Mapbox credentials only from `VITE_MAPBOX_ACCESS_TOKEN`; never track a real token.
 - Without a Mapbox token, the application must render a styled, usable map fallback.
 - Touch targets are at least 44px and the bottom navigation respects safe-area insets.
-- The repository destination is `risenhealthinsurance/reignterritory777`.
+- The repository destination is `risenhealthinsurance-dev/reignterritory777`.
 
 ## Review Focus
 
@@ -448,7 +448,7 @@ git commit -m "feat: verify responsive and accessible mobile experience"
 **Interfaces:**
 
 - Consumes: verified local `main` branch
-- Produces: public or private GitHub repository `risenhealthinsurance/reignterritory777` using the organization's default visibility policy
+- Produces: public or private GitHub repository `risenhealthinsurance-dev/reignterritory777` using the account's default visibility policy
 
 - [ ] **Step 1: Add the final README usage and prototype-boundary checks**
 
@@ -479,13 +479,13 @@ git commit -m "docs: document Reign Territory prototype"
 
 - [ ] **Step 4: Create the GitHub repository**
 
-Using the authenticated GitHub account, create `risenhealthinsurance/reignterritory777` without initializing it with a README, license, or `.gitignore`. Use the organization's default repository visibility because the user did not specify public or private.
+Using the authenticated GitHub account, create `risenhealthinsurance-dev/reignterritory777` without initializing it with a README, license, or `.gitignore`. Use the account's default repository visibility because the user did not specify public or private.
 
 - [ ] **Step 5: Rename the branch and push**
 
 ```bash
 git branch -M main
-git remote add origin https://github.com/risenhealthinsurance/reignterritory777.git
+git remote add origin https://github.com/risenhealthinsurance-dev/reignterritory777.git
 git push -u origin main
 ```
 
