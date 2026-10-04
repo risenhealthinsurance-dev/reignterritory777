@@ -2,11 +2,12 @@ import { useEffect, useRef, useCallback } from 'react'
 import mapboxgl from 'mapbox-gl'
 import type { Account } from '../data/accounts'
 import { quadrantGeoJSON, boundaryGeoJSON, quadrantLabelGeoJSON } from '../data/territory_grid'
+import { MapFallback } from './MapFallback'
 
 const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim()
 if (mapboxAccessToken) mapboxgl.accessToken = mapboxAccessToken
 
-interface MapViewProps {
+export interface MapViewProps {
   height: number
   accounts: Account[]
   activeAccountId: string | null
@@ -33,6 +34,19 @@ export function MapView({
   height, accounts, activeAccountId, onPinTap, doneAccountIds,
   showTerritoryMode, activeQuadrantId, onQuadrantTap,
 }: MapViewProps) {
+  if (!mapboxAccessToken) {
+    return (
+      <MapFallback
+        height={height}
+        accounts={accounts}
+        activeAccountId={activeAccountId}
+        doneAccountIds={doneAccountIds}
+        onPinTap={onPinTap}
+        showTerritoryMode={showTerritoryMode}
+      />
+    )
+  }
+
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const initialized = useRef(false)
