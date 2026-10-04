@@ -213,7 +213,8 @@ export function EnrichmentScreen({
               color: "#6b7490",
               cursor: "pointer",
               fontSize: 12,
-              padding: 0,
+              minHeight: 44,
+              padding: "0 8px",
               marginBottom: 8,
             }}
           >
@@ -230,7 +231,9 @@ export function EnrichmentScreen({
           >
             REVIEW PROPOSED EDIT
           </div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#e8eaf0" }}>{account.name}</div>
+          <h1 style={{ fontSize: 15, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
+            {account.name}
+          </h1>
         </div>
         <div
           style={{
@@ -778,7 +781,8 @@ function Header({
           color: "#6b7490",
           cursor: "pointer",
           fontSize: 12,
-          padding: 0,
+          minHeight: 44,
+          padding: "0 8px",
           marginBottom: 8,
         }}
       >
@@ -836,16 +840,17 @@ function Header({
       >
         ● FIELD AI · {action.toUpperCase()}
       </div>
-      <div
+      <h1
         style={{
           fontSize: 14,
           fontWeight: 700,
           color: "#e8eaf0",
           lineHeight: 1.2,
+          margin: 0,
         }}
       >
         @{account.name}
-      </div>
+      </h1>
       <div
         style={{
           fontSize: 10,

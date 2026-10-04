@@ -24,7 +24,7 @@ test("requires every unfinished stop to be resolved before closeout", async () =
   const user = userEvent.setup();
   const props = callbacks();
   render(<SummaryScreen day={createInitialRepDay()} {...props} />);
-  expect(screen.getByRole("button", { name: /Close day/i })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^Close day$/i })).toBeDisabled();
   await user.click(screen.getAllByRole("button", { name: /Move to tomorrow/i })[0]);
   expect(props.onResolveStop).toHaveBeenCalledWith("apex", { kind: "tomorrow" });
 });
@@ -46,7 +46,11 @@ test("closes offline on device and explains that server sync is still pending", 
 test("requires review and an explicit send for the manager summary", async () => {
   const user = userEvent.setup();
   const props = callbacks();
-  render(<SummaryScreen day={createInitialRepDay()} {...props} />);
+  let day = createInitialRepDay();
+  for (const stop of day.stops.filter((candidate) => candidate.resolution === "unresolved"))
+    day = resolveStop(day, stop.accountId, { kind: "territory_pool" });
+  day = { ...day, closedAt: new Date(), closeoutSyncState: "closed_on_device" };
+  render(<SummaryScreen day={day} {...props} onManagerDraftChange={vi.fn()} />);
   await user.click(screen.getByRole("button", { name: /Review manager summary/i }));
   expect(screen.getByRole("dialog", { name: /Review manager handoff/i })).toBeInTheDocument();
   expect(screen.getByText(/^Destination$/i)).toBeInTheDocument();
@@ -69,6 +73,7 @@ test("records post-close corrections with an audit reason", async () => {
     screen.getByLabelText(/Correction reason/i),
     "Manager confirmed the next action by phone",
   );
+  await user.type(screen.getByLabelText(/Corrected next action/i), "Call buyer on Tuesday");
   await user.click(screen.getByRole("button", { name: /Record audited correction/i }));
   expect(props.onRecordCorrection).toHaveBeenCalledWith(
     expect.objectContaining({

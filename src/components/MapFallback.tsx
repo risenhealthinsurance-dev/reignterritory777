@@ -5,6 +5,7 @@ export interface MapFallbackProps {
   accounts: Account[];
   activeAccountId: string | null;
   doneAccountIds: string[];
+  routeStopIds?: string[];
   onPinTap: (id: string) => void;
   showTerritoryMode?: boolean;
 }
@@ -23,6 +24,7 @@ export function MapFallback({
   accounts,
   activeAccountId,
   doneAccountIds,
+  routeStopIds,
   onPinTap,
   showTerritoryMode = false,
 }: MapFallbackProps) {
@@ -128,39 +130,46 @@ export function MapFallback({
       </div>
 
       {!showTerritoryMode &&
-        accounts.map((account, index) => {
-          const [left, top] = PIN_POSITIONS[index] ?? ["50%", "50%"];
-          const isDone = doneAccountIds.includes(account.id);
-          const isActive = activeAccountId === account.id;
-          return (
-            <button
-              key={account.id}
-              aria-label={`${account.name}, route stop ${account.routeOrder}${
-                isDone ? ", completed" : isActive ? ", active" : ""
-              }`}
-              onClick={() => onPinTap(account.id)}
-              style={{
-                position: "absolute",
-                left,
-                top,
-                transform: "translate(-50%,-50%)",
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                cursor: "pointer",
-                border: `2px solid ${isDone ? "#10b981" : isActive ? "#60a5fa" : "#3b82f6"}`,
-                background: isDone ? "#064e3b" : isActive ? "#1d4ed8" : "#111827",
-                color: "#fff",
-                font: "700 11px DM Mono,monospace",
-                boxShadow: isActive
-                  ? "0 0 0 6px rgba(59,130,246,.2),0 0 18px rgba(59,130,246,.65)"
-                  : "0 3px 12px rgba(0,0,0,.5)",
-              }}
-            >
-              {isDone ? "✓" : account.routeOrder}
-            </button>
-          );
-        })}
+        accounts
+          .filter((account) => !routeStopIds || routeStopIds.includes(account.id))
+          .sort((first, second) =>
+            routeStopIds
+              ? routeStopIds.indexOf(first.id) - routeStopIds.indexOf(second.id)
+              : first.routeOrder - second.routeOrder,
+          )
+          .map((account, index) => {
+            const [left, top] = PIN_POSITIONS[index] ?? ["50%", "50%"];
+            const isDone = doneAccountIds.includes(account.id);
+            const isActive = activeAccountId === account.id;
+            return (
+              <button
+                key={account.id}
+                aria-label={`${account.name}, route stop ${index + 1}${
+                  isDone ? ", completed" : isActive ? ", active" : ""
+                }`}
+                onClick={() => onPinTap(account.id)}
+                style={{
+                  position: "absolute",
+                  left,
+                  top,
+                  transform: "translate(-50%,-50%)",
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  border: `2px solid ${isDone ? "#10b981" : isActive ? "#60a5fa" : "#3b82f6"}`,
+                  background: isDone ? "#064e3b" : isActive ? "#1d4ed8" : "#111827",
+                  color: "#fff",
+                  font: "700 11px DM Mono,monospace",
+                  boxShadow: isActive
+                    ? "0 0 0 6px rgba(59,130,246,.2),0 0 18px rgba(59,130,246,.65)"
+                    : "0 3px 12px rgba(0,0,0,.5)",
+                }}
+              >
+                {isDone ? "✓" : index + 1}
+              </button>
+            );
+          })}
 
       <div
         style={{

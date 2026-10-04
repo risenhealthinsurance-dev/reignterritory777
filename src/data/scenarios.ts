@@ -24,7 +24,7 @@ export const scenarios: Scenario[] = [
         id: "r1",
         role: "assistant",
         content:
-          "Good morning. Today you have 6 accounts in the 90210 corridor. Traffic on the 405 is moderate — I'd recommend starting with the Wilshire cluster before heading west. Ready to lock in your route?",
+          "Good morning. Today you have 6 accounts in Fort Pierce 34950. Start downtown with protected commitments before moving west. Ready to review the route?",
         toolCalls: [],
         timestamp: t(12),
       },
@@ -38,14 +38,14 @@ export const scenarios: Scenario[] = [
         id: "r3",
         role: "assistant",
         content:
-          "Optimized. Starting with Meridian Medical Devices on Wilshire — highest revenue and closest to your position. You'll loop north to Pacific Rim, then east to Apex Manufacturing for your anchor stop. Solano and Westside wrap the afternoon. Total: **6 stops, 18.4 miles, 3h 52min**. Adjusted for the Sunset Blvd construction — done by 4:30 PM.",
+          "Optimized. Starting with Meridian Medical Devices on US Highway 1, then Pacific Rim and Apex Manufacturing for the anchor stop. Solano, Westside, and Bravo complete the Fort Pierce loop. Total: **6 stops**, with protected commitments preserved and a projected finish of **4:42 PM**.",
         card: {
           type: "route",
           stops: [
             {
               accountId: "meridian",
               name: "Meridian Medical Devices",
-              address: "9100 Wilshire Blvd",
+              address: "100 N US Highway 1",
               etaMinutes: 0,
               distanceMiles: 0.4,
             },
@@ -59,7 +59,7 @@ export const scenarios: Scenario[] = [
             {
               accountId: "apex",
               name: "Apex Manufacturing Group",
-              address: "8899 Beverly Blvd",
+              address: "500 Orange Ave",
               etaMinutes: 22,
               distanceMiles: 3.2,
             },
@@ -80,7 +80,7 @@ export const scenarios: Scenario[] = [
             {
               accountId: "bravo",
               name: "Bravo Industrial Supply",
-              address: "8383 Wilshire Blvd",
+              address: "800 Virginia Ave",
               etaMinutes: 71,
               distanceMiles: 5.5,
             },
@@ -91,7 +91,7 @@ export const scenarios: Scenario[] = [
         toolCalls: [
           {
             name: "plan_route",
-            args: '{ zip: "90210", accounts: 6 }',
+            args: '{ zip: "34950", accounts: 6 }',
             result: "6 stops · 18.4 mi · 3h 52m",
           },
         ],

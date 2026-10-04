@@ -10,6 +10,7 @@ interface SummaryScreenProps {
   onSync: () => void;
   onCloseDay: (isOffline: boolean) => void;
   onSendToManager: (summary: string) => void;
+  onManagerDraftChange?: (summary: string) => void;
   onRecordCorrection: (correction: CorrectionInput) => void;
 }
 
@@ -24,19 +25,29 @@ export function SummaryScreen({
   onSync,
   onCloseDay,
   onSendToManager,
+  onManagerDraftChange,
   onRecordCorrection,
 }: SummaryScreenProps) {
   const [managerReviewOpen, setManagerReviewOpen] = useState(false);
-  const [managerSent, setManagerSent] = useState(false);
   const [correctionAccountId, setCorrectionAccountId] = useState<string | null>(null);
   const [correctionReason, setCorrectionReason] = useState("");
+  const [correctionAfter, setCorrectionAfter] = useState("");
   const [closeReasonFor, setCloseReasonFor] = useState<string | null>(null);
   const [closeReason, setCloseReason] = useState("");
+  const [reloopDates, setReloopDates] = useState<Record<string, string>>({});
+  const [recordFilter, setRecordFilter] = useState<"completed" | "followups" | "reloops">(
+    "completed",
+  );
   const unfinished = day.stops.filter((stop) => stop.resolution === "unresolved");
   const unsynced = getSyncQueue(day);
   const completed = day.stops.filter((stop) => stop.resolution === "completed");
   const resolved = day.stops.length - unfinished.length;
-  const summary = `Fort Pierce 34950 field day: ${completed.length} visits completed; ${resolved} of ${day.stops.length} stops resolved. ${unsynced.length} record${unsynced.length === 1 ? "" : "s"} still waiting to sync. Priority handoff: follow through on every dated next action.`;
+  const followUps = day.stops.filter((stop) => stop.followUpDate);
+  const reloops = day.stops.filter((stop) => stop.resolution === "reloop");
+  const filteredRecords =
+    recordFilter === "completed" ? completed : recordFilter === "followups" ? followUps : reloops;
+  const nonCommitmentUnfinished = unfinished.filter((stop) => !stop.hardCommitment);
+  const hardCommitmentUnfinished = unfinished.filter((stop) => stop.hardCommitment);
 
   return (
     <section className="screen" aria-labelledby="summary-title">
@@ -92,63 +103,126 @@ export function SummaryScreen({
           {unfinished.length === 0 ? (
             <div className="success-banner">Every stop has a clear next home.</div>
           ) : (
-            <div className="stack compact">
-              {unfinished.map((stop) => (
-                <article className="resolution-card" key={stop.accountId}>
-                  <div>
-                    <strong>{nameFor(stop.accountId)}</strong>
-                    <small>
-                      {stop.status === "failed"
-                        ? "Visit failed · choose recovery"
-                        : "Not worked · choose disposition"}
-                    </small>
-                  </div>
-                  <div className="resolution-actions">
-                    <button onClick={() => onResolveStop(stop.accountId, { kind: "tomorrow" })}>
-                      Move to tomorrow
-                    </button>
-                    <button
-                      onClick={() => onResolveStop(stop.accountId, { kind: "territory_pool" })}
-                    >
-                      Return to territory pool
-                    </button>
-                    <button
-                      onClick={() =>
-                        onResolveStop(stop.accountId, { kind: "reloop", date: "2026-10-05" })
-                      }
-                    >
-                      Reloop Oct 5
-                    </button>
-                    <button onClick={() => setCloseReasonFor(stop.accountId)}>
-                      Close with reason
-                    </button>
-                  </div>
-                  {closeReasonFor === stop.accountId && (
-                    <div className="inline-reason">
-                      <label htmlFor={`reason-${stop.accountId}`}>Close reason</label>
+            <>
+              {hardCommitmentUnfinished.length > 0 && (
+                <p className="warning">
+                  ⚠ {hardCommitmentUnfinished.length} protected commitment
+                  {hardCommitmentUnfinished.length === 1 ? " requires" : "s require"} individual
+                  confirmation.
+                </p>
+              )}
+              {nonCommitmentUnfinished.length > 1 && (
+                <button
+                  className="secondary-button full-button"
+                  onClick={() =>
+                    nonCommitmentUnfinished.forEach((stop) =>
+                      onResolveStop(stop.accountId, { kind: "tomorrow" }),
+                    )
+                  }
+                >
+                  Move {nonCommitmentUnfinished.length} non-commitments to tomorrow
+                </button>
+              )}
+              <div className="stack compact">
+                {unfinished.map((stop) => (
+                  <article className="resolution-card" key={stop.accountId}>
+                    <div>
+                      <strong>{nameFor(stop.accountId)}</strong>
+                      <small>
+                        {stop.status === "failed"
+                          ? "Visit failed · choose recovery"
+                          : "Not worked · choose disposition"}
+                      </small>
+                    </div>
+                    <div className="resolution-actions">
+                      <button onClick={() => onResolveStop(stop.accountId, { kind: "tomorrow" })}>
+                        Move to tomorrow
+                      </button>
+                      <button
+                        onClick={() => onResolveStop(stop.accountId, { kind: "territory_pool" })}
+                      >
+                        Return to territory pool
+                      </button>
+                      <label className="field-label" htmlFor={`reloop-${stop.accountId}`}>
+                        Reloop date
+                      </label>
                       <input
-                        id={`reason-${stop.accountId}`}
-                        value={closeReason}
-                        onChange={(event) => setCloseReason(event.target.value)}
+                        id={`reloop-${stop.accountId}`}
+                        type="date"
+                        min="2026-10-05"
+                        value={reloopDates[stop.accountId] ?? "2026-10-05"}
+                        onChange={(event) =>
+                          setReloopDates((current) => ({
+                            ...current,
+                            [stop.accountId]: event.target.value,
+                          }))
+                        }
                       />
                       <button
-                        disabled={!closeReason.trim()}
-                        onClick={() => {
+                        onClick={() =>
                           onResolveStop(stop.accountId, {
-                            kind: "closed",
-                            reason: closeReason.trim(),
-                          });
-                          setCloseReasonFor(null);
-                          setCloseReason("");
-                        }}
+                            kind: "reloop",
+                            date: reloopDates[stop.accountId] ?? "2026-10-05",
+                          })
+                        }
                       >
-                        Confirm close
+                        Confirm reloop
+                      </button>
+                      <button onClick={() => setCloseReasonFor(stop.accountId)}>
+                        Close with reason
                       </button>
                     </div>
-                  )}
-                </article>
-              ))}
-            </div>
+                    {closeReasonFor === stop.accountId && (
+                      <div className="inline-reason">
+                        <label htmlFor={`reason-${stop.accountId}`}>Close reason</label>
+                        <input
+                          id={`reason-${stop.accountId}`}
+                          value={closeReason}
+                          onChange={(event) => setCloseReason(event.target.value)}
+                        />
+                        <button
+                          disabled={!closeReason.trim()}
+                          onClick={() => {
+                            onResolveStop(stop.accountId, {
+                              kind: "closed",
+                              reason: closeReason.trim(),
+                            });
+                            setCloseReasonFor(null);
+                            setCloseReason("");
+                          }}
+                        >
+                          Confirm close
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        <section className="summary-section" aria-labelledby="records-title">
+          <div className="eyebrow">VISIT RECORDS</div>
+          <h2 id="records-title">Review by category</h2>
+          <div className="resolution-actions" role="tablist" aria-label="Summary categories">
+            <button onClick={() => setRecordFilter("completed")}>
+              Completed ({completed.length})
+            </button>
+            <button onClick={() => setRecordFilter("followups")}>
+              Follow-ups ({followUps.length})
+            </button>
+            <button onClick={() => setRecordFilter("reloops")}>Reloops ({reloops.length})</button>
+          </div>
+          {filteredRecords.length === 0 ? (
+            <p className="section-copy">No records in this category.</p>
+          ) : (
+            filteredRecords.map((stop) => (
+              <div className="sync-row" key={stop.accountId}>
+                <strong>{nameFor(stop.accountId)}</strong>
+                <span>{stop.resolution.replace("_", " ").toUpperCase()}</span>
+              </div>
+            ))
           )}
         </section>
 
@@ -168,7 +242,10 @@ export function SummaryScreen({
             <div className="sync-row" key={stop.accountId}>
               <div>
                 <strong>{nameFor(stop.accountId)}</strong>
-                <small>{stop.syncStatus.replace("_", " ")}</small>
+                <small>
+                  {stop.syncStatus.replace("_", " ")}
+                  {stop.mutatedAt ? ` · ${stop.mutatedAt.toLocaleTimeString()}` : ""}
+                </small>
               </div>
               <span>{stop.syncStatus.toUpperCase()}</span>
             </div>
@@ -183,15 +260,21 @@ export function SummaryScreen({
         <section className="summary-section" aria-labelledby="handoff-title">
           <div className="eyebrow">AI-DRAFTED · REP-CONTROLLED</div>
           <h2 id="handoff-title">Manager handoff</h2>
-          <textarea aria-label="Manager summary draft" value={summary} readOnly rows={5} />
-          {managerSent ? (
+          <textarea
+            aria-label="Manager summary draft"
+            value={day.managerSummaryDraft}
+            onChange={(event) => onManagerDraftChange?.(event.target.value)}
+            rows={5}
+          />
+          {day.managerSummarySentAt ? (
             <div className="success-banner">Summary sent after your review.</div>
           ) : (
             <button
               className="secondary-button full-button"
               onClick={() => setManagerReviewOpen(true)}
+              disabled={!day.closedAt}
             >
-              Review manager summary
+              {day.closedAt ? "Review manager summary" : "Close day before manager handoff"}
             </button>
           )}
         </section>
@@ -219,7 +302,11 @@ export function SummaryScreen({
                 <span>
                   {correction.before} → {correction.after}
                 </span>
-                <small>{correction.reason}</small>
+                <small>
+                  {correction.reason} · {correction.author} ·{" "}
+                  {correction.correctedAt.toLocaleString()}
+                  {correction.requiresManagerReview ? " · Manager review required" : ""}
+                </small>
               </div>
             ))}
           </section>
@@ -261,19 +348,22 @@ export function SummaryScreen({
               </div>
               <div>
                 <dt>Content</dt>
-                <dd>{summary}</dd>
+                <dd>{day.managerSummaryDraft}</dd>
               </div>
             </dl>
             <p>This draft is not sent until you approve it.</p>
             <div className="two-actions">
-              <button className="secondary-button" onClick={() => setManagerReviewOpen(false)}>
+              <button
+                autoFocus
+                className="secondary-button"
+                onClick={() => setManagerReviewOpen(false)}
+              >
                 Keep editing
               </button>
               <button
                 className="primary-button"
                 onClick={() => {
-                  onSendToManager(summary);
-                  setManagerSent(true);
+                  onSendToManager(day.managerSummaryDraft);
                   setManagerReviewOpen(false);
                 }}
               >
@@ -308,9 +398,17 @@ export function SummaryScreen({
               </div>
               <div>
                 <dt>After</dt>
-                <dd>Manager-confirmed follow-up</dd>
+                <dd>{correctionAfter || "Enter the corrected value below"}</dd>
               </div>
             </dl>
+            <label className="field-label" htmlFor="correction-after">
+              Corrected next action
+            </label>
+            <input
+              id="correction-after"
+              value={correctionAfter}
+              onChange={(event) => setCorrectionAfter(event.target.value)}
+            />
             <label className="field-label" htmlFor="correction-reason">
               Correction reason
             </label>
@@ -326,7 +424,7 @@ export function SummaryScreen({
               </button>
               <button
                 className="primary-button"
-                disabled={!correctionReason.trim()}
+                disabled={!correctionReason.trim() || !correctionAfter.trim()}
                 onClick={() => {
                   const stop = day.stops.find(
                     (candidate) => candidate.accountId === correctionAccountId,
@@ -335,11 +433,14 @@ export function SummaryScreen({
                     accountId: correctionAccountId,
                     field: "nextAction",
                     before: stop?.nextAction || "No next action recorded",
-                    after: "Manager-confirmed follow-up",
+                    after: correctionAfter.trim(),
                     reason: correctionReason.trim(),
+                    author: "Field rep",
+                    requiresManagerReview: true,
                   });
                   setCorrectionAccountId(null);
                   setCorrectionReason("");
+                  setCorrectionAfter("");
                 }}
               >
                 Record audited correction

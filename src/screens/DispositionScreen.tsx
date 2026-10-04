@@ -59,17 +59,18 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
         >
           ✓
         </div>
-        <div
+        <h1
           style={{
             fontSize: 17,
             fontWeight: 700,
             color: "#e8eaf0",
             marginBottom: 6,
+            marginTop: 0,
             textAlign: "center",
           }}
         >
           Visit logged
-        </div>
+        </h1>
         <div
           style={{
             fontSize: 12,
@@ -100,16 +101,7 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
           <span>Local only · will sync when online</span>
         </div>
         <button
-          onClick={() => {
-            if (submittedRef.current) return;
-            submittedRef.current = true;
-            onConfirm({
-              stopId: account.id,
-              outcome: outcome!,
-              note,
-              nextAction,
-            });
-          }}
+          onClick={onCancel}
           style={{
             width: "100%",
             maxWidth: 280,
@@ -149,15 +141,16 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
               color: "#6b7490",
               cursor: "pointer",
               fontSize: 12,
-              padding: 0,
+              minHeight: 44,
+              padding: "0 8px",
               marginBottom: 8,
             }}
           >
             ← Edit draft
           </button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#e8eaf0" }}>
+          <h1 style={{ fontSize: 16, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
             Review before saving
-          </div>
+          </h1>
           <div
             style={{
               fontSize: 11,
@@ -322,7 +315,12 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
           }}
         >
           <button
-            onClick={() => setStep("success")}
+            onClick={() => {
+              if (submittedRef.current || !outcome) return;
+              submittedRef.current = true;
+              onConfirm({ stopId: account.id, outcome, note, nextAction });
+              setStep("success");
+            }}
             style={{
               width: "100%",
               padding: "14px",
@@ -399,7 +397,9 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
             >
               LOG VISIT · DRAFT
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#e8eaf0" }}>{account.name}</div>
+            <h1 style={{ fontSize: 14, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
+              {account.name}
+            </h1>
           </div>
           <div style={{ marginLeft: "auto" }}>
             <div

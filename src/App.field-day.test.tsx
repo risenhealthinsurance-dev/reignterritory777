@@ -38,6 +38,10 @@ test("edits the suggested stop set and previews every route impact before applyi
   await user.click(
     screen.getByRole("button", { name: /Schedule Bravo Industrial Supply for later/i }),
   );
+  await user.click(screen.getByRole("button", { name: /Add Bravo Industrial Supply back/i }));
+  await user.click(
+    screen.getByRole("button", { name: /Schedule Bravo Industrial Supply for later/i }),
+  );
   await user.click(screen.getByRole("button", { name: /Preview route impact/i }));
 
   const preview = screen.getByRole("region", { name: /Route impact preview/i });

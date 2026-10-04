@@ -8,10 +8,9 @@ import type {
   StopRecord,
   DraftDisposition,
   FollowUpDraft,
-  OutcomeKey,
 } from "./types";
 import { accounts } from "./data/accounts";
-import { territory, OUTCOME_CONFIG } from "./data/territory";
+import { territory } from "./data/territory";
 import { getAIResponse } from "./lib/ai";
 import { BottomNav } from "./components/BottomNav";
 import { RouteCard } from "./components/cards/RouteCard";
@@ -38,11 +37,15 @@ import type { QuadrantContext } from "./types";
 import {
   applyRouteChange,
   closeRepDay,
+  completeVisit,
   createInitialRepDay,
+  failVisit,
   getSyncQueue,
   previewRouteChange,
   recordCorrection,
   resolveStop,
+  sendManagerSummary,
+  updateManagerSummary,
 } from "./domain/repDay";
 import type { DayStop, RouteProposal } from "./domain/repDay";
 
@@ -216,6 +219,7 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [focused, setFocused] = useState(false);
   const [vh, setVh] = useState(window.innerHeight);
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -238,6 +242,16 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
     const onResize = () => setVh(window.innerHeight);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const updateConnectivity = () => setIsOffline(!navigator.onLine);
+    window.addEventListener("online", updateConnectivity);
+    window.addEventListener("offline", updateConnectivity);
+    return () => {
+      window.removeEventListener("online", updateConnectivity);
+      window.removeEventListener("offline", updateConnectivity);
+    };
   }, []);
 
   useEffect(() => {
@@ -356,74 +370,37 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
     setScreen("disposition");
   }, []);
 
-  const handleDispositionConfirm = useCallback(
-    (draft: DraftDisposition) => {
-      setStops((prev) =>
-        prev.map((s) =>
-          s.accountId === draft.stopId
-            ? {
-                ...s,
-                status: "done",
-                disposition: draft.outcome as OutcomeKey,
-                dispositionNote: draft.note,
-                nextAction: draft.nextAction,
-                departedAt: new Date(),
-                syncStatus: "local_only",
-                resolution: "completed",
-              }
-            : s,
-        ),
-      );
-      const acc = accounts.find((a) => a.id === draft.stopId);
-      const conf = draft.outcome ? OUTCOME_CONFIG[draft.outcome] : null;
-      sendMessage(
-        `Logged ${acc?.name ?? "account"} as ${conf?.label ?? draft.outcome}. Notes: ${draft.note || "none"}.`,
-      );
-      setScreen("route");
-      setActiveStopId(null);
-      setDay((current) => ({ ...current, currentStopId: null }));
-    },
-    [sendMessage],
-  );
+  const handleDispositionConfirm = useCallback((draft: DraftDisposition) => {
+    setDay((current) => completeVisit(current, draft, new Date()));
+    setScreen("route");
+    setActiveStopId(null);
+  }, []);
 
-  const handleFollowUpConfirm = useCallback(
-    (fu: FollowUpDraft) => {
-      setStops((prev) =>
-        prev.map((s) =>
-          s.accountId === fu.stopId
-            ? {
-                ...s,
-                followUpDate: fu.date,
-                followUpTime: fu.time,
-                nextAction: fu.agenda,
-                syncStatus: "local_only",
-              }
-            : s,
-        ),
-      );
-      sendMessage(
-        `Follow-up with ${accounts.find((a) => a.id === fu.stopId)?.name} scheduled for ${fu.date} at ${fu.time}.`,
-      );
-      setScreen("stop");
-    },
-    [sendMessage],
-  );
+  const handleFollowUpConfirm = useCallback((fu: FollowUpDraft) => {
+    const mutatedAt = new Date();
+    setDay((current) => ({
+      ...current,
+      stops: current.stops.map((stop) =>
+        stop.accountId === fu.stopId
+          ? {
+              ...stop,
+              followUpDate: fu.date,
+              followUpTime: fu.time,
+              nextAction: fu.agenda,
+              syncStatus: "local_only",
+              mutatedAt,
+            }
+          : stop,
+      ),
+    }));
+    setScreen("stop");
+  }, []);
 
   const handleSkip = useCallback(
     (failureReason?: string, recoveryPlan?: "skip" | "reloop" | "call_ahead") => {
       if (!activeStopId) return;
-      setStops((prev) =>
-        prev.map((s) =>
-          s.accountId === activeStopId
-            ? {
-                ...s,
-                status: "failed",
-                failureReason,
-                recoveryPlan,
-                syncStatus: "local_only",
-              }
-            : s,
-        ),
+      setDay((current) =>
+        failVisit(current, activeStopId, failureReason, recoveryPlan, new Date()),
       );
       setScreen("route");
       setActiveStopId(null);
@@ -466,7 +443,13 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
       currentStopId: activeStopId,
       stops: current.stops.map((stop) =>
         stop.accountId === activeStopId
-          ? { ...stop, status: "active", arrivedAt: new Date(), syncStatus: "local_only" }
+          ? {
+              ...stop,
+              status: "active",
+              arrivedAt: new Date(),
+              syncStatus: "local_only",
+              mutatedAt: new Date(),
+            }
           : stop,
       ),
     }));
@@ -478,7 +461,14 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
       ...current,
       currentStopId: activeStopId,
       stops: current.stops.map((stop) =>
-        stop.accountId === activeStopId ? { ...stop, visitStartedAt: new Date() } : stop,
+        stop.accountId === activeStopId
+          ? {
+              ...stop,
+              visitStartedAt: new Date(),
+              syncStatus: "local_only",
+              mutatedAt: new Date(),
+            }
+          : stop,
       ),
     }));
   }, [activeStopId]);
@@ -719,9 +709,11 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
           onCloseDay={(isOffline) =>
             setDay((current) => closeRepDay(current, new Date(), isOffline))
           }
-          onSendToManager={(summary) =>
-            sendMessage(`Send this EOD summary to my manager: ${summary}`)
+          isOffline={isOffline}
+          onManagerDraftChange={(draft) =>
+            setDay((current) => updateManagerSummary(current, draft))
           }
+          onSendToManager={() => setDay((current) => sendManagerSummary(current, new Date()))}
           onRecordCorrection={(correction) =>
             setDay((current) => recordCorrection(current, correction))
           }
@@ -733,6 +725,7 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
     return (
       <FieldAIScreen
         currentAccountId={day.currentStopId}
+        isOffline={isOffline}
         onQueueAction={(action) => {
           if (!action.accountId) return;
           setDay((current) => ({
@@ -778,8 +771,10 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
               }
             >
               <MapView
+                key={day.routeStopIds.join(">")}
                 height={mapHeight}
                 accounts={accounts}
+                routeStopIds={day.routeStopIds}
                 activeAccountId={mapActiveId}
                 onPinTap={onPinTap}
                 doneAccountIds={doneIds}

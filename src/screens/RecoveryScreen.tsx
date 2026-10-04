@@ -138,15 +138,16 @@ export function RecoveryScreen({
               color: "#6b7490",
               cursor: "pointer",
               fontSize: 12,
-              padding: 0,
+              minHeight: 44,
+              padding: "0 8px",
               marginBottom: 8,
             }}
           >
             ← Edit
           </button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#e8eaf0" }}>
+          <h1 style={{ fontSize: 16, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
             Confirm recovery plan
-          </div>
+          </h1>
           <div
             style={{
               fontSize: 11,
@@ -311,7 +312,7 @@ export function RecoveryScreen({
           <button
             onClick={onCancel}
             style={{
-              width: 32,
+              width: 44,
               height: 44,
               background: "none",
               border: "none",
@@ -339,7 +340,9 @@ export function RecoveryScreen({
             >
               ⚠ {initialFailureReason ? "EDIT RECOVERY PLAN" : "VISIT FAILED · RECOVERY"}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#e8eaf0" }}>{account.name}</div>
+            <h1 style={{ fontSize: 14, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
+              {account.name}
+            </h1>
           </div>
         </div>
       </div>

@@ -7,7 +7,7 @@ export const seedMessages: Message[] = [
     id: "seed-1",
     role: "assistant",
     content:
-      "Good morning. Today you have 6 accounts scheduled in the 90210 corridor. Traffic on the 405 is moderate — I'd recommend starting with the Wilshire cluster before heading west to Westside Distribution. Ready to lock in your route?",
+      "Good morning. Today you have 6 accounts scheduled in Fort Pierce 34950. Start downtown with the protected commitments before moving west toward Okeechobee Road. Ready to review the route?",
     toolCalls: [],
     timestamp: t(52),
   },
@@ -21,14 +21,14 @@ export const seedMessages: Message[] = [
     id: "seed-3",
     role: "assistant",
     content:
-      "Optimized. Starting with Meridian Medical Devices on Wilshire — highest revenue account and a 0.4-mile opener. You'll hit Pacific Rim Logistics on Camden next, then swing east to Apex Manufacturing on Beverly Blvd for your anchor stop. Solano Healthcare and Westside wrap the afternoon, and Bravo Industrial closes the loop back toward the 10. Total: 6 stops, 18.4 miles, estimated 3h 52min drive time. I've adjusted for the Sunset Blvd construction window — should have you done by 4:30 PM.",
+      "Optimized. Starting with Meridian Medical Devices on US Highway 1, then Pacific Rim on Orange Avenue and Apex on Virginia Avenue for the anchor stop. Solano, Westside, and Bravo complete the Fort Pierce loop. The plan protects commitments and is projected to finish by 4:42 PM.",
     card: {
       type: "route",
       stops: [
         {
           accountId: "meridian",
           name: "Meridian Medical Devices",
-          address: "9100 Wilshire Blvd",
+          address: "100 N US Highway 1",
           etaMinutes: 0,
           distanceMiles: 0.4,
         },
@@ -42,7 +42,7 @@ export const seedMessages: Message[] = [
         {
           accountId: "apex",
           name: "Apex Manufacturing Group",
-          address: "8899 Beverly Blvd",
+          address: "500 Orange Ave",
           etaMinutes: 22,
           distanceMiles: 3.2,
         },
@@ -63,7 +63,7 @@ export const seedMessages: Message[] = [
         {
           accountId: "bravo",
           name: "Bravo Industrial Supply",
-          address: "8383 Wilshire Blvd",
+          address: "800 Virginia Ave",
           etaMinutes: 71,
           distanceMiles: 5.5,
         },
@@ -74,7 +74,7 @@ export const seedMessages: Message[] = [
     toolCalls: [
       {
         name: "plan_route",
-        args: '{ zip: "90210", accounts: 6, mode: "optimized" }',
+        args: '{ zip: "34950", accounts: 6, mode: "optimized" }',
         result: "6 stops · 18.4 mi · 3h 52m",
       },
     ],

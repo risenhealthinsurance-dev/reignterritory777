@@ -131,17 +131,18 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
         >
           📅
         </div>
-        <div
+        <h1
           style={{
             fontSize: 17,
             fontWeight: 700,
             color: "#e8eaf0",
             marginBottom: 6,
+            marginTop: 0,
             textAlign: "center",
           }}
         >
           Follow-up scheduled
-        </div>
+        </h1>
         <div
           style={{
             fontSize: 13,
@@ -192,11 +193,7 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
           <span>Local only · not synced · will sync when online</span>
         </div>
         <button
-          onClick={() => {
-            if (submittedRef.current) return;
-            submittedRef.current = true;
-            onConfirm({ stopId: account.id, date: dateKey, time, agenda });
-          }}
+          onClick={onCancel}
           style={{
             width: "100%",
             maxWidth: 300,
@@ -235,7 +232,8 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
               color: "#6b7490",
               cursor: "pointer",
               fontSize: 13,
-              padding: 0,
+              minHeight: 44,
+              padding: "0 8px",
               marginBottom: 8,
               display: "flex",
               alignItems: "center",
@@ -244,7 +242,9 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
           >
             ← Edit draft
           </button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#e8eaf0" }}>Confirm follow-up</div>
+          <h1 style={{ fontSize: 16, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
+            Confirm follow-up
+          </h1>
           <div
             style={{
               fontSize: 12,
@@ -353,7 +353,12 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
           }}
         >
           <button
-            onClick={() => setStep("saved")}
+            onClick={() => {
+              if (submittedRef.current) return;
+              submittedRef.current = true;
+              onConfirm({ stopId: account.id, date: dateKey, time, agenda });
+              setStep("saved");
+            }}
             style={{
               width: "100%",
               minHeight: 48,
@@ -417,7 +422,7 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
               fontSize: 20,
               padding: 0,
               lineHeight: 1,
-              minWidth: 32,
+              minWidth: 44,
               minHeight: 44,
               display: "flex",
               alignItems: "center",
@@ -436,7 +441,9 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
             >
               SCHEDULE FOLLOW-UP
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#e8eaf0" }}>{account.name}</div>
+            <h1 style={{ fontSize: 14, fontWeight: 700, color: "#e8eaf0", margin: 0 }}>
+              {account.name}
+            </h1>
           </div>
           <div
             style={{

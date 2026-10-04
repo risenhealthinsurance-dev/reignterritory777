@@ -19,7 +19,6 @@ test("requires an outcome and confirms a disposition only once", async () => {
   await user.type(screen.getByPlaceholderText(/What happened/i), "Order approved by buyer.");
   await user.click(screen.getByRole("button", { name: /Review & Confirm/i }));
   await user.click(screen.getByRole("button", { name: /confirm & save/i }));
-  await user.dblClick(screen.getByRole("button", { name: /Back to Route/i }));
 
   expect(onConfirm).toHaveBeenCalledTimes(1);
   expect(onConfirm).toHaveBeenCalledWith(
@@ -37,7 +36,6 @@ test("requires date and time and confirms a follow-up only once", async () => {
   await user.click(screen.getByRole("button", { name: "9:00 AM" }));
   await user.click(screen.getByRole("button", { name: /Review & Confirm/i }));
   await user.click(screen.getByRole("button", { name: /save locally/i }));
-  await user.dblClick(screen.getByRole("button", { name: /Back to Route/i }));
 
   expect(onConfirm).toHaveBeenCalledTimes(1);
   expect(onConfirm).toHaveBeenCalledWith(

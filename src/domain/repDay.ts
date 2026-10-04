@@ -1,6 +1,6 @@
 import { accounts } from "../data/accounts";
 import { initialStops } from "../data/territory";
-import type { StopRecord, StopResolution } from "../types";
+import type { DraftDisposition, StopRecord, StopResolution } from "../types";
 
 export interface DayStop extends StopRecord {
   resolution: StopResolution;
@@ -34,6 +34,8 @@ export interface CorrectionRecord {
   after: string;
   reason: string;
   correctedAt: Date;
+  author: string;
+  requiresManagerReview: boolean;
 }
 
 export interface RepDay {
@@ -47,6 +49,8 @@ export interface RepDay {
   closedAt: Date | null;
   closeoutSyncState: "open" | "closed_on_device" | "fully_synced";
   corrections: CorrectionRecord[];
+  managerSummaryDraft: string;
+  managerSummarySentAt: Date | null;
 }
 
 const ROUTE_META: Record<
@@ -65,10 +69,12 @@ export function createInitialRepDay(): RepDay {
   const stops = initialStops.map<DayStop>((stop) => {
     const account = accounts.find((candidate) => candidate.id === stop.accountId);
     const meta = ROUTE_META[stop.accountId];
+    const syncStatus =
+      stop.status === "failed" || stop.status === "skipped" ? stop.syncStatus : "synced";
     return {
       ...stop,
-      syncStatus:
-        stop.status === "failed" || stop.status === "skipped" ? stop.syncStatus : "synced",
+      syncStatus,
+      mutatedAt: syncStatus === "synced" ? undefined : new Date("2026-10-04T13:18:00.000-04:00"),
       resolution: stop.status === "done" ? "completed" : "unresolved",
       hardCommitment: meta.hardCommitment,
       expectedValue: account?.revenue ?? 0,
@@ -88,16 +94,24 @@ export function createInitialRepDay(): RepDay {
     closedAt: null,
     closeoutSyncState: "open",
     corrections: [],
+    managerSummaryDraft:
+      "Fort Pierce 34950 field day handoff: review completed visits, unresolved work, and queued records before sending.",
+    managerSummarySentAt: null,
   };
 }
 
 function routeTotals(day: RepDay, ids: string[]) {
+  let previous = { lat: 27.44, lng: -80.337 };
   return ids.reduce(
     (totals, id) => {
       const stop = day.stops.find((candidate) => candidate.accountId === id);
-      if (stop) {
-        totals.travelMinutes += stop.travelMinutes;
+      const account = accounts.find((candidate) => candidate.id === id);
+      if (stop && account) {
+        const latMiles = (account.lat - previous.lat) * 69;
+        const lngMiles = (account.lng - previous.lng) * 61;
+        totals.travelMinutes += Math.max(2, Math.round(Math.hypot(latMiles, lngMiles) * 3.2));
         totals.expectedValue += stop.expectedValue;
+        previous = account;
       }
       return totals;
     },
@@ -157,6 +171,13 @@ export function applyRouteChange(day: RepDay, proposalId: string): RepDay {
   return {
     ...day,
     routeStopIds: [...day.routeProposal.proposedStopIds],
+    currentStopId:
+      day.currentStopId && day.routeProposal.proposedStopIds.includes(day.currentStopId)
+        ? day.currentStopId
+        : (day.routeProposal.proposedStopIds.find((id) => {
+            const stop = day.stops.find((candidate) => candidate.accountId === id);
+            return stop?.status === "pending" || stop?.status === "active";
+          }) ?? null),
     routeProposal: null,
   };
 }
@@ -214,7 +235,13 @@ export function closeRepDay(day: RepDay, closedAt: Date, isOffline: boolean): Re
   };
 }
 
-export type CorrectionInput = Omit<CorrectionRecord, "id" | "correctedAt">;
+export type CorrectionInput = Omit<
+  CorrectionRecord,
+  "id" | "correctedAt" | "author" | "requiresManagerReview"
+> & {
+  author?: string;
+  requiresManagerReview?: boolean;
+};
 
 export function recordCorrection(day: RepDay, input: CorrectionInput): RepDay {
   if (!day.closedAt) throw new Error("Corrections become available after closeout");
@@ -227,7 +254,13 @@ export function recordCorrection(day: RepDay, input: CorrectionInput): RepDay {
     ...day,
     corrections: [
       ...day.corrections,
-      { ...input, id: `correction:${input.accountId}:${correctedAt.getTime()}`, correctedAt },
+      {
+        ...input,
+        id: `correction:${input.accountId}:${correctedAt.getTime()}`,
+        correctedAt,
+        author: input.author ?? "Field rep",
+        requiresManagerReview: input.requiresManagerReview ?? true,
+      },
     ],
     closeoutSyncState: "closed_on_device",
     stops: day.stops.map((stop) =>
@@ -236,4 +269,78 @@ export function recordCorrection(day: RepDay, input: CorrectionInput): RepDay {
         : stop,
     ),
   };
+}
+
+function nextActionableStopId(day: RepDay, afterAccountId: string) {
+  const afterIndex = day.routeStopIds.indexOf(afterAccountId);
+  const ordered = [
+    ...day.routeStopIds.slice(afterIndex + 1),
+    ...day.routeStopIds.slice(0, afterIndex + 1),
+  ];
+  return (
+    ordered.find((id) => {
+      const stop = day.stops.find((candidate) => candidate.accountId === id);
+      return stop?.status === "pending" || stop?.status === "active";
+    }) ?? null
+  );
+}
+
+export function completeVisit(
+  day: RepDay,
+  draft: DraftDisposition,
+  mutatedAt = new Date(),
+): RepDay {
+  const nextDay = {
+    ...day,
+    stops: day.stops.map((stop) =>
+      stop.accountId === draft.stopId
+        ? {
+            ...stop,
+            status: "done" as const,
+            disposition: draft.outcome ?? undefined,
+            dispositionNote: draft.note,
+            nextAction: draft.nextAction,
+            departedAt: mutatedAt,
+            syncStatus: "local_only" as const,
+            resolution: "completed" as const,
+            mutatedAt,
+          }
+        : stop,
+    ),
+  };
+  return { ...nextDay, currentStopId: nextActionableStopId(nextDay, draft.stopId) };
+}
+
+export function failVisit(
+  day: RepDay,
+  accountId: string,
+  failureReason?: string,
+  recoveryPlan?: "skip" | "reloop" | "call_ahead",
+  mutatedAt = new Date(),
+): RepDay {
+  const nextDay = {
+    ...day,
+    stops: day.stops.map((stop) =>
+      stop.accountId === accountId
+        ? {
+            ...stop,
+            status: "failed" as const,
+            failureReason,
+            recoveryPlan,
+            syncStatus: "local_only" as const,
+            mutatedAt,
+          }
+        : stop,
+    ),
+  };
+  return { ...nextDay, currentStopId: nextActionableStopId(nextDay, accountId) };
+}
+
+export function updateManagerSummary(day: RepDay, draft: string): RepDay {
+  return { ...day, managerSummaryDraft: draft, managerSummarySentAt: null };
+}
+
+export function sendManagerSummary(day: RepDay, sentAt = new Date()): RepDay {
+  if (!day.closedAt) throw new Error("Close the day before sending the manager handoff");
+  return { ...day, managerSummarySentAt: sentAt };
 }

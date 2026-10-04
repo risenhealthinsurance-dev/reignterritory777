@@ -9,6 +9,10 @@ import {
   previewRouteChange,
   recordCorrection,
   resolveStop,
+  completeVisit,
+  failVisit,
+  sendManagerSummary,
+  updateManagerSummary,
 } from "./repDay";
 
 describe("field-day domain", () => {
@@ -92,5 +96,54 @@ describe("field-day domain", () => {
     expect(corrected.stops.find((stop) => stop.accountId === "meridian")?.syncStatus).toBe(
       "local_only",
     );
+  });
+
+  test("completing or failing a stop atomically advances the shared current stop", () => {
+    const day = createInitialRepDay();
+    const completed = completeVisit(
+      day,
+      {
+        stopId: "apex",
+        outcome: "callback",
+        note: "Requested comparison",
+        nextAction: "Call Friday",
+      },
+      new Date("2026-10-04T15:00:00Z"),
+    );
+    expect(completed.currentStopId).toBe("solano");
+    expect(completed.stops.find((stop) => stop.accountId === "apex")).toEqual(
+      expect.objectContaining({ status: "done", mutatedAt: expect.any(Date) }),
+    );
+    const failed = failVisit(
+      day,
+      "apex",
+      "Contact unavailable",
+      "reloop",
+      new Date("2026-10-04T15:00:00Z"),
+    );
+    expect(failed.currentStopId).toBe("solano");
+    expect(failed.stops.find((stop) => stop.accountId === "apex")?.syncStatus).toBe("local_only");
+  });
+
+  test("route travel impact changes when the order changes", () => {
+    const day = createInitialRepDay();
+    const reordered = previewRouteChange(day, [
+      "meridian",
+      "bravo",
+      "pacific",
+      "apex",
+      "solano",
+      "westside",
+    ]);
+    expect(reordered.metrics.travelMinutesDelta).not.toBe(0);
+  });
+
+  test("persists manager edits and only sends a closed day once state is ready", () => {
+    const draft = updateManagerSummary(createInitialRepDay(), "Rep-reviewed handoff");
+    expect(draft.managerSummaryDraft).toBe("Rep-reviewed handoff");
+    expect(() => sendManagerSummary(draft)).toThrow(/close the day/i);
+
+    const sent = sendManagerSummary({ ...draft, closedAt: new Date("2026-10-04T21:00:00Z") });
+    expect(sent.managerSummarySentAt).toBeInstanceOf(Date);
   });
 });

@@ -13,15 +13,23 @@ export interface MapViewProps {
   activeAccountId: string | null;
   onPinTap: (id: string) => void;
   doneAccountIds: string[];
+  routeStopIds?: string[];
   showTerritoryMode?: boolean;
   activeQuadrantId?: string;
   onQuadrantTap?: (id: string) => void;
 }
 
 export const FORT_PIERCE_CENTER: [number, number] = [-80.337, 27.44];
-export function getRouteCoordinates(items: Account[]): [number, number][] {
+export function getRouteCoordinates(items: Account[], routeStopIds?: string[]): [number, number][] {
+  const rank = new Map(routeStopIds?.map((id, index) => [id, index]));
   return [...items]
-    .sort((first, second) => first.routeOrder - second.routeOrder)
+    .filter((account) => !routeStopIds || rank.has(account.id))
+    .sort((first, second) =>
+      routeStopIds
+        ? (rank.get(first.id) ?? Number.MAX_SAFE_INTEGER) -
+          (rank.get(second.id) ?? Number.MAX_SAFE_INTEGER)
+        : first.routeOrder - second.routeOrder,
+    )
     .map((account) => [account.lng, account.lat]);
 }
 
@@ -31,6 +39,7 @@ export function MapView({
   activeAccountId,
   onPinTap,
   doneAccountIds,
+  routeStopIds,
   showTerritoryMode,
   activeQuadrantId,
   onQuadrantTap,
@@ -42,6 +51,7 @@ export function MapView({
         accounts={accounts}
         activeAccountId={activeAccountId}
         doneAccountIds={doneAccountIds}
+        routeStopIds={routeStopIds}
         onPinTap={onPinTap}
         showTerritoryMode={showTerritoryMode}
       />
@@ -65,10 +75,12 @@ export function MapView({
         const isDone = doneAccountIds.includes(acc.id);
         const isActive = acc.id === activeAccountId;
         pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
-        pin.textContent = isDone ? "✓" : String(acc.routeOrder);
+        pin.textContent = isDone
+          ? "✓"
+          : String((routeStopIds?.indexOf(acc.id) ?? -1) + 1 || acc.routeOrder);
       }
     },
-    [accounts, activeAccountId, doneAccountIds],
+    [accounts, activeAccountId, doneAccountIds, routeStopIds],
   );
 
   useEffect(() => {
@@ -97,7 +109,10 @@ export function MapView({
         data: {
           type: "Feature",
           properties: {},
-          geometry: { type: "LineString", coordinates: getRouteCoordinates(accounts) },
+          geometry: {
+            type: "LineString",
+            coordinates: getRouteCoordinates(accounts, routeStopIds),
+          },
         },
       });
       map.addLayer({
@@ -248,7 +263,9 @@ export function MapView({
         const wrapper = document.createElement("div");
         const pin = document.createElement("div");
         pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
-        pin.textContent = isDone ? "✓" : String(acc.routeOrder);
+        pin.textContent = isDone
+          ? "✓"
+          : String((routeStopIds?.indexOf(acc.id) ?? -1) + 1 || acc.routeOrder);
         pin.setAttribute("role", "button");
         pin.setAttribute("tabindex", "0");
         pin.setAttribute("aria-label", `Open ${acc.name}`);

@@ -20,10 +20,18 @@ test("uses rep-controlled push-to-talk and never implies background listening", 
   render(<FieldAIScreen currentAccountId="apex" />);
 
   expect(screen.getByText(/Nothing is recorded in the background/i)).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: /Hold to talk/i }));
+  await user.pointer({
+    keys: "[MouseLeft>]",
+    target: screen.getByRole("button", { name: /Hold to talk/i }),
+  });
   expect(screen.getByRole("button", { name: /Stop recording/i })).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: /Stop recording/i }));
+  await user.pointer({
+    keys: "[/MouseLeft]",
+    target: screen.getByRole("button", { name: /Stop recording/i }),
+  });
   expect(screen.getByText(/Voice note ready/i)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Prior interactions/i })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Capture visit note/i })).toBeInTheDocument();
 });
 
 test("shows evidence source, date, confidence, and fact versus inference", async () => {

@@ -49,8 +49,8 @@ function extractAccountId(msg: string): string {
 }
 
 const ROUTE_TEXTS = [
-  "Optimized route locked in for the day. I've sequenced all 6 accounts to minimize backtracking and avoid the Sunset construction zone. Starting tight on Wilshire and working outward — Meridian Medical first since Sandra's availability window closes at 11 AM. Total drive: 18.4 miles, 3h 52min moving time. You should be clear by 4:30 PM with buffer for extended stops.",
-  "Route planned. I've ordered your stops to cluster the Beverly Hills accounts before pushing west toward Westside Distribution — saves you 23 minutes versus north-south ordering. Traffic on Wilshire is light right now but expect slowdown after 3 PM on the return. I'll alert you if it changes.",
+  "Optimized route locked in for the day. I've sequenced all 6 accounts to minimize backtracking through Fort Pierce. Meridian Medical stays first because Sandra's availability window closes at 11 AM. The route preserves protected commitments and keeps buffer for extended stops.",
+  "Route planned. I've clustered the downtown Fort Pierce accounts before moving toward Okeechobee Road and back to the waterfront. Every edit will preview its effect on commitments, travel, expected value, and finish time.",
 ];
 
 const DISPOSITION_TEXTS = [

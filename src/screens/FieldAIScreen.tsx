@@ -15,7 +15,21 @@ interface FieldAIScreenProps {
   onQueueAction?: (action: CopilotQueuedAction) => void;
 }
 
-type ResultKind = "brief" | "talking_points" | "objection" | null;
+type ResultKind =
+  | "brief"
+  | "talking_points"
+  | "objection"
+  | "prior_interactions"
+  | "visit_note"
+  | null;
+
+const RESULT_HEADINGS: Record<Exclude<ResultKind, null>, string> = {
+  brief: "Lead with compliance readiness and local support.",
+  talking_points: "Open with the decision window, then confirm the buying process.",
+  objection: "Acknowledge the concern, verify it, and answer with sourced evidence.",
+  prior_interactions: "Use the last commitment as the opening context.",
+  visit_note: "Capture the outcome, evidence, and next action before leaving.",
+};
 
 export function FieldAIScreen({
   currentAccountId = null,
@@ -132,13 +146,27 @@ export function FieldAIScreen({
               </div>
               <button
                 className={recording ? "voice-button recording" : "voice-button"}
-                onClick={() => {
-                  if (recording) {
-                    setRecording(false);
-                    setVoiceReady(true);
-                  } else {
+                onPointerDown={() => {
+                  setRecording(true);
+                  setVoiceReady(false);
+                }}
+                onPointerUp={() => {
+                  setRecording(false);
+                  setVoiceReady(true);
+                }}
+                onPointerCancel={() => setRecording(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
                     setRecording(true);
                     setVoiceReady(false);
+                  }
+                }}
+                onKeyUp={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setRecording(false);
+                    setVoiceReady(true);
                   }
                 }}
               >
@@ -167,6 +195,16 @@ export function FieldAIScreen({
                 <strong>Draft follow-up</strong>
                 <small>Preview before anything is queued</small>
               </button>
+              <button onClick={() => setResult("prior_interactions")}>
+                <span>↩</span>
+                <strong>Prior interactions</strong>
+                <small>Last visit, promise, and contact context</small>
+              </button>
+              <button onClick={() => setResult("visit_note")}>
+                <span>🎙</span>
+                <strong>Capture visit note</strong>
+                <small>Structure the outcome before leaving</small>
+              </button>
               <button onClick={queueResearch}>
                 <span>🔎</span>
                 <strong>Run deeper research</strong>
@@ -181,13 +219,7 @@ export function FieldAIScreen({
                 <div className="eyebrow">
                   ANSWER FOR {account ? "@" + account.name : "FORT PIERCE 34950"}
                 </div>
-                <h2>
-                  {result === "brief"
-                    ? "Lead with compliance readiness and local support."
-                    : result === "talking_points"
-                      ? "Open with the decision window, then confirm the buying process."
-                      : "Acknowledge the concern, verify it, and answer with sourced evidence."}
-                </h2>
+                <h2>{RESULT_HEADINGS[result]}</h2>
                 <p>
                   {account?.notes ??
                     "Compare the strongest opportunities across today’s territory."}
