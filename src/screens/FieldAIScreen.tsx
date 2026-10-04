@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { accounts } from "../data/accounts";
+import {
+  createFieldAiClient,
+  type FieldAiClient,
+  type FieldAiIntent,
+  type FieldAiResult,
+} from "../lib/fieldAi";
+import { supabase } from "../lib/supabase";
 
 export const AUDIT_STEP_DELAY_MS = 600;
 
@@ -13,35 +20,37 @@ interface FieldAIScreenProps {
   currentAccountId?: string | null;
   isOffline?: boolean;
   onQueueAction?: (action: CopilotQueuedAction) => void;
+  fieldAiClient?: FieldAiClient | null;
 }
 
-type ResultKind =
-  | "brief"
-  | "talking_points"
-  | "objection"
-  | "prior_interactions"
-  | "visit_note"
-  | null;
+const configuredFieldAiClient = supabase ? createFieldAiClient(supabase) : null;
 
-const RESULT_HEADINGS: Record<Exclude<ResultKind, null>, string> = {
-  brief: "Lead with compliance readiness and local support.",
-  talking_points: "Open with the decision window, then confirm the buying process.",
-  objection: "Acknowledge the concern, verify it, and answer with sourced evidence.",
-  prior_interactions: "Use the last commitment as the opening context.",
-  visit_note: "Capture the outcome, evidence, and next action before leaving.",
-};
+function formattedDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Unknown date"
+    : new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      }).format(date);
+}
 
 export function FieldAIScreen({
   currentAccountId = null,
   isOffline = false,
   onQueueAction,
+  fieldAiClient = configuredFieldAiClient,
 }: FieldAIScreenProps) {
   const [accountId, setAccountId] = useState<string | null>(currentAccountId);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [territoryMode, setTerritoryMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [voiceReady, setVoiceReady] = useState(false);
-  const [result, setResult] = useState<ResultKind>(null);
+  const [result, setResult] = useState<FieldAiResult | null>(null);
+  const [resultLoading, setResultLoading] = useState(false);
+  const [resultError, setResultError] = useState<string | null>(null);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [draftOpen, setDraftOpen] = useState(false);
   const account = accounts.find((candidate) => candidate.id === accountId) ?? null;
@@ -72,6 +81,36 @@ export function FieldAIScreen({
     setTerritoryMode(false);
     setPickerOpen(false);
     setResult(null);
+  }
+  async function askFieldAi(intent: FieldAiIntent) {
+    setResult(null);
+    setResultError(null);
+    if (isOffline) {
+      setResultError("This action needs connectivity. Your last cached brief remains available.");
+      return;
+    }
+    if (!fieldAiClient) {
+      setResultError("Field AI is not configured for this environment.");
+      return;
+    }
+    setResultLoading(true);
+    try {
+      setResult(
+        await fieldAiClient.ask({
+          scope: accountId
+            ? { type: "account", accountId }
+            : { type: "territory", territoryId: "ft-pierce-34950" },
+          intent,
+          idempotencyKey: crypto.randomUUID(),
+        }),
+      );
+    } catch (cause) {
+      setResultError(
+        cause instanceof Error ? cause.message : "Field AI is temporarily unavailable.",
+      );
+    } finally {
+      setResultLoading(false);
+    }
   }
   function queueResearch() {
     onQueueAction?.({ type: "research", accountId, status: "queued" });
@@ -202,17 +241,17 @@ export function FieldAIScreen({
             </div>
 
             <div className="copilot-actions">
-              <button onClick={() => setResult("brief")}>
+              <button onClick={() => void askFieldAi("brief")} disabled={resultLoading}>
                 <span>⚡</span>
                 <strong>30-second brief</strong>
                 <small>What matters before walking in</small>
               </button>
-              <button onClick={() => setResult("talking_points")}>
+              <button onClick={() => void askFieldAi("talking_points")} disabled={resultLoading}>
                 <span>🎯</span>
                 <strong>Talking points</strong>
                 <small>Lead with the strongest angle</small>
               </button>
-              <button onClick={() => setResult("objection")}>
+              <button onClick={() => void askFieldAi("objection")} disabled={resultLoading}>
                 <span>🛡</span>
                 <strong>Handle an objection</strong>
                 <small>Evidence-aware response coaching</small>
@@ -222,12 +261,15 @@ export function FieldAIScreen({
                 <strong>Draft follow-up</strong>
                 <small>Preview before anything is queued</small>
               </button>
-              <button onClick={() => setResult("prior_interactions")}>
+              <button
+                onClick={() => void askFieldAi("prior_interactions")}
+                disabled={resultLoading}
+              >
                 <span>↩</span>
                 <strong>Prior interactions</strong>
                 <small>Last visit, promise, and contact context</small>
               </button>
-              <button onClick={() => setResult("visit_note")}>
+              <button onClick={() => void askFieldAi("visit_note")} disabled={resultLoading}>
                 <span>🎙</span>
                 <strong>Capture visit note</strong>
                 <small>Structure the outcome before leaving</small>
@@ -241,35 +283,59 @@ export function FieldAIScreen({
 
             {queuedMessage && <div className="queue-banner">⏳ {queuedMessage}</div>}
 
+            {resultLoading && <div className="queue-banner">Checking authorized evidence…</div>}
+            {resultError && <div role="alert">{resultError}</div>}
+
             {result && (
               <section className="copilot-result" aria-label="Copilot answer">
                 <div className="eyebrow">
                   ANSWER FOR {account ? "@" + account.name : "FORT PIERCE 34950"}
                 </div>
-                <h2>{RESULT_HEADINGS[result]}</h2>
-                <p>
-                  {account?.notes ??
-                    "Compare the strongest opportunities across today’s territory."}
-                </p>
+                <h2>{result.answer}</h2>
+                <p>{result.confidence[0].toUpperCase() + result.confidence.slice(1)} confidence</p>
                 <details open>
                   <summary>Evidence</summary>
-                  <div className="evidence-card">
-                    <div>
-                      <span className="evidence-kind fact">Fact</span>
-                      <strong>Recent account activity supports this talking point.</strong>
+                  {result.facts.length === 0 && <p>Not verified — no supporting fact was found.</p>}
+                  {result.facts.map((fact, index) => (
+                    <div className="evidence-card" key={`fact-${index}`}>
+                      <div>
+                        <span className="evidence-kind fact">Fact</span>
+                        <strong>{fact.text}</strong>
+                      </div>
+                      {(fact.sources ?? []).map((source) => (
+                        <p key={source.id}>
+                          Source: {source.name}
+                          <br />
+                          Updated {formattedDate(source.retrievedAt)} ·{" "}
+                          {fact.confidence[0].toUpperCase() + fact.confidence.slice(1)} confidence
+                        </p>
+                      ))}
                     </div>
-                    <p>Source: CRM visit history</p>
-                    <p>Updated Oct 4, 2026 · High confidence</p>
-                  </div>
-                  <div className="evidence-card">
-                    <div>
-                      <span className="evidence-kind inference">AI inference</span>
-                      <strong>The current commitment window makes this the best opening.</strong>
+                  ))}
+                  {result.inferences.map((inference, index) => (
+                    <div className="evidence-card" key={`inference-${index}`}>
+                      <div>
+                        <span className="evidence-kind inference">AI inference</span>
+                        <strong>{inference.text}</strong>
+                      </div>
+                      <p>
+                        Based on evidence: {inference.evidenceIds.join(", ") || "none"} ·{" "}
+                        {inference.confidence[0].toUpperCase() + inference.confidence.slice(1)}{" "}
+                        confidence
+                      </p>
                     </div>
-                    <p>Source: Route commitments + account notes</p>
-                    <p>Updated Oct 4, 2026 · Medium confidence</p>
-                  </div>
+                  ))}
                 </details>
+                {result.uncertainties.length > 0 && (
+                  <div className="uncertainty-list">
+                    <strong>Not verified</strong>
+                    <ul>
+                      {result.uncertainties.map((uncertainty) => (
+                        <li key={uncertainty}>{uncertainty}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
             )}
 

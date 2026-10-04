@@ -61,13 +61,15 @@ create table public.territory_assignments (
 create table public.businesses (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
+  external_key text not null,
   display_name text not null check (length(trim(display_name)) > 0),
   legal_name text,
   website text,
   status text not null default 'candidate' check (status in ('candidate', 'active', 'closed', 'relocated', 'not_verified')),
   version bigint not null default 1,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (organization_id, external_key)
 );
 
 create table public.business_locations (
