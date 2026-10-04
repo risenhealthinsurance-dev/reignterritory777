@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { accounts } from "../data/accounts";
 import { getSyncQueue } from "../domain/repDay";
 import type { CorrectionInput, RepDay, StopResolutionInput } from "../domain/repDay";
@@ -38,6 +38,38 @@ export function SummaryScreen({
   const [recordFilter, setRecordFilter] = useState<"completed" | "followups" | "reloops">(
     "completed",
   );
+  const managerDialogRef = useRef<HTMLElement>(null);
+  const correctionDialogRef = useRef<HTMLElement>(null);
+  const openerRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    const dialog = managerReviewOpen ? managerDialogRef.current : correctionDialogRef.current;
+    if (!dialog) return;
+    const focusables = Array.from(
+      dialog.querySelectorAll<HTMLElement>("button:not([disabled]), textarea, input"),
+    );
+    focusables[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setManagerReviewOpen(false);
+        setCorrectionAccountId(null);
+      } else if (event.key === "Tab" && focusables.length > 1) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    dialog.addEventListener("keydown", onKeyDown);
+    return () => dialog.removeEventListener("keydown", onKeyDown);
+  }, [managerReviewOpen, correctionAccountId]);
+  useEffect(() => {
+    if (!managerReviewOpen && !correctionAccountId) openerRef.current?.focus();
+  }, [managerReviewOpen, correctionAccountId]);
   const unfinished = day.stops.filter((stop) => stop.resolution === "unresolved");
   const unsynced = getSyncQueue(day);
   const completed = day.stops.filter((stop) => stop.resolution === "completed");
@@ -205,14 +237,25 @@ export function SummaryScreen({
         <section className="summary-section" aria-labelledby="records-title">
           <div className="eyebrow">VISIT RECORDS</div>
           <h2 id="records-title">Review by category</h2>
-          <div className="resolution-actions" role="tablist" aria-label="Summary categories">
-            <button onClick={() => setRecordFilter("completed")}>
+          <div className="resolution-actions" role="group" aria-label="Summary categories">
+            <button
+              aria-pressed={recordFilter === "completed"}
+              onClick={() => setRecordFilter("completed")}
+            >
               Completed ({completed.length})
             </button>
-            <button onClick={() => setRecordFilter("followups")}>
+            <button
+              aria-pressed={recordFilter === "followups"}
+              onClick={() => setRecordFilter("followups")}
+            >
               Follow-ups ({followUps.length})
             </button>
-            <button onClick={() => setRecordFilter("reloops")}>Reloops ({reloops.length})</button>
+            <button
+              aria-pressed={recordFilter === "reloops"}
+              onClick={() => setRecordFilter("reloops")}
+            >
+              Reloops ({reloops.length})
+            </button>
           </div>
           {filteredRecords.length === 0 ? (
             <p className="section-copy">No records in this category.</p>
@@ -271,7 +314,11 @@ export function SummaryScreen({
           ) : (
             <button
               className="secondary-button full-button"
-              onClick={() => setManagerReviewOpen(true)}
+              ref={openerRef}
+              onClick={(event) => {
+                openerRef.current = event.currentTarget;
+                setManagerReviewOpen(true);
+              }}
               disabled={!day.closedAt}
             >
               {day.closedAt ? "Review manager summary" : "Close day before manager handoff"}
@@ -335,6 +382,7 @@ export function SummaryScreen({
         <div className="modal-backdrop">
           <section
             className="review-dialog"
+            ref={managerDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Review manager handoff"
@@ -378,6 +426,7 @@ export function SummaryScreen({
         <div className="modal-backdrop">
           <section
             className="review-dialog"
+            ref={correctionDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Record correction"

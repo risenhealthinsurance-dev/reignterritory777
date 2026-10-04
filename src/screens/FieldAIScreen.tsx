@@ -53,6 +53,20 @@ export function FieldAIScreen({
     }
   }, [currentAccountId]);
 
+  useEffect(() => {
+    if (!recording) return;
+    const stopRecording = () => {
+      setRecording(false);
+      setVoiceReady(true);
+    };
+    window.addEventListener("pointerup", stopRecording);
+    window.addEventListener("blur", stopRecording);
+    return () => {
+      window.removeEventListener("pointerup", stopRecording);
+      window.removeEventListener("blur", stopRecording);
+    };
+  }, [recording]);
+
   function chooseAccount(id: string) {
     setAccountId(id);
     setTerritoryMode(false);
@@ -146,11 +160,24 @@ export function FieldAIScreen({
               </div>
               <button
                 className={recording ? "voice-button recording" : "voice-button"}
-                onPointerDown={() => {
+                onPointerDown={(event) => {
+                  if (typeof event.currentTarget.setPointerCapture === "function") {
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                  }
                   setRecording(true);
                   setVoiceReady(false);
                 }}
-                onPointerUp={() => {
+                onPointerUp={(event) => {
+                  if (
+                    typeof event.currentTarget.hasPointerCapture === "function" &&
+                    event.currentTarget.hasPointerCapture(event.pointerId)
+                  ) {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  }
+                  setRecording(false);
+                  setVoiceReady(true);
+                }}
+                onLostPointerCapture={() => {
                   setRecording(false);
                   setVoiceReady(true);
                 }}

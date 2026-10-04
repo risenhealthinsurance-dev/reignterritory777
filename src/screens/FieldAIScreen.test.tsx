@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 import { FieldAIScreen } from "./FieldAIScreen";
@@ -44,6 +44,15 @@ test("shows evidence source, date, confidence, and fact versus inference", async
   expect(screen.getByText(/High confidence/i)).toBeInTheDocument();
   expect(screen.getByText(/^Fact$/i)).toBeInTheDocument();
   expect(screen.getByText(/^AI inference$/i)).toBeInTheDocument();
+});
+
+test("stops recording when the pointer is released outside the control", () => {
+  render(<FieldAIScreen currentAccountId="apex" />);
+  const button = screen.getByRole("button", { name: /Hold to talk/i });
+  fireEvent.pointerDown(button, { pointerId: 1 });
+  expect(screen.getByRole("button", { name: /Stop recording/i })).toBeInTheDocument();
+  fireEvent.pointerUp(window, { pointerId: 1 });
+  expect(screen.getByRole("button", { name: /Hold to talk/i })).toBeInTheDocument();
 });
 
 test("uses cached briefs offline and queues network-dependent research", async () => {

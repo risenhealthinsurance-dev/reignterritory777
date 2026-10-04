@@ -69,7 +69,8 @@ export function MapView({
         const marker = markersRef.current.get(acc.id);
         if (!marker) continue;
         const el = marker.getElement();
-        el.style.display = hidePins ? "none" : "";
+        const isScheduled = !routeStopIds || routeStopIds.includes(acc.id);
+        el.style.display = hidePins || !isScheduled ? "none" : "";
         const pin = el.querySelector(".map-pin") as HTMLElement;
         if (!pin) continue;
         const isDone = doneAccountIds.includes(acc.id);
@@ -262,6 +263,8 @@ export function MapView({
         const isActive = acc.id === activeAccountId;
         const wrapper = document.createElement("div");
         const pin = document.createElement("div");
+        const isScheduled = !routeStopIds || routeStopIds.includes(acc.id);
+        wrapper.style.display = isScheduled ? "" : "none";
         pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
         pin.textContent = isDone
           ? "✓"
