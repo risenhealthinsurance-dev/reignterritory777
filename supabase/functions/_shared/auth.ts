@@ -1,4 +1,4 @@
-import { FunctionError } from "./errors";
+import { FunctionError } from "./errors.ts";
 
 export interface Actor {
   userId: string;

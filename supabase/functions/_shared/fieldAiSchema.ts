@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { FunctionError } from "./errors";
+import { z } from "npm:zod@3.25.76";
+import { FunctionError } from "./errors.ts";
 
 const confidenceSchema = z.enum(["low", "medium", "high"]);
 const claimSchema = z.object({

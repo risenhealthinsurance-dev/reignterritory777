@@ -1,4 +1,4 @@
-import { FunctionError } from "./errors";
+import { FunctionError } from "./errors.ts";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",

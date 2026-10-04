@@ -1,5 +1,5 @@
-import { FunctionError, classifySourceError } from "./errors";
-import type { BusinessLookup, ConnectorRecord, ProvenanceObservation } from "./types";
+import { FunctionError, classifySourceError } from "./errors.ts";
+import type { BusinessLookup, ConnectorRecord, ProvenanceObservation } from "./types.ts";
 
 export interface SourceConnector {
   id: string;
