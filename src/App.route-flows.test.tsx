@@ -16,6 +16,7 @@ test("requires an outcome and confirms a disposition only once", async () => {
 
   expect(screen.getByRole("button", { name: /Review & Confirm/i })).toBeDisabled();
   await user.click(screen.getByRole("button", { name: /Sold/i }));
+  await user.type(screen.getByPlaceholderText(/What happened/i), "Order approved by buyer.");
   await user.click(screen.getByRole("button", { name: /Review & Confirm/i }));
   await user.click(screen.getByRole("button", { name: /confirm & save/i }));
   await user.dblClick(screen.getByRole("button", { name: /Back to Route/i }));

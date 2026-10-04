@@ -22,10 +22,10 @@ test("moves from territory through A1 to the route", async () => {
   renderApp({ initialScreen: "territory" });
 
   await user.click(screen.getByRole("button", { name: /^A1/i }));
-  await user.click(screen.getByRole("button", { name: /Plan .* route/i }));
-  await user.click(screen.getByRole("button", { name: /Start .* loop/i }));
-  await user.click(screen.getByRole("button", { name: /Prioritize Solano/i }));
-  await user.click(screen.getByRole("button", { name: /Start .* loop/i }));
+  await user.click(screen.getByRole("button", { name: /Plan suggested route/i }));
+  await user.click(screen.getByRole("button", { name: /Preview route impact/i }));
+  await user.click(screen.getByRole("button", { name: /Apply route/i }));
+  await user.click(screen.getByRole("button", { name: /Start route/i }));
 
   expect(screen.getByText(/ROUTE ACTIVE · 34950 · A1/i)).toBeInTheDocument();
 });

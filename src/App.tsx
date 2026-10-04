@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, Fragment } from "react";
+import type { SetStateAction } from "react";
 import type {
   Message,
   CardData,
@@ -10,7 +11,7 @@ import type {
   OutcomeKey,
 } from "./types";
 import { accounts } from "./data/accounts";
-import { territory, initialStops, OUTCOME_CONFIG } from "./data/territory";
+import { territory, OUTCOME_CONFIG } from "./data/territory";
 import { getAIResponse } from "./lib/ai";
 import { MapView } from "./components/MapView";
 import { BottomNav } from "./components/BottomNav";
@@ -35,6 +36,13 @@ import { FieldAIScreen } from "./screens/FieldAIScreen";
 import { A1_STOPS } from "./data/territory_grid";
 import type { QuadrantStop } from "./data/territory_grid";
 import type { QuadrantContext } from "./types";
+import {
+  applyRouteChange,
+  createInitialRepDay,
+  getSyncQueue,
+  previewRouteChange,
+} from "./domain/repDay";
+import type { DayStop, RouteProposal } from "./domain/repDay";
 
 const MAP_H = 340;
 const PLACEHOLDERS = [
@@ -188,7 +196,8 @@ interface AppProps {
 export default function App({ initialScreen = "kickoff", initialAccountId = "apex" }: AppProps) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen);
   const [activeStopId, setActiveStopId] = useState<string | null>(initialAccountId);
-  const [stops, setStops] = useState<StopRecord[]>(initialStops);
+  const [day, setDay] = useState(createInitialRepDay);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const [activeQuadrantId, setActiveQuadrantId] = useState<string>("A1");
   const [enrichmentAction, setEnrichmentAction] = useState<string>("enrich");
   const [quadrantContext, setQuadrantContext] = useState<QuadrantContext | null>(null);
@@ -206,12 +215,18 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const chatH = vh - MAP_H;
+  const mapHeight = mapExpanded ? Math.max(vh - 190, MAP_H) : MAP_H;
 
+  const stops = day.stops;
+  const setStops = useCallback((update: SetStateAction<DayStop[]>) => {
+    setDay((current) => ({
+      ...current,
+      stops: typeof update === "function" ? update(current.stops) : update,
+    }));
+  }, []);
   const completedStops = stops.filter((s) => s.status === "done");
   const doneIds = completedStops.map((s) => s.accountId);
-  const unsyncedCount = stops.filter(
-    (s) => s.syncStatus === "local_only" || s.syncStatus === "error",
-  ).length;
+  const unsyncedCount = getSyncQueue(day).length;
 
   useEffect(() => {
     const onResize = () => setVh(window.innerHeight);
@@ -325,11 +340,13 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
 
   const onPinTap = useCallback((id: string) => {
     setActiveStopId(id);
+    setDay((current) => ({ ...current, currentStopId: id }));
     setScreen("stop");
   }, []);
 
   const onLogVisit = useCallback((id: string) => {
     setActiveStopId(id);
+    setDay((current) => ({ ...current, currentStopId: id }));
     setScreen("disposition");
   }, []);
 
@@ -346,6 +363,7 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
                 nextAction: draft.nextAction,
                 departedAt: new Date(),
                 syncStatus: "local_only",
+                resolution: "completed",
               }
             : s,
         ),
@@ -357,6 +375,7 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
       );
       setScreen("route");
       setActiveStopId(null);
+      setDay((current) => ({ ...current, currentStopId: null }));
     },
     [sendMessage],
   );
@@ -434,6 +453,30 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
     ? (stops.find((s) => s.accountId === activeStopId) ?? null)
     : null;
 
+  const confirmArrival = useCallback(() => {
+    if (!activeStopId) return;
+    setDay((current) => ({
+      ...current,
+      currentStopId: activeStopId,
+      stops: current.stops.map((stop) =>
+        stop.accountId === activeStopId
+          ? { ...stop, status: "active", arrivedAt: new Date(), syncStatus: "local_only" }
+          : stop,
+      ),
+    }));
+  }, [activeStopId]);
+
+  const startVisit = useCallback(() => {
+    if (!activeStopId) return;
+    setDay((current) => ({
+      ...current,
+      currentStopId: activeStopId,
+      stops: current.stops.map((stop) =>
+        stop.accountId === activeStopId ? { ...stop, visitStartedAt: new Date() } : stop,
+      ),
+    }));
+  }, [activeStopId]);
+
   useEffect(() => {
     const requiresSelection = [
       "stop",
@@ -471,8 +514,13 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
       return (
         <RouteScreen
           stops={stops}
+          routeStopIds={day.routeStopIds}
+          currentStopId={day.currentStopId}
+          mapExpanded={mapExpanded}
+          onToggleMap={() => setMapExpanded((expanded) => !expanded)}
           onSelectStop={(id) => {
             setActiveStopId(id);
+            setDay((current) => ({ ...current, currentStopId: id }));
             const s = stops.find((s) => s.accountId === id);
             // Failed/skipped stops open RecoveryScreen directly from route
             if (s?.status === "failed" || s?.status === "skipped") {
@@ -481,6 +529,7 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
               setScreen("stop");
             }
           }}
+          onEditRoute={() => setScreen("quad_route")}
           onEndDay={() => setScreen("summary")}
         />
       );
@@ -491,6 +540,8 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
         <StopScreen
           account={activeAccount}
           stop={activeStop}
+          onConfirmArrival={confirmArrival}
+          onStartVisit={startVisit}
           onLogVisit={() => setScreen("disposition")}
           onScheduleFollowUp={() => setScreen("followup")}
           onReportFailed={() => setScreen("recovery")}
@@ -555,6 +606,10 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
             setActiveQuadrantId(id);
             setScreen("quadrant");
           }}
+          onPlanToday={() => {
+            setActiveQuadrantId("A1");
+            setScreen("quad_route");
+          }}
         />
       );
     }
@@ -573,9 +628,21 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
       return (
         <QuadrantRouteScreen
           quadrantId={activeQuadrantId}
+          routeStopIds={day.routeStopIds}
+          onPreviewRoute={(ids) => {
+            const proposal = previewRouteChange(day, ids);
+            setDay((current) => ({ ...current, routeProposal: proposal }));
+            return proposal;
+          }}
+          onApplyRoute={(proposal: RouteProposal) => {
+            setDay((current) =>
+              applyRouteChange({ ...current, routeProposal: proposal }, proposal.id),
+            );
+          }}
           onStartLoop={(firstAccountId) => {
             if (firstAccountId) {
               setActiveStopId(firstAccountId);
+              setDay((current) => ({ ...current, currentStopId: firstAccountId }));
               setQuadrantContext({
                 zipCode: "34950",
                 quadrantId: activeQuadrantId,
@@ -667,10 +734,10 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
       }}
     >
       {/* ══ MAP ══════════════════════════════════════════ */}
-      <div style={{ height: MAP_H, flexShrink: 0, position: "relative" }}>
+      <div style={{ height: mapHeight, flexShrink: 0, position: "relative" }}>
         {vh > 0 && (
           <MapView
-            height={MAP_H}
+            height={mapHeight}
             accounts={accounts}
             activeAccountId={mapActiveId}
             onPinTap={onPinTap}

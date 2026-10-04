@@ -27,7 +27,7 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
   const [nextAction, setNextAction] = useState(NEXT_ACTIONS[0]);
   const submittedRef = useRef(false);
 
-  const canReview = outcome !== null;
+  const canReview = outcome !== null && note.trim().length >= 3 && nextAction.trim().length > 0;
 
   if (step === "success") {
     const conf = outcome ? OUTCOME_CONFIG[outcome] : null;
@@ -587,7 +587,7 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
               fontFamily: "DM Mono,monospace",
             }}
           >
-            Select an outcome to continue
+            Select an outcome and add a short note to continue
           </div>
         )}
         <button
