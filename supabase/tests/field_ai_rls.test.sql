@@ -1,12 +1,13 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 
 select has_table('public', 'organizations', 'organizations table exists');
 select has_table('public', 'organization_members', 'membership table exists');
 select has_table('public', 'businesses', 'businesses table exists');
 select has_table('public', 'source_observations', 'source observations table exists');
 select has_table('public', 'zoning_districts', 'zoning table exists');
+select has_table('public', 'address_points', 'official address points table exists');
 select has_table('public', 'ai_runs', 'AI audit table exists');
 
 set local role authenticated;

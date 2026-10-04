@@ -175,6 +175,17 @@ create table public.parcels (
   unique (organization_id, source_id)
 );
 
+create table public.address_points (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  source_id text not null,
+  full_address text,
+  location extensions.geometry(Point, 4326) not null,
+  source_updated_at timestamptz,
+  retrieved_at timestamptz not null,
+  unique (organization_id, source_id)
+);
+
 create table public.zoning_districts (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -355,6 +366,7 @@ create table public.audit_events (
 create index business_locations_location_gix on public.business_locations using gist (location);
 create index territories_boundary_gix on public.territories using gist (boundary);
 create index parcels_geometry_gix on public.parcels using gist (geometry);
+create index address_points_location_gix on public.address_points using gist (location);
 create index zoning_districts_geometry_gix on public.zoning_districts using gist (geometry);
 create index future_land_use_geometry_gix on public.future_land_use_areas using gist (geometry);
 create index building_footprints_geometry_gix on public.building_footprints using gist (geometry);
@@ -367,7 +379,7 @@ begin
   foreach tenant_table in array array[
     'rep_profiles', 'territories', 'territory_assignments', 'businesses', 'business_locations',
     'source_registry', 'source_observations', 'normalized_facts', 'fact_conflicts',
-    'proposed_business_changes', 'change_reviews', 'parcels', 'zoning_districts',
+    'proposed_business_changes', 'change_reviews', 'parcels', 'address_points', 'zoning_districts',
     'future_land_use_areas', 'building_footprints', 'parcel_business_candidates',
     'enrichment_jobs', 'enrichment_attempts', 'ai_runs', 'ai_citations',
     'ai_suggested_actions', 'field_visits', 'visit_notes', 'route_plans', 'route_stops',
