@@ -27,4 +27,4 @@ Rotate the OpenAI key in the provider dashboard, update the Supabase function se
 
 ## Current environment limitation
 
-The repository host currently has no Supabase CLI, and the browser session is at an unauthenticated GitHub OAuth page rather than an authenticated Supabase project. Until an authenticated Supabase project/session is available, remote migration, function deployment, magic-link verification, and authenticated E2E remain unverified; the local app must display its unauthenticated magic-link gate.
+The Supabase CLI is installed via `pnpm dlx supabase` and authenticated, but the only accessible project (`iradajkukqlxmzcouybk`) is currently paused. The CLI link check returns `ProjectPausedError` and directs an admin to unpause it in the Supabase dashboard. Until that project is unpaused—or a new project is explicitly authorized and created—remote migration, function deployment, magic-link verification, and authenticated E2E remain unverified; the local app must display its unauthenticated magic-link gate.
