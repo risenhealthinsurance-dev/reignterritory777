@@ -36,6 +36,7 @@
 ### Task 1: Import and normalize the Figma Make baseline
 
 **Files:**
+
 - Copy: exported `src/` to `src/`
 - Copy: exported `index.html`, `package.json`, `pnpm-lock.yaml`, and `tsconfig.json`
 - Create: `vite.config.ts`
@@ -44,6 +45,7 @@
 - Create: `README.md`
 
 **Interfaces:**
+
 - Consumes: the downloaded Figma Make archive at `C:/Users/USUARIO/Downloads/Mobile UI Layout with AI Chat.zip`
 - Produces: a buildable `App` default export from `src/App.tsx` and the `npm run build`, `npm test`, `npm run typecheck`, and `npm run format:check` commands used by later tasks
 
@@ -56,14 +58,14 @@ Extract the archive to a temporary directory. Copy `src/`, `index.html`, `packag
 Create `vite.config.ts`:
 
 ```ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { '@': new URL('./src', import.meta.url).pathname } },
-})
+  resolve: { alias: { "@": new URL("./src", import.meta.url).pathname } },
+});
 ```
 
 - [ ] **Step 3: Add test and quality dependencies and scripts**
@@ -97,8 +99,8 @@ Document Node 22+, `pnpm install`, `pnpm dev`, `pnpm test`, `pnpm run typecheck`
 In `src/components/MapView.tsx`, delete the literal `mapboxgl.accessToken = 'pk.…'` assignment and replace it with:
 
 ```ts
-const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim()
-if (mapboxAccessToken) mapboxgl.accessToken = mapboxAccessToken
+const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
+if (mapboxAccessToken) mapboxgl.accessToken = mapboxAccessToken;
 ```
 
 Run `rg "pk\." src` and require no output. Task 3 adds the complete no-token fallback before release.
@@ -119,6 +121,7 @@ git commit -m "feat: import Reign Territory Figma application"
 ### Task 2: Establish the test harness and navigation contract
 
 **Files:**
+
 - Create: `src/test/setup.ts`
 - Create: `src/test/renderApp.tsx`
 - Create: `src/App.navigation.test.tsx`
@@ -126,6 +129,7 @@ git commit -m "feat: import Reign Territory Figma application"
 - Modify: `src/App.tsx`
 
 **Interfaces:**
+
 - Consumes: `App` from `src/App.tsx`
 - Produces: `renderApp(): RenderResult`, stable accessible names for primary navigation, and automatic recovery from invalid selection state
 
@@ -136,27 +140,27 @@ Extend `vite.config.ts` with `test: { environment: 'jsdom', setupFiles: ['./src/
 - [ ] **Step 2: Write failing kickoff and route navigation tests**
 
 ```tsx
-import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { renderApp } from './test/renderApp'
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderApp } from "./test/renderApp";
 
-test('opens on kickoff and starts the route', async () => {
-  const user = userEvent.setup()
-  renderApp()
-  expect(screen.getByText(/GOOD MORNING · FIELD AI READY/i)).toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: /Resume Route|Start Today's Route/i }))
-  expect(screen.getByText("TODAY'S ROUTE")).toBeInTheDocument()
-})
+test("opens on kickoff and starts the route", async () => {
+  const user = userEvent.setup();
+  renderApp();
+  expect(screen.getByText(/GOOD MORNING · FIELD AI READY/i)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: /Resume Route|Start Today's Route/i }));
+  expect(screen.getByText("TODAY'S ROUTE")).toBeInTheDocument();
+});
 
-test('moves from territory through A1 to the route', async () => {
-  const user = userEvent.setup()
-  renderApp()
-  await user.click(screen.getByRole('button', { name: /TERRITORY/i }))
-  await user.click(screen.getByRole('button', { name: /A1/i }))
-  await user.click(screen.getByRole('button', { name: /Enter A1|Plan Route/i }))
-  await user.click(screen.getByRole('button', { name: /Start Loop/i }))
-  expect(screen.getByText("TODAY'S ROUTE")).toBeInTheDocument()
-})
+test("moves from territory through A1 to the route", async () => {
+  const user = userEvent.setup();
+  renderApp();
+  await user.click(screen.getByRole("button", { name: /TERRITORY/i }));
+  await user.click(screen.getByRole("button", { name: /A1/i }));
+  await user.click(screen.getByRole("button", { name: /Enter A1|Plan Route/i }));
+  await user.click(screen.getByRole("button", { name: /Start Loop/i }));
+  expect(screen.getByText("TODAY'S ROUTE")).toBeInTheDocument();
+});
 ```
 
 - [ ] **Step 3: Run the navigation tests and confirm the expected failure**
@@ -174,9 +178,9 @@ Create `renderApp` as a thin wrapper around Testing Library's `render(<App />)`.
 Expose an optional `initialState` prop solely as a typed application bootstrap contract:
 
 ```tsx
-renderApp({ initialScreen: 'stop', initialAccountId: 'missing-account' })
-expect(screen.getByText("TODAY'S ROUTE")).toBeInTheDocument()
-expect(screen.queryByTestId('empty-panel')).not.toBeInTheDocument()
+renderApp({ initialScreen: "stop", initialAccountId: "missing-account" });
+expect(screen.getByText("TODAY'S ROUTE")).toBeInTheDocument();
+expect(screen.queryByTestId("empty-panel")).not.toBeInTheDocument();
 ```
 
 Run the test and verify it fails because the exported app currently falls through to an empty panel.
@@ -199,27 +203,36 @@ git commit -m "test: lock application navigation behavior"
 ### Task 3: Secure Mapbox and provide the visual fallback
 
 **Files:**
+
 - Create: `src/components/MapFallback.tsx`
 - Create: `src/components/MapView.test.tsx`
 - Modify: `src/components/MapView.tsx`
 - Modify: `src/index.css`
 
 **Interfaces:**
+
 - Consumes: existing `MapViewProps`
 - Produces: `MapFallback(props: Pick<MapViewProps, 'height' | 'accounts' | 'activeAccountId' | 'doneAccountIds' | 'showTerritoryMode' | 'onPinTap'>)` and token-aware `MapView`
 
 - [ ] **Step 1: Write the failing missing-token test**
 
 ```tsx
-test('renders a usable fallback when no Mapbox token is configured', async () => {
-  vi.stubEnv('VITE_MAPBOX_ACCESS_TOKEN', '')
-  render(<MapView height={340} accounts={accounts} activeAccountId={null}
-    doneAccountIds={[]} onPinTap={onPinTap} />)
-  expect(screen.getByLabelText('Route map fallback')).toBeInTheDocument()
-  await userEvent.click(screen.getByRole('button', { name: /Apex Manufacturing/i }))
-  expect(onPinTap).toHaveBeenCalledWith('apex')
-  expect(Map).not.toHaveBeenCalled()
-})
+test("renders a usable fallback when no Mapbox token is configured", async () => {
+  vi.stubEnv("VITE_MAPBOX_ACCESS_TOKEN", "");
+  render(
+    <MapView
+      height={340}
+      accounts={accounts}
+      activeAccountId={null}
+      doneAccountIds={[]}
+      onPinTap={onPinTap}
+    />,
+  );
+  expect(screen.getByLabelText("Route map fallback")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /Apex Manufacturing/i }));
+  expect(onPinTap).toHaveBeenCalledWith("apex");
+  expect(Map).not.toHaveBeenCalled();
+});
 ```
 
 - [ ] **Step 2: Run the test and confirm it fails for the hard-coded token**
@@ -250,6 +263,7 @@ git commit -m "feat: add secure map configuration and fallback"
 ### Task 4: Lock route mutations and approval gates
 
 **Files:**
+
 - Create: `src/App.route-flows.test.tsx`
 - Modify: `src/App.tsx`
 - Modify: `src/screens/DispositionScreen.tsx`
@@ -257,6 +271,7 @@ git commit -m "feat: add secure map configuration and fallback"
 - Modify: `src/screens/RecoveryScreen.tsx`
 
 **Interfaces:**
+
 - Consumes: `StopRecord`, `DraftDisposition`, and `FollowUpDraft` from `src/types.ts`
 - Produces: idempotent confirmation handlers and disabled confirmation buttons until required fields are selected
 
@@ -296,31 +311,33 @@ git commit -m "test: protect route workflow confirmations"
 ### Task 5: Lock Field AI and summary behavior
 
 **Files:**
+
 - Create: `src/screens/FieldAIScreen.test.tsx`
 - Create: `src/screens/SummaryScreen.test.tsx`
 - Modify: `src/screens/FieldAIScreen.tsx`
 - Modify: `src/screens/SummaryScreen.tsx`
 
 **Interfaces:**
+
 - Consumes: `getAuditData(accountId)` and `StopRecord[]`
 - Produces: deterministic Field AI phase transitions and truthful local-only summary/sync states
 
 - [ ] **Step 1: Write the failing Field AI phase test**
 
 ```tsx
-test('requires business context and approval before queuing an edit', async () => {
-  vi.useFakeTimers()
-  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-  render(<FieldAIScreen />)
-  await user.click(screen.getByRole('button', { name: /Select Business/i }))
-  await user.click(screen.getByRole('button', { name: /Solano Healthcare Partners/i }))
-  await user.click(screen.getByRole('button', { name: /digital-marketing audit/i }))
-  await vi.runAllTimersAsync()
-  await user.click(screen.getByRole('button', { name: /Review proposed edit/i }))
-  expect(screen.getByText(/no automatic saves/i)).toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: /Approve/i }))
-  expect(screen.getByText(/queued.*not saved/i)).toBeInTheDocument()
-})
+test("requires business context and approval before queuing an edit", async () => {
+  vi.useFakeTimers();
+  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  render(<FieldAIScreen />);
+  await user.click(screen.getByRole("button", { name: /Select Business/i }));
+  await user.click(screen.getByRole("button", { name: /Solano Healthcare Partners/i }));
+  await user.click(screen.getByRole("button", { name: /digital-marketing audit/i }));
+  await vi.runAllTimersAsync();
+  await user.click(screen.getByRole("button", { name: /Review proposed edit/i }));
+  expect(screen.getByText(/no automatic saves/i)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: /Approve/i }));
+  expect(screen.getByText(/queued.*not saved/i)).toBeInTheDocument();
+});
 ```
 
 - [ ] **Step 2: Run it and confirm the exported timing or accessible-name failure**
@@ -355,6 +372,7 @@ git commit -m "test: lock Field AI and summary state machines"
 ### Task 6: Accessibility, responsive containment, and visual verification
 
 **Files:**
+
 - Create: `e2e/mobile.spec.ts`
 - Create: `playwright.config.ts`
 - Modify: `package.json`
@@ -362,6 +380,7 @@ git commit -m "test: lock Field AI and summary state machines"
 - Modify: task-relevant components identified by accessibility assertions
 
 **Interfaces:**
+
 - Consumes: the complete app and the `pnpm dev` server
 - Produces: Playwright `webServer` configuration and viewport-level regression coverage
 
@@ -370,12 +389,12 @@ git commit -m "test: lock Field AI and summary state machines"
 ```ts
 for (const width of [320, 390, 1280]) {
   test(`contains the application at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 844 })
-    await page.goto('/')
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)
-    expect(overflow).toBe(false)
-    if (width > 390) await expect(page.locator('#root > *')).toHaveCSS('max-width', '390px')
-  })
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/");
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    expect(overflow).toBe(false);
+    if (width > 390) await expect(page.locator("#root > *")).toHaveCSS("max-width", "390px");
+  });
 }
 ```
 
@@ -393,7 +412,9 @@ Center the application shell, set `width: 100%` and `max-width: 390px`, prevent 
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -420,10 +441,12 @@ git commit -m "feat: verify responsive and accessible mobile experience"
 ### Task 7: Final documentation, repository creation, and push
 
 **Files:**
+
 - Modify: `README.md`
 - Verify: all tracked files
 
 **Interfaces:**
+
 - Consumes: verified local `main` branch
 - Produces: public or private GitHub repository `risenhealthinsurance/reignterritory777` using the organization's default visibility policy
 
@@ -469,4 +492,3 @@ git push -u origin main
 - [ ] **Step 6: Verify the remote result**
 
 Confirm the GitHub repository page visibly shows the latest commit, `README.md`, `src/`, and both `docs/superpowers/specs/` and `docs/superpowers/plans/`. Confirm the remote default branch is `main`.
-

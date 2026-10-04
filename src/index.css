@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
-@import 'mapbox-gl/dist/mapbox-gl.css';
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap");
+@import "mapbox-gl/dist/mapbox-gl.css";
+@import "tailwindcss";
 
 @theme inline {
   --color-background: #0a0c10;
@@ -19,24 +19,30 @@
   --color-border: #1e2230;
   --color-ring: #3b82f6;
   --radius: 12px;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'DM Mono', monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "DM Mono", monospace;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   overflow: hidden;
   background: #0a0c10;
   color: #e8eaf0;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -44,7 +50,9 @@ html, body, #root {
   }
 }
 
-::-webkit-scrollbar { width: 0; }
+::-webkit-scrollbar {
+  width: 0;
+}
 
 /* ── Map pins ─────────────────────────────────────────── */
 .map-pin {
@@ -54,7 +62,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -62,12 +70,14 @@ html, body, #root {
   transition: transform 0.15s ease;
   user-select: none;
 }
-.map-pin:hover { transform: scale(1.15); }
+.map-pin:hover {
+  transform: scale(1.15);
+}
 .map-pin--pending {
   background: #0f1a2e;
   border: 2px solid #3b82f6;
   color: #93c5fd;
-  box-shadow: 0 2px 12px rgba(59,130,246,0.25);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.25);
 }
 .map-pin--active {
   background: #3b82f6;
@@ -82,25 +92,39 @@ html, body, #root {
 }
 
 @keyframes pin-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
-  50%       { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
 }
 
 /* ── Streaming cursor ─────────────────────────────────── */
 .streaming-cursor::after {
-  content: '▋';
+  content: "▋";
   color: #3b82f6;
   animation: cursor-blink 0.75s step-end infinite;
 }
 @keyframes cursor-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* ── Spin animation (audit loader) ───────────────────── */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Card base ────────────────────────────────────────── */
@@ -134,8 +158,13 @@ html, body, #root {
 }
 
 /* ── Drawer handle ────────────────────────────────────── */
-.drawer-handle { cursor: grab; touch-action: none; }
-.drawer-handle:active { cursor: grabbing; }
+.drawer-handle {
+  cursor: grab;
+  touch-action: none;
+}
+.drawer-handle:active {
+  cursor: grabbing;
+}
 
 /* ── Scrollable message list ──────────────────────────── */
 .messages-scroll {
@@ -143,4 +172,6 @@ html, body, #root {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
-.messages-scroll::-webkit-scrollbar { display: none; }
+.messages-scroll::-webkit-scrollbar {
+  display: none;
+}

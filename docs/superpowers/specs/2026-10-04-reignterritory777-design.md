@@ -158,4 +158,3 @@ Deployment, CI/CD, production authentication, analytics, and backend services ar
 - Persisting data beyond the browser session.
 - Desktop-specific workflows beyond presenting the mobile surface cleanly.
 - Redesigning, expanding, or simplifying product behavior not represented in Figma.
-

@@ -24,6 +24,7 @@ Set `VITE_MAPBOX_ACCESS_TOKEN` in `.env.local` to enable Mapbox. Without it, the
 
 ```bash
 pnpm test
+pnpm run test:e2e
 pnpm run typecheck
 pnpm run format:check
 pnpm run build
@@ -38,3 +39,10 @@ pnpm run build
 - Summary → completed, reloop, follow-up, and unsynced views
 
 The visual baseline is a 390px-wide mobile viewport. On desktop, the application remains centered as a mobile surface.
+
+## Prototype boundaries
+
+- Route, visit, follow-up, sync, and approval states live only in memory and reset on reload.
+- Field AI uses deterministic fixture data; it never calls an AI provider or changes a business profile.
+- Approval actions queue a local review state only. They do not save to a CRM or third-party service.
+- Summary sharing and sync controls demonstrate the intended workflow without sending messages or records.
