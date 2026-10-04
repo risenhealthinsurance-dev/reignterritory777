@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+@import 'mapbox-gl/dist/mapbox-gl.css';
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: #0a0c10;
+  --color-foreground: #e8eaf0;
+  --color-card: #13161d;
+  --color-card-foreground: #c8cbd6;
+  --color-primary: #3b82f6;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1e2230;
+  --color-secondary-foreground: #9ba3b8;
+  --color-muted: #161920;
+  --color-muted-foreground: #6b7490;
+  --color-accent: #22d3ee;
+  --color-accent-foreground: #0a0c10;
+  --color-border: #1e2230;
+  --color-ring: #3b82f6;
+  --radius: 12px;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #0a0c10;
+  color: #e8eaf0;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 0; }
+
+/* ── Map pins ─────────────────────────────────────────── */
+.map-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+.map-pin:hover { transform: scale(1.15); }
+.map-pin--pending {
+  background: #0f1a2e;
+  border: 2px solid #3b82f6;
+  color: #93c5fd;
+  box-shadow: 0 2px 12px rgba(59,130,246,0.25);
+}
+.map-pin--active {
+  background: #3b82f6;
+  border: 2px solid #93c5fd;
+  color: #fff;
+  animation: pin-pulse 2s ease-in-out infinite;
+}
+.map-pin--done {
+  background: #111827;
+  border: 2px solid #374151;
+  color: #4b5563;
+}
+
+@keyframes pin-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+  50%       { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+}
+
+/* ── Streaming cursor ─────────────────────────────────── */
+.streaming-cursor::after {
+  content: '▋';
+  color: #3b82f6;
+  animation: cursor-blink 0.75s step-end infinite;
+}
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Spin animation (audit loader) ───────────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Card base ────────────────────────────────────────── */
+.ai-card {
+  background: #0d1117;
+  border: 1px solid #1e2a3a;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* ── Action sheet ─────────────────────────────────────── */
+.action-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 60;
+  backdrop-filter: blur(2px);
+}
+.action-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #13161d;
+  border-top: 1px solid #1e2230;
+  border-radius: 24px 24px 0 0;
+  padding: 20px 24px 48px;
+  z-index: 61;
+}
+
+/* ── Drawer handle ────────────────────────────────────── */
+.drawer-handle { cursor: grab; touch-action: none; }
+.drawer-handle:active { cursor: grabbing; }
+
+/* ── Scrollable message list ──────────────────────────── */
+.messages-scroll {
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.messages-scroll::-webkit-scrollbar { display: none; }
