@@ -15,9 +15,11 @@
     "format:check": "oxfmt --check ."
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "mapbox-gl": "^3.11.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
