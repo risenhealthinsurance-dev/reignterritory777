@@ -6,6 +6,7 @@ import type { AuditSection, SupplyOpportunity, ProfileEdit, SalesBrief } from '.
 import type { Provenance } from '../types'
 
 type AIPhase = 'empty' | 'picker' | 'locked' | 'audit_loading' | 'audit_results' | 'edit_review'
+export const AUDIT_STEP_DELAY_MS = 600
 
 interface FieldAIScreenProps {
   isOffline?: boolean
@@ -187,7 +188,7 @@ export function FieldAIScreen({ isOffline }: FieldAIScreenProps) {
         }
         setTimeout(() => setPhase('audit_results'), 400)
       }
-    }, 600)
+    }, AUDIT_STEP_DELAY_MS)
     return () => clearInterval(id)
   }, [phase, selectedAccountId])
 
@@ -654,6 +655,7 @@ export function FieldAIScreen({ isOffline }: FieldAIScreenProps) {
     const { profileEdits, salesBrief } = auditData
     const cfg = { high: { color: '#10b981', label: 'High' }, medium: { color: '#f59e0b', label: 'Medium' }, low: { color: '#ef4444', label: 'Low' } }[currentEdit.confidence]
     const remaining = profileEdits.filter((e) => !resolvedEdits[e.field])
+    const approvedCount = Object.values(resolvedEdits).filter((decision) => decision === 'approved').length
 
     function resolve(decision: 'approved' | 'rejected') {
       setResolvedEdits((prev) => ({ ...prev, [currentEdit.field]: decision }))
@@ -676,6 +678,12 @@ export function FieldAIScreen({ isOffline }: FieldAIScreenProps) {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'none', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+          {approvedCount > 0 && (
+            <div role="status" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 8, padding: '7px 10px', color: '#10b981', fontSize: 10, fontFamily: 'DM Mono,monospace' }}>
+              {approvedCount} edit queued for manual submission · not saved
+            </div>
+          )}
 
           {/* Disclaimer */}
           <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.22)', borderRadius: 8, padding: '7px 10px', display: 'flex', gap: 7, alignItems: 'flex-start' }}>
