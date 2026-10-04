@@ -21,6 +21,12 @@ const STATUS_COLOR: Record<
     text: "#22d3ee",
     label: "Active",
   },
+  available: {
+    bg: "rgba(59,130,246,0.08)",
+    border: "#24324a",
+    text: "#93a4c7",
+    label: "Available",
+  },
   completed: {
     bg: "rgba(16,185,129,0.12)",
     border: "#10b981",
@@ -85,7 +91,7 @@ export function TerritoryOverviewScreen({ onViewQuadrant }: TerritoryOverviewScr
               lineHeight: 1.2,
             }}
           >
-            90210 Corridor
+            Fort Pierce 34950
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {[

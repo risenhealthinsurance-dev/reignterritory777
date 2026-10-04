@@ -14,7 +14,7 @@ export type AppScreen =
   | "quad_route"
   | "enrichment";
 
-export type QuadrantStatus = "active" | "completed" | "locked";
+export type QuadrantStatus = "active" | "available" | "completed" | "locked";
 export type StopBadge = "new_door" | "reloop" | "follow_up" | "retention";
 export type FindingStatus = "strong" | "partial" | "missing" | "unknown";
 export type OpportunityLabel = "observed" | "publicly_supported" | "likely" | "needs_confirmation";
@@ -49,11 +49,20 @@ export interface StopRecord {
   followUpDate?: string;
   followUpTime?: string;
   arrivedAt?: Date;
+  visitStartedAt?: Date;
   departedAt?: Date;
   syncStatus: SyncStatus;
   failureReason?: string;
   recoveryPlan?: "skip" | "reloop" | "call_ahead";
 }
+
+export type StopResolution =
+  | "unresolved"
+  | "completed"
+  | "tomorrow"
+  | "territory_pool"
+  | "reloop"
+  | "closed";
 
 export interface DraftDisposition {
   stopId: string;

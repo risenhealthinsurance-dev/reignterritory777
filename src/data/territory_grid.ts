@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 // ── Grid geometry ─────────────────────────────────────────────────────────────
-export const GRID = { W: -118.48, E: -118.36, N: 34.105, S: 34.045 };
+export const GRID = { W: -80.37, E: -80.31, N: 27.47, S: 27.41 };
 const COL_W = (GRID.E - GRID.W) / 4; // 0.03° per column
 const ROW_H = (GRID.N - GRID.S) / 6; // 0.01° per row
 const COLS = ["A", "B", "C", "D"] as const;
@@ -36,11 +36,16 @@ for (let r = 1; r <= 6; r++) {
       col: COLS[c],
       row: r,
       snakeOrder: snakeOrder(c, r),
-      status: id === "A1" ? "active" : "locked",
+      status: id === "A1" ? "active" : "available",
       counts:
         id === "A1"
-          ? { newDoor: 5, reloop: 1, followUp: 2, retention: 3 }
-          : { newDoor: 0, reloop: 0, followUp: 0, retention: 0 },
+          ? { newDoor: 4, reloop: 1, followUp: 2, retention: 1 }
+          : {
+              newDoor: (r + c) % 4,
+              reloop: (r + c) % 2,
+              followUp: (r * (c + 1)) % 3,
+              retention: (r + c + 1) % 2,
+            },
     });
   }
 }
@@ -135,9 +140,9 @@ export const A1_STOPS: QuadrantStop[] = [
     accountId: "meridian",
     name: "Meridian Medical Devices",
     type: "follow_up",
-    address: "9100 Wilshire Blvd, Beverly Hills",
-    lat: 34.0683,
-    lng: -118.3987,
+    address: "100 N US Highway 1, Fort Pierce",
+    lat: 27.4488,
+    lng: -80.3256,
     reason: "Follow-up due today — Sandra confirmed CFO review by Oct 10",
     eta: "9:15 AM",
     distance: "0.8 mi",
@@ -147,9 +152,9 @@ export const A1_STOPS: QuadrantStop[] = [
     accountId: "pacific",
     name: "Pacific Rim Logistics",
     type: "follow_up",
-    address: "433 N Camden Dr, Beverly Hills",
-    lat: 34.0727,
-    lng: -118.4001,
+    address: "500 Orange Ave, Fort Pierce",
+    lat: 27.4471,
+    lng: -80.3298,
     reason: "Demo prep — send materials before Oct 7 deadline",
     eta: "10:05 AM",
     distance: "1.2 mi",
@@ -159,9 +164,9 @@ export const A1_STOPS: QuadrantStop[] = [
     accountId: "westside",
     name: "Westside Distribution Co",
     type: "reloop",
-    address: "1100 Glendon Ave, Los Angeles",
-    lat: 34.0611,
-    lng: -118.4423,
+    address: "130 S Indian River Dr, Fort Pierce",
+    lat: 27.4474,
+    lng: -80.3227,
     reason: "Failed Oct 3 — Tommy out; office is open Fri mornings",
     eta: "10:52 AM",
     distance: "2.1 mi",
@@ -171,9 +176,9 @@ export const A1_STOPS: QuadrantStop[] = [
     accountId: "solano",
     name: "Solano Healthcare Partners",
     type: "retention",
-    address: "345 N Maple Dr, Beverly Hills",
-    lat: 34.0753,
-    lng: -118.4032,
+    address: "2215 Okeechobee Rd, Fort Pierce",
+    lat: 27.4321,
+    lng: -80.3478,
     reason: "Retention — 23 days since visit; budget refreshed Oct 1",
     eta: "11:30 AM",
     distance: "1.7 mi",
@@ -183,9 +188,9 @@ export const A1_STOPS: QuadrantStop[] = [
     accountId: "apex",
     name: "Apex Manufacturing Group",
     type: "new_door",
-    address: "8899 Beverly Blvd, West Hollywood",
-    lat: 34.0764,
-    lng: -118.3742,
+    address: "800 Virginia Ave, Fort Pierce",
+    lat: 27.4269,
+    lng: -80.3311,
     reason: "High-value in-quadrant prospect; board window closes Oct 14",
     eta: "12:10 PM",
     distance: "1.4 mi",
@@ -195,9 +200,9 @@ export const A1_STOPS: QuadrantStop[] = [
     accountId: "bravo",
     name: "Bravo Industrial Supply",
     type: "new_door",
-    address: "8383 Wilshire Blvd, Beverly Hills",
-    lat: 34.0621,
-    lng: -118.3851,
+    address: "2400 Rhode Island Ave, Fort Pierce",
+    lat: 27.4428,
+    lng: -80.3509,
     reason: "Dormant 49 days — competitor risk; strong re-engagement hook",
     eta: "12:55 PM",
     distance: "0.9 mi",
@@ -206,9 +211,9 @@ export const A1_STOPS: QuadrantStop[] = [
     id: "qs-7",
     name: "Sunset Supply Solutions",
     type: "new_door",
-    address: "8560 Sunset Blvd, West Hollywood",
-    lat: 34.09,
-    lng: -118.376,
+    address: "600 Atlantic Ave, Fort Pierce",
+    lat: 27.4374,
+    lng: -80.3265,
     reason: "Cold prospect — logistics spend matches ICP; referred by partner",
     eta: "1:30 PM",
     distance: "1.1 mi",
@@ -217,9 +222,9 @@ export const A1_STOPS: QuadrantStop[] = [
     id: "qs-8",
     name: "Beverly Hills Wholesale",
     type: "new_door",
-    address: "211 S Robertson Blvd, Beverly Hills",
-    lat: 34.075,
-    lng: -118.381,
+    address: "101 Melody Ln, Fort Pierce",
+    lat: 27.451,
+    lng: -80.3243,
     reason: "New prospect — referred by Tommy Park; similar operator profile",
     eta: "2:05 PM",
     distance: "0.6 mi",

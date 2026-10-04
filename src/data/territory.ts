@@ -59,12 +59,12 @@ export const initialStops: StopRecord[] = [
   {
     accountId: "apex",
     status: "active",
-    syncStatus: "local_only",
+    syncStatus: "synced",
   },
   {
     accountId: "solano",
     status: "pending",
-    syncStatus: "local_only",
+    syncStatus: "synced",
   },
   {
     accountId: "westside",
@@ -76,7 +76,7 @@ export const initialStops: StopRecord[] = [
   {
     accountId: "bravo",
     status: "pending",
-    syncStatus: "local_only",
+    syncStatus: "synced",
   },
 ];
 
