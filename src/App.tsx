@@ -96,9 +96,14 @@ const SEED_MESSAGES: Message[] = [
   },
 ]
 
-export default function App() {
-  const [screen, setScreen] = useState<AppScreen>('kickoff')
-  const [activeStopId, setActiveStopId] = useState<string | null>('apex')
+interface AppProps {
+  initialScreen?: AppScreen
+  initialAccountId?: string | null
+}
+
+export default function App({ initialScreen = 'kickoff', initialAccountId = 'apex' }: AppProps) {
+  const [screen, setScreen] = useState<AppScreen>(initialScreen)
+  const [activeStopId, setActiveStopId] = useState<string | null>(initialAccountId)
   const [stops, setStops] = useState<StopRecord[]>(initialStops)
   const [activeQuadrantId, setActiveQuadrantId] = useState<string>('A1')
   const [enrichmentAction, setEnrichmentAction] = useState<string>('enrich')
@@ -260,6 +265,14 @@ export default function App() {
 
   const activeAccount = activeStopId ? accounts.find((a) => a.id === activeStopId) ?? null : null
   const activeStop = activeStopId ? stops.find((s) => s.accountId === activeStopId) ?? null : null
+
+  useEffect(() => {
+    const requiresSelection = ['stop', 'disposition', 'followup', 'recovery', 'enrichment'].includes(screen)
+    if (requiresSelection && (!activeAccount || !activeStop)) {
+      setScreen('route')
+      setActiveStopId(null)
+    }
+  }, [screen, activeAccount, activeStop])
 
   // Map pin highlight: show active stop when on stop screen, else show all
   const mapActiveId = (screen === 'stop' || screen === 'disposition' || screen === 'followup' || screen === 'recovery')
