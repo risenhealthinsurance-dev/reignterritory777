@@ -709,7 +709,22 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
     }
 
     // Field AI screen
-    return <FieldAIScreen />;
+    return (
+      <FieldAIScreen
+        currentAccountId={day.currentStopId}
+        onQueueAction={(action) => {
+          if (!action.accountId) return;
+          setDay((current) => ({
+            ...current,
+            stops: current.stops.map((stop) =>
+              stop.accountId === action.accountId
+                ? { ...stop, syncStatus: "queued" as const, mutatedAt: new Date() }
+                : stop,
+            ),
+          }));
+        }}
+      />
+    );
   }
 
   // ── Determine which screen has a panel header ───────────────────────────
