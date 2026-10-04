@@ -1,4 +1,4 @@
-import { z } from "npm:zod@3.25.76";
+import { z } from "zod";
 import { FunctionError } from "./errors.ts";
 
 const confidenceSchema = z.enum(["low", "medium", "high"]);
