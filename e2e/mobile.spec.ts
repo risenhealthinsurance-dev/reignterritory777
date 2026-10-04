@@ -27,6 +27,12 @@ test("all visible buttons have accessible names", async ({ page }) => {
   expect(unnamed).toEqual([]);
 });
 
+test("exposes production document metadata", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("Reign Territory");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+});
+
 test("honors reduced-motion preferences", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
