@@ -443,7 +443,16 @@ export default function App({ initialScreen = 'kickoff', initialAccountId = 'ape
   const showChatHeader = screen === 'chat'
 
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#060810', fontFamily: 'Inter,sans-serif' }}>
+    <div
+      data-app-shell
+      style={{
+        position: 'fixed', inset: '0 auto 0 50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 390, height: '100dvh',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        background: '#060810', fontFamily: 'Inter,sans-serif',
+        boxShadow: '0 0 48px rgba(0,0,0,.35)',
+      }}
+    >
 
       {/* ══ MAP ══════════════════════════════════════════ */}
       <div style={{ height: MAP_H, flexShrink: 0, position: 'relative' }}>
