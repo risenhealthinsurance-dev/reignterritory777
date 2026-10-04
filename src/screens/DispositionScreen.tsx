@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Account } from '../data/accounts'
 import type { OutcomeKey, DraftDisposition } from '../types'
 import { OUTCOME_CONFIG } from '../data/territory'
@@ -25,6 +25,7 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
   const [outcome, setOutcome] = useState<OutcomeKey | null>(null)
   const [note, setNote] = useState('')
   const [nextAction, setNextAction] = useState(NEXT_ACTIONS[0])
+  const submittedRef = useRef(false)
 
   const canReview = outcome !== null
 
@@ -55,7 +56,11 @@ export function DispositionScreen({ account, onConfirm, onCancel }: DispositionS
           <span>Local only · will sync when online</span>
         </div>
         <button
-          onClick={() => onConfirm({ stopId: account.id, outcome: outcome!, note, nextAction })}
+          onClick={() => {
+            if (submittedRef.current) return
+            submittedRef.current = true
+            onConfirm({ stopId: account.id, outcome: outcome!, note, nextAction })
+          }}
           style={{
             width: '100%', maxWidth: 280, padding: '14px', borderRadius: 14, border: 'none', cursor: 'pointer',
             background: 'linear-gradient(135deg,#1d4ed8,#0ea5e9)',

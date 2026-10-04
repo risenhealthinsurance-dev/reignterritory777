@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Account } from '../data/accounts'
 import type { FollowUpDraft } from '../types'
 
@@ -46,6 +46,7 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
   const [time, setTime] = useState<string>('')
   const [agenda, setAgenda] = useState(AGENDA_OPTS[0])
   const [customNote, setCustomNote] = useState('')
+  const submittedRef = useRef(false)
 
   const canConfirm = dateKey && time
   const selectedDay = DAY_OPTIONS.find((d) => d.key === dateKey)
@@ -82,7 +83,11 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
           <span>Local only · not synced · will sync when online</span>
         </div>
         <button
-          onClick={() => onConfirm({ stopId: account.id, date: dateKey, time, agenda })}
+          onClick={() => {
+            if (submittedRef.current) return
+            submittedRef.current = true
+            onConfirm({ stopId: account.id, date: dateKey, time, agenda })
+          }}
           style={{
             width: '100%', maxWidth: 300, minHeight: 48, padding: '0 24px', borderRadius: 14, border: 'none', cursor: 'pointer',
             background: 'linear-gradient(135deg,#1d4ed8,#0ea5e9)',

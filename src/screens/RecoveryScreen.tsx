@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Account } from '../data/accounts'
 import { accounts } from '../data/accounts'
 
@@ -51,6 +51,7 @@ export function RecoveryScreen({ account, initialFailureReason, initialRecoveryP
   const [note, setNote] = useState(initialFailureReason ?? '')
   const [choice, setChoice] = useState<RecoveryChoice | null>(initialRecoveryPlan ?? null)
   const [showConfirm, setShowConfirm] = useState(false)
+  const submittedRef = useRef(false)
 
   const nearby = accounts.filter((a) => a.id !== account.id).slice(0, 3)
   const canProceed = reason !== null && choice !== null
@@ -96,6 +97,8 @@ export function RecoveryScreen({ account, initialFailureReason, initialRecoveryP
         <div style={{ flexShrink: 0, padding: '10px 14px 16px', borderTop: '1px solid #111520', display: 'flex', flexDirection: 'column', gap: 7 }}>
           <button
             onClick={() => {
+              if (submittedRef.current) return
+              submittedRef.current = true
               const reasonLabel = reason ? FAILURE_REASONS[reason].label : 'Unknown'
               if (choice === 'skip') onSkip(reasonLabel, 'skip')
               else if (choice === 'reloop') onReloop(account.id, reasonLabel)
@@ -152,7 +155,7 @@ export function RecoveryScreen({ account, initialFailureReason, initialRecoveryP
             {(Object.entries(FAILURE_REASONS) as [FailureReason, typeof FAILURE_REASONS[FailureReason]][]).map(([key, val]) => {
               const sel = reason === key
               return (
-                <button key={key} onClick={() => setReason(key)} style={{
+                <button key={key} aria-pressed={sel} onClick={() => setReason(key)} style={{
                   padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
                   background: sel ? 'rgba(239,68,68,0.08)' : '#0d1117',
                   border: `1.5px solid ${sel ? '#ef4444' : '#1a2030'}`,
@@ -247,7 +250,7 @@ export function RecoveryScreen({ account, initialFailureReason, initialRecoveryP
             {(Object.entries(RECOVERY_OPTIONS) as [RecoveryChoice, typeof RECOVERY_OPTIONS[RecoveryChoice]][]).map(([key, val]) => {
               const sel = choice === key
               return (
-                <button key={key} onClick={() => setChoice(key)} style={{
+                <button key={key} aria-pressed={sel} onClick={() => setChoice(key)} style={{
                   padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
                   background: sel ? `${val.color}14` : '#0d1117',
                   border: `1.5px solid ${sel ? val.color : '#1a2030'}`,

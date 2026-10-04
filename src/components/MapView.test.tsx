@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { accounts } from '../data/accounts'
 
-const mapConstructor = vi.fn(() => ({
+const mapConstructor = vi.fn((_options: Record<string, unknown>) => ({
   on: vi.fn(),
   remove: vi.fn(),
   resize: vi.fn(),
