@@ -26,6 +26,16 @@ export interface RouteProposal {
   warnings: string[];
 }
 
+export interface CorrectionRecord {
+  id: string;
+  accountId: string;
+  field: "nextAction" | "dispositionNote" | "resolution";
+  before: string;
+  after: string;
+  reason: string;
+  correctedAt: Date;
+}
+
 export interface RepDay {
   territoryId: "ft-pierce-34950";
   selectedQuadrantId: string;
@@ -36,6 +46,7 @@ export interface RepDay {
   routeProposal: RouteProposal | null;
   closedAt: Date | null;
   closeoutSyncState: "open" | "closed_on_device" | "fully_synced";
+  corrections: CorrectionRecord[];
 }
 
 const ROUTE_META: Record<
@@ -75,6 +86,7 @@ export function createInitialRepDay(): RepDay {
     routeProposal: null,
     closedAt: null,
     closeoutSyncState: "open",
+    corrections: [],
   };
 }
 
@@ -184,6 +196,41 @@ export function resolveStop(
             syncStatus: "local_only",
             mutatedAt: new Date(),
           }
+        : stop,
+    ),
+  };
+}
+
+export function closeRepDay(day: RepDay, closedAt: Date, isOffline: boolean): RepDay {
+  if (day.stops.some((stop) => stop.resolution === "unresolved")) {
+    throw new Error("Resolve every unfinished stop before closing the day");
+  }
+  return {
+    ...day,
+    closedAt,
+    closeoutSyncState: isOffline || getSyncQueue(day).length > 0 ? "closed_on_device" : "fully_synced",
+  };
+}
+
+export type CorrectionInput = Omit<CorrectionRecord, "id" | "correctedAt">;
+
+export function recordCorrection(day: RepDay, input: CorrectionInput): RepDay {
+  if (!day.closedAt) throw new Error("Corrections become available after closeout");
+  if (!input.reason.trim()) throw new Error("An audit reason is required");
+  if (!day.stops.some((stop) => stop.accountId === input.accountId)) {
+    throw new Error(`Unknown stop: ${input.accountId}`);
+  }
+  const correctedAt = new Date();
+  return {
+    ...day,
+    corrections: [
+      ...day.corrections,
+      { ...input, id: `correction:${input.accountId}:${correctedAt.getTime()}`, correctedAt },
+    ],
+    closeoutSyncState: "closed_on_device",
+    stops: day.stops.map((stop) =>
+      stop.accountId === input.accountId
+        ? { ...stop, [input.field]: input.after, syncStatus: "local_only", mutatedAt: correctedAt }
         : stop,
     ),
   };

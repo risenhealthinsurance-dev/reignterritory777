@@ -38,9 +38,12 @@ import type { QuadrantStop } from "./data/territory_grid";
 import type { QuadrantContext } from "./types";
 import {
   applyRouteChange,
+  closeRepDay,
   createInitialRepDay,
   getSyncQueue,
   previewRouteChange,
+  recordCorrection,
+  resolveStop,
 } from "./domain/repDay";
 import type { DayStop, RouteProposal } from "./domain/repDay";
 
@@ -684,7 +687,10 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
     if (screen === "summary") {
       return (
         <SummaryScreen
-          stops={stops}
+          day={day}
+          onResolveStop={(accountId, resolution) =>
+            setDay((current) => resolveStop(current, accountId, resolution))
+          }
           onSync={() => {
             setStops((p) =>
               p.map((s) =>
@@ -703,7 +709,13 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
               1600,
             );
           }}
-          onSendToManager={() => sendMessage("Send my EOD summary to my manager.")}
+          onCloseDay={(isOffline) =>
+            setDay((current) => closeRepDay(current, new Date(), isOffline))
+          }
+          onSendToManager={(summary) => sendMessage(`Send this EOD summary to my manager: ${summary}`)}
+          onRecordCorrection={(correction) =>
+            setDay((current) => recordCorrection(current, correction))
+          }
         />
       );
     }
