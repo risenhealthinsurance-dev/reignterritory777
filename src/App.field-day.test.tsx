@@ -18,6 +18,19 @@ test("lets the rep browse any quadrant while clearly recommending A1", async () 
   expect(screen.getByText(/B1 · QUADRANT/i)).toBeInTheDocument();
 });
 
+test("exposes one main region and named primary navigation", () => {
+  renderApp({ initialScreen: "territory" });
+  expect(screen.getByRole("main")).toBeInTheDocument();
+  const navigation = screen.getByRole("navigation", { name: /Primary/i });
+  expect(within(navigation).getByRole("button", { name: /Territory/i })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  expect(within(navigation).getByRole("button", { name: /Route/i })).toBeInTheDocument();
+  expect(within(navigation).getByRole("button", { name: /Field AI/i })).toBeInTheDocument();
+  expect(within(navigation).getByRole("button", { name: /Summary/i })).toBeInTheDocument();
+});
+
 test("edits the suggested stop set and previews every route impact before applying", async () => {
   const user = userEvent.setup();
   renderApp({ initialScreen: "quad_route" });

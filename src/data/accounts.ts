@@ -31,7 +31,7 @@ export const accounts: Account[] = [
     contact: {
       name: "Sandra Kowalski",
       title: "VP of Operations",
-      phone: "+1 (310) 555-0182",
+      phone: "+1 (772) 555-0182",
     },
     address: "100 N US Highway 1, Fort Pierce, FL 34950",
     lat: 27.4488,
@@ -69,7 +69,7 @@ export const accounts: Account[] = [
     contact: {
       name: "David Chen",
       title: "Director of Procurement",
-      phone: "+1 (310) 555-0247",
+      phone: "+1 (772) 555-0247",
     },
     address: "500 Orange Ave, Fort Pierce, FL 34950",
     lat: 27.4471,
@@ -106,7 +106,7 @@ export const accounts: Account[] = [
     contact: {
       name: "Robert Garza",
       title: "Chief Procurement Officer",
-      phone: "+1 (323) 555-0318",
+      phone: "+1 (772) 555-0318",
     },
     address: "800 Virginia Ave, Fort Pierce, FL 34950",
     lat: 27.4269,
@@ -144,7 +144,7 @@ export const accounts: Account[] = [
     contact: {
       name: "Maria Trevino",
       title: "Director of Supply Chain",
-      phone: "+1 (310) 555-0451",
+      phone: "+1 (772) 555-0451",
     },
     address: "2215 Okeechobee Rd, Fort Pierce, FL 34950",
     lat: 27.4321,
@@ -182,7 +182,7 @@ export const accounts: Account[] = [
     contact: {
       name: "Tommy Park",
       title: "Owner / CEO",
-      phone: "+1 (310) 555-0563",
+      phone: "+1 (772) 555-0563",
     },
     address: "130 S Indian River Dr, Fort Pierce, FL 34950",
     lat: 27.4474,
@@ -219,7 +219,7 @@ export const accounts: Account[] = [
     contact: {
       name: "Lisa Okonkwo",
       title: "Purchasing Manager",
-      phone: "+1 (323) 555-0674",
+      phone: "+1 (772) 555-0674",
     },
     address: "2400 Rhode Island Ave, Fort Pierce, FL 34950",
     lat: 27.4428,

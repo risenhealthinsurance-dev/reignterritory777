@@ -123,7 +123,7 @@ export function MapFallback({
             whiteSpace: "nowrap",
           }}
         >
-          {showTerritoryMode ? "A1 ACTIVE · 23 locked" : "14.4 mi · A1 loop"}
+          {showTerritoryMode ? "24 available · A1 recommended" : "14.4 mi · A1 loop"}
         </div>
       </div>
 
@@ -144,8 +144,8 @@ export function MapFallback({
                 left,
                 top,
                 transform: "translate(-50%,-50%)",
-                width: 34,
-                height: 34,
+                width: 44,
+                height: 44,
                 borderRadius: "50%",
                 cursor: "pointer",
                 border: `2px solid ${isDone ? "#10b981" : isActive ? "#60a5fa" : "#3b82f6"}`,

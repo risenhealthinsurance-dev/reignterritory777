@@ -62,9 +62,7 @@ describe("field-day domain", () => {
 
     const resolved = resolveStop(day, "apex", { kind: "tomorrow" });
     expect(getSyncQueue(resolved).map((stop) => stop.accountId)).toEqual(["apex", "westside"]);
-    expect(resolved.stops.find((stop) => stop.accountId === "apex")?.resolution).toBe(
-      "tomorrow",
-    );
+    expect(resolved.stops.find((stop) => stop.accountId === "apex")?.resolution).toBe("tomorrow");
   });
 
   test("blocks closeout until all stops are resolved, then distinguishes device close from sync", () => {
@@ -88,7 +86,11 @@ describe("field-day domain", () => {
       reason: "Manager confirmed by phone",
     });
     expect(corrected.corrections).toHaveLength(1);
-    expect(corrected.corrections[0]).toEqual(expect.objectContaining({ accountId: "meridian", reason: "Manager confirmed by phone" }));
-    expect(corrected.stops.find((stop) => stop.accountId === "meridian")?.syncStatus).toBe("local_only");
+    expect(corrected.corrections[0]).toEqual(
+      expect.objectContaining({ accountId: "meridian", reason: "Manager confirmed by phone" }),
+    );
+    expect(corrected.stops.find((stop) => stop.accountId === "meridian")?.syncStatus).toBe(
+      "local_only",
+    );
   });
 });

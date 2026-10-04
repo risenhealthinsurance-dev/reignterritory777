@@ -18,17 +18,12 @@ export interface MapViewProps {
   onQuadrantTap?: (id: string) => void;
 }
 
-const ROUTE_COORDS = [
-  [-118.3987, 34.0683],
-  [-118.4001, 34.0727],
-  [-118.3742, 34.0764],
-  [-118.4032, 34.0753],
-  [-118.4423, 34.0611],
-  [-118.3851, 34.0621],
-];
-
-const TERRITORY_CENTER: [number, number] = [-118.42, 34.075];
-const ROUTE_CENTER: [number, number] = [-118.4004, 34.0736];
+export const FORT_PIERCE_CENTER: [number, number] = [-80.337, 27.44];
+export function getRouteCoordinates(items: Account[]): [number, number][] {
+  return [...items]
+    .sort((first, second) => first.routeOrder - second.routeOrder)
+    .map((account) => [account.lng, account.lat]);
+}
 
 export function MapView({
   height,
@@ -83,7 +78,7 @@ export function MapView({
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: "mapbox://styles/mapbox/standard",
-      center: ROUTE_CENTER,
+      center: FORT_PIERCE_CENTER,
       zoom: 13.8,
       pitch: 45,
       bearing: -10,
@@ -102,7 +97,7 @@ export function MapView({
         data: {
           type: "Feature",
           properties: {},
-          geometry: { type: "LineString", coordinates: ROUTE_COORDS },
+          geometry: { type: "LineString", coordinates: getRouteCoordinates(accounts) },
         },
       });
       map.addLayer({
@@ -254,8 +249,14 @@ export function MapView({
         const pin = document.createElement("div");
         pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
         pin.textContent = isDone ? "✓" : String(acc.routeOrder);
+        pin.setAttribute("role", "button");
+        pin.setAttribute("tabindex", "0");
+        pin.setAttribute("aria-label", `Open ${acc.name}`);
         wrapper.appendChild(pin);
         wrapper.addEventListener("click", () => onPinTap(acc.id));
+        wrapper.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") onPinTap(acc.id);
+        });
         const marker = new mapboxgl.Marker({ element: wrapper })
           .setLngLat([acc.lng, acc.lat])
           .addTo(map);
@@ -299,7 +300,7 @@ export function MapView({
     if (map.getLayer("route-line")) map.setLayoutProperty("route-line", "visibility", routeVis);
     if (showTerritoryMode) {
       map.flyTo({
-        center: TERRITORY_CENTER,
+        center: FORT_PIERCE_CENTER,
         zoom: 12.2,
         pitch: 0,
         bearing: 0,
@@ -307,7 +308,7 @@ export function MapView({
       });
     } else {
       map.flyTo({
-        center: ROUTE_CENTER,
+        center: FORT_PIERCE_CENTER,
         zoom: 13.8,
         pitch: 45,
         bearing: -10,
@@ -409,7 +410,7 @@ export function MapView({
               }}
             >
               {" "}
-              · 23 locked
+              · 24 available · A1 recommended
             </span>
           </div>
         </div>

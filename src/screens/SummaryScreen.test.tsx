@@ -4,7 +4,13 @@ import { expect, test, vi } from "vitest";
 import { createInitialRepDay, resolveStop } from "../domain/repDay";
 import { SummaryScreen } from "./SummaryScreen";
 
-const callbacks = () => ({ onResolveStop: vi.fn(), onSync: vi.fn(), onCloseDay: vi.fn(), onSendToManager: vi.fn(), onRecordCorrection: vi.fn() });
+const callbacks = () => ({
+  onResolveStop: vi.fn(),
+  onSync: vi.fn(),
+  onCloseDay: vi.fn(),
+  onSendToManager: vi.fn(),
+  onRecordCorrection: vi.fn(),
+});
 
 test("separates unfinished stops from records waiting to sync", () => {
   const day = createInitialRepDay();
@@ -25,8 +31,13 @@ test("requires every unfinished stop to be resolved before closeout", async () =
 
 test("closes offline on device and explains that server sync is still pending", () => {
   let day = createInitialRepDay();
-  for (const stop of day.stops.filter((candidate) => candidate.resolution === "unresolved")) day = resolveStop(day, stop.accountId, { kind: "territory_pool" });
-  day = { ...day, closedAt: new Date("2026-10-04T17:00:00-04:00"), closeoutSyncState: "closed_on_device" };
+  for (const stop of day.stops.filter((candidate) => candidate.resolution === "unresolved"))
+    day = resolveStop(day, stop.accountId, { kind: "territory_pool" });
+  day = {
+    ...day,
+    closedAt: new Date("2026-10-04T17:00:00-04:00"),
+    closeoutSyncState: "closed_on_device",
+  };
   render(<SummaryScreen day={day} isOffline {...callbacks()} />);
   expect(screen.getByText(/Closed on this device/i)).toBeInTheDocument();
   expect(screen.getByText(/Fully synced after connectivity returns/i)).toBeInTheDocument();
@@ -47,10 +58,22 @@ test("requires review and an explicit send for the manager summary", async () =>
 test("records post-close corrections with an audit reason", async () => {
   const user = userEvent.setup();
   const props = callbacks();
-  const day = { ...createInitialRepDay(), closedAt: new Date(), closeoutSyncState: "fully_synced" as const };
+  const day = {
+    ...createInitialRepDay(),
+    closedAt: new Date(),
+    closeoutSyncState: "fully_synced" as const,
+  };
   render(<SummaryScreen day={day} {...props} />);
   await user.click(screen.getByRole("button", { name: /Correct Meridian Medical Devices/i }));
-  await user.type(screen.getByLabelText(/Correction reason/i), "Manager confirmed the next action by phone");
+  await user.type(
+    screen.getByLabelText(/Correction reason/i),
+    "Manager confirmed the next action by phone",
+  );
   await user.click(screen.getByRole("button", { name: /Record audited correction/i }));
-  expect(props.onRecordCorrection).toHaveBeenCalledWith(expect.objectContaining({ accountId: "meridian", reason: expect.stringContaining("Manager confirmed") }));
+  expect(props.onRecordCorrection).toHaveBeenCalledWith(
+    expect.objectContaining({
+      accountId: "meridian",
+      reason: expect.stringContaining("Manager confirmed"),
+    }),
+  );
 });

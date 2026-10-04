@@ -44,7 +44,8 @@ export function BottomNav({
     {
       key: "route" as const,
       icon: "🗺",
-      label: `${completedCount}/${totalCount}`,
+      label: "Route",
+      detail: `${completedCount}/${totalCount}`,
       group: "route" as const,
     },
     {
@@ -63,7 +64,8 @@ export function BottomNav({
   ];
 
   return (
-    <div
+    <nav
+      aria-label="Primary"
       style={{
         display: "flex",
         borderTop: "1px solid #111520",
@@ -77,6 +79,8 @@ export function BottomNav({
         return (
           <button
             key={item.key}
+            aria-label={`${item.label}${"detail" in item ? `, ${item.detail} complete` : ""}${"badge" in item && item.badge ? `, ${item.badge} unsynced` : ""}`}
+            aria-current={isActive ? "page" : undefined}
             onClick={() => onNavigate(item.key === "route" ? "route" : item.key)}
             style={{
               flex: 1,
@@ -127,7 +131,9 @@ export function BottomNav({
                 {item.badge}
               </div>
             )}
-            <span style={{ fontSize: 18 }}>{item.icon}</span>
+            <span aria-hidden="true" style={{ fontSize: 18 }}>
+              {item.icon}
+            </span>
             <span
               style={{
                 fontSize: 9,
@@ -137,10 +143,11 @@ export function BottomNav({
               }}
             >
               {item.label.toUpperCase()}
+              {"detail" in item && item.detail ? ` · ${item.detail}` : ""}
             </span>
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

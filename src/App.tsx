@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, Fragment } from "react";
+import { useState, useCallback, useRef, useEffect, Fragment, lazy, Suspense } from "react";
 import type { SetStateAction } from "react";
 import type {
   Message,
@@ -13,7 +13,6 @@ import type {
 import { accounts } from "./data/accounts";
 import { territory, OUTCOME_CONFIG } from "./data/territory";
 import { getAIResponse } from "./lib/ai";
-import { MapView } from "./components/MapView";
 import { BottomNav } from "./components/BottomNav";
 import { RouteCard } from "./components/cards/RouteCard";
 import { AccountCard } from "./components/cards/AccountCard";
@@ -46,6 +45,10 @@ import {
   resolveStop,
 } from "./domain/repDay";
 import type { DayStop, RouteProposal } from "./domain/repDay";
+
+const MapView = lazy(() =>
+  import("./components/MapView").then((module) => ({ default: module.MapView })),
+);
 
 const MAP_H = 340;
 const PLACEHOLDERS = [
@@ -185,7 +188,7 @@ const SEED_MESSAGES: Message[] = [
     id: "init-1",
     role: "assistant",
     content:
-      "Good morning. **6 stops planned** in the 90210 Corridor — Meridian and Pacific are already done. Your next stop is **Apex Manufacturing**, the highest-priority account today. Robert has a board meeting Oct 14. What do you need?",
+      "Good morning. **6 stops planned** in Fort Pierce 34950 — Meridian and Pacific are already done. Your next stop is **Apex Manufacturing**, the highest-priority account today. Robert has a board meeting Oct 14. What do you need?",
     toolCalls: [],
     timestamp: new Date(Date.now() - 8 * 60000),
   },
@@ -196,7 +199,7 @@ interface AppProps {
   initialAccountId?: string | null;
 }
 
-export default function App({ initialScreen = "kickoff", initialAccountId = "apex" }: AppProps) {
+export default function App({ initialScreen = "territory", initialAccountId = "apex" }: AppProps) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen);
   const [activeStopId, setActiveStopId] = useState<string | null>(initialAccountId);
   const [day, setDay] = useState(createInitialRepDay);
@@ -217,8 +220,8 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const chatH = vh - MAP_H;
   const mapHeight = mapExpanded ? Math.max(vh - 190, MAP_H) : MAP_H;
+  const showMap = screen !== "chat" && screen !== "summary";
 
   const stops = day.stops;
   const setStops = useCallback((update: SetStateAction<DayStop[]>) => {
@@ -701,18 +704,24 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
             );
             setTimeout(
               () =>
-                setStops((p) =>
-                  p.map((s) =>
-                    s.syncStatus === "queued" ? { ...s, syncStatus: "synced" as const } : s,
+                setDay((current) => ({
+                  ...current,
+                  stops: current.stops.map((stop) =>
+                    stop.syncStatus === "queued"
+                      ? { ...stop, syncStatus: "synced" as const }
+                      : stop,
                   ),
-                ),
+                  closeoutSyncState: current.closedAt ? "fully_synced" : current.closeoutSyncState,
+                })),
               1600,
             );
           }}
           onCloseDay={(isOffline) =>
             setDay((current) => closeRepDay(current, new Date(), isOffline))
           }
-          onSendToManager={(summary) => sendMessage(`Send this EOD summary to my manager: ${summary}`)}
+          onSendToManager={(summary) =>
+            sendMessage(`Send this EOD summary to my manager: ${summary}`)
+          }
           onRecordCorrection={(correction) =>
             setDay((current) => recordCorrection(current, correction))
           }
@@ -739,9 +748,6 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
     );
   }
 
-  // ── Determine which screen has a panel header ───────────────────────────
-  const showChatHeader = screen === "chat";
-
   return (
     <div
       data-app-shell
@@ -761,25 +767,35 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
       }}
     >
       {/* ══ MAP ══════════════════════════════════════════ */}
-      <div style={{ height: mapHeight, flexShrink: 0, position: "relative" }}>
-        {vh > 0 && (
-          <MapView
-            height={mapHeight}
-            accounts={accounts}
-            activeAccountId={mapActiveId}
-            onPinTap={onPinTap}
-            doneAccountIds={doneIds}
-            showTerritoryMode={
-              screen === "territory" || screen === "quadrant" || screen === "quad_route"
-            }
-            activeQuadrantId={activeQuadrantId}
-            onQuadrantTap={(id) => {
-              setActiveQuadrantId(id);
-              setScreen("quadrant");
-            }}
-          />
-        )}
-      </div>
+      {showMap && (
+        <div style={{ height: mapHeight, flexShrink: 0, position: "relative" }}>
+          {vh > 0 && (
+            <Suspense
+              fallback={
+                <div className="map-loading" aria-label="Loading territory map">
+                  Loading map…
+                </div>
+              }
+            >
+              <MapView
+                height={mapHeight}
+                accounts={accounts}
+                activeAccountId={mapActiveId}
+                onPinTap={onPinTap}
+                doneAccountIds={doneIds}
+                showTerritoryMode={
+                  screen === "territory" || screen === "quadrant" || screen === "quad_route"
+                }
+                activeQuadrantId={activeQuadrantId}
+                onQuadrantTap={(id) => {
+                  setActiveQuadrantId(id);
+                  setScreen("quadrant");
+                }}
+              />
+            </Suspense>
+          )}
+        </div>
+      )}
 
       {/* ══ PANEL ═══════════════════════════════════════ */}
       <div
@@ -792,83 +808,8 @@ export default function App({ initialScreen = "kickoff", initialAccountId = "ape
           borderTop: "1px solid rgba(255,255,255,0.05)",
         }}
       >
-        {/* Chat header (only on chat screen) */}
-        {showChatHeader && (
-          <div
-            style={{
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "9px 14px 7px",
-              borderBottom: "1px solid #111520",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg,#1d4ed8,#0ea5e9)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 0 12px rgba(14,165,233,0.4)",
-                  fontSize: 12,
-                }}
-              >
-                🤖
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#e8eaf0",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Field AI
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontFamily: "DM Mono,monospace",
-                    color: "#22d3ee",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  ● online · ready
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {["📞", "📋"].map((icon) => (
-                <button
-                  key={icon}
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 9,
-                    background: "#131720",
-                    border: "1px solid #1e2535",
-                    fontSize: 13,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Screen content */}
-        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>{renderPanel()}</div>
+        <main style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>{renderPanel()}</main>
 
         {/* Bottom nav */}
         <BottomNav

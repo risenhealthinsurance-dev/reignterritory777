@@ -209,7 +209,7 @@ export const A1_STOPS: QuadrantStop[] = [
   },
   {
     id: "qs-7",
-    name: "Sunset Supply Solutions",
+    name: "Sunrise Supply Solutions",
     type: "new_door",
     address: "600 Atlantic Ave, Fort Pierce",
     lat: 27.4374,
@@ -220,7 +220,7 @@ export const A1_STOPS: QuadrantStop[] = [
   },
   {
     id: "qs-8",
-    name: "Beverly Hills Wholesale",
+    name: "Treasure Coast Wholesale",
     type: "new_door",
     address: "101 Melody Ln, Fort Pierce",
     lat: 27.451,
@@ -420,20 +420,20 @@ export const APEX_AUDIT: AuditSection[] = [
     findings: [
       {
         status: "strong",
-        finding: 'Ranks #2 in local pack for "manufacturing supplies West Hollywood"',
+        finding: 'Ranks #2 in local pack for "manufacturing supplies Fort Pierce"',
         recommendation: "Protect ranking with consistent GBP activity",
         evidence: "Confirmed in Google local pack — position 2 of 3",
-        source: "Google SERP · West Hollywood query · Oct 2026",
+        source: "Google SERP · Fort Pierce query · Oct 2026",
         provenance: "public",
         confidence: "high",
       },
       {
         status: "partial",
-        finding: 'Not in top 10 for "industrial supplier Beverly Hills"',
+        finding: 'Not in top 10 for "industrial supplier Fort Pierce"',
         recommendation: 'Add "industrial supplier" as GBP category to improve coverage',
         evidence:
           "Manual SERP check — competitors Grainger and Fastenal appear above; Apex not visible in first page",
-        source: "Google SERP · Beverly Hills query · Oct 2026",
+        source: "Google SERP · Fort Pierce query · Oct 2026",
         provenance: "public",
         confidence: "medium",
       },
@@ -617,7 +617,7 @@ export const SOLANO_AUDIT: AuditSection[] = [
         recommendation:
           "Adding an accepted-insurance page can reduce admin call volume — confirm with Maria if feasible",
         evidence:
-          'No pricing or insurance page found on solanohealth.com. Competitors appear above for "Beverly Hills healthcare pricing" — whether Solano intends to publish this is unconfirmed.',
+          'No pricing or insurance page found on solanohealth.com. Competitors appear above for "Fort Pierce healthcare pricing" — whether Solano intends to publish this is unconfirmed.',
         source: "solanohealth.com · Google SERP · Oct 2026",
         provenance: "needs_confirmation",
         confidence: "medium",
@@ -682,7 +682,7 @@ export const SOLANO_AUDIT: AuditSection[] = [
         recommendation:
           "Confirm with Maria whether directory listings are part of their marketing plan — if not listed, enrollment could increase referral volume",
         evidence:
-          'Searches on Healthgrades and Zocdoc under "Solano Healthcare Partners" and Beverly Hills address returned no results. Could be listed under a different entity name — needs confirmation.',
+          'Searches on Healthgrades and Zocdoc under "Solano Healthcare Partners" and the Fort Pierce address returned no results. Could be listed under a different entity name — needs confirmation.',
         source: "healthgrades.com · zocdoc.com search · Oct 2026",
         provenance: "needs_confirmation",
         confidence: "low",
@@ -695,17 +695,17 @@ export const SOLANO_AUDIT: AuditSection[] = [
     findings: [
       {
         status: "partial",
-        finding: 'Ranks #6 in local pack for "healthcare partners Beverly Hills"',
+        finding: 'Ranks #6 in local pack for "healthcare partners Fort Pierce"',
         recommendation:
           "GBP optimization and responding to reviews can improve ranking within 60 days",
         evidence: "Position 6 in local pack — below Cedars-Sinai affiliate and three competitors",
-        source: "Google SERP · Beverly Hills query · Oct 2026",
+        source: "Google SERP · Fort Pierce query · Oct 2026",
         provenance: "public",
         confidence: "medium",
       },
       {
         status: "unknown",
-        finding: '"Medical supply procurement Beverly Hills": not found in sources checked',
+        finding: '"Medical supply procurement Fort Pierce": not found in sources checked',
         recommendation:
           "If supply procurement is a service Solano offers, adding it to the website description could capture this search term — confirm with Maria",
         evidence:

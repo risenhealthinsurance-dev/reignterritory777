@@ -67,7 +67,8 @@ export function createInitialRepDay(): RepDay {
     const meta = ROUTE_META[stop.accountId];
     return {
       ...stop,
-      syncStatus: stop.status === "failed" || stop.status === "skipped" ? stop.syncStatus : "synced",
+      syncStatus:
+        stop.status === "failed" || stop.status === "skipped" ? stop.syncStatus : "synced",
       resolution: stop.status === "done" ? "completed" : "unresolved",
       hardCommitment: meta.hardCommitment,
       expectedValue: account?.revenue ?? 0,
@@ -208,7 +209,8 @@ export function closeRepDay(day: RepDay, closedAt: Date, isOffline: boolean): Re
   return {
     ...day,
     closedAt,
-    closeoutSyncState: isOffline || getSyncQueue(day).length > 0 ? "closed_on_device" : "fully_synced",
+    closeoutSyncState:
+      isOffline || getSyncQueue(day).length > 0 ? "closed_on_device" : "fully_synced",
   };
 }
 

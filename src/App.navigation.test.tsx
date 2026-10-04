@@ -7,14 +7,10 @@ vi.mock("./components/MapView", () => ({
   MapView: () => <div aria-label="Map preview" />,
 }));
 
-test("opens on kickoff and starts the route", async () => {
-  const user = userEvent.setup();
+test("opens on territory so the rep chooses today's work first", () => {
   renderApp();
-
-  expect(screen.getByText(/GOOD MORNING · FIELD AI READY/i)).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: /Resume Route|Start Today's Route/i }));
-
-  expect(screen.getByText(/ROUTE ACTIVE · 34950 · A1/i)).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /Fort Pierce 34950/i })).toBeInTheDocument();
+  expect(screen.getByText(/Choose today's work/i)).toBeInTheDocument();
 });
 
 test("moves from territory through A1 to the route", async () => {
