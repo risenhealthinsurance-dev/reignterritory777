@@ -26,7 +26,7 @@ test("exposes one main region and named primary navigation", () => {
     "aria-current",
     "page",
   );
-  expect(within(navigation).getByRole("button", { name: /Route/i })).toBeInTheDocument();
+  expect(within(navigation).getByRole("button", { name: /Today/i })).toBeInTheDocument();
   expect(within(navigation).getByRole("button", { name: /Field AI/i })).toBeInTheDocument();
   expect(within(navigation).getByRole("button", { name: /Summary/i })).toBeInTheDocument();
 });

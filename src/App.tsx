@@ -31,6 +31,7 @@ import { ActiveQuadrantScreen } from "./screens/ActiveQuadrantScreen";
 import { QuadrantRouteScreen } from "./screens/QuadrantRouteScreen";
 import { EnrichmentScreen } from "./screens/EnrichmentScreen";
 import { FieldAIScreen } from "./screens/FieldAIScreen";
+import { TodayCockpitScreen } from "./screens/TodayCockpitScreen";
 import { A1_STOPS } from "./data/territory_grid";
 import type { QuadrantStop } from "./data/territory_grid";
 import type { QuadrantContext } from "./types";
@@ -48,6 +49,8 @@ import {
   updateManagerSummary,
 } from "./domain/repDay";
 import type { DayStop, RouteProposal } from "./domain/repDay";
+import { fixtureRepBrief, fetchRepBrief, readCachedRepBrief } from "./lib/repBrief";
+import type { RepBriefResponse } from "./contracts/repBrief";
 
 const MapView = lazy(() =>
   import("./components/MapView").then((module) => ({ default: module.MapView })),
@@ -202,7 +205,7 @@ interface AppProps {
   initialAccountId?: string | null;
 }
 
-export default function App({ initialScreen = "territory", initialAccountId = "apex" }: AppProps) {
+export default function App({ initialScreen = "today", initialAccountId = "apex" }: AppProps) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen);
   const [activeStopId, setActiveStopId] = useState<string | null>(initialAccountId);
   const [day, setDay] = useState(createInitialRepDay);
@@ -217,6 +220,9 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [streamingGen, setStreamingGen] = useState<AsyncGenerator<string> | null>(null);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [repBrief, setRepBrief] = useState<RepBriefResponse>(() => readCachedRepBrief() ?? fixtureRepBrief);
+  const [briefCached, setBriefCached] = useState(() => Boolean(readCachedRepBrief()));
+  const [briefLoading, setBriefLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const [vh, setVh] = useState(window.innerHeight);
   const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
@@ -493,8 +499,45 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
       ? activeStopId
       : null;
 
+  const nextBriefAccount = repBrief.accounts.find((account) => !stops.find((stop) => stop.accountId === account.businessId)?.status || stops.find((stop) => stop.accountId === account.businessId)?.status === "pending") ?? repBrief.accounts[0];
+
+  const refreshBrief = async () => {
+    setBriefLoading(true);
+    try {
+      const fresh = await fetchRepBrief();
+      setRepBrief(fresh);
+      setBriefCached(false);
+    } catch {
+      setBriefCached(true);
+    } finally {
+      setBriefLoading(false);
+    }
+  };
+
   // ── Render bottom panel content ─────────────────────────────────────────
   function renderPanel() {
+    if (screen === "today" && nextBriefAccount) {
+      return (
+        <TodayCockpitScreen
+          brief={repBrief}
+          nextAccount={nextBriefAccount}
+          cached={briefCached}
+          loading={briefLoading}
+          onRefresh={refreshBrief}
+          onOpenBrief={() => {
+            setActiveStopId(nextBriefAccount.businessId);
+            setScreen("stop");
+          }}
+          onStartVisit={() => {
+            setActiveStopId(nextBriefAccount.businessId);
+            setDay((current) => ({ ...current, currentStopId: nextBriefAccount.businessId }));
+            setScreen("stop");
+          }}
+          onOpenTerritory={() => setScreen("territory")}
+        />
+      );
+    }
+
     if (screen === "kickoff") {
       return (
         <KickoffScreen

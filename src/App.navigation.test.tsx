@@ -7,10 +7,11 @@ vi.mock("./components/MapView", () => ({
   MapView: () => <div aria-label="Map preview" />,
 }));
 
-test("opens on territory so the rep chooses today's work first", () => {
+test("opens on the Today cockpit with the next stop brief", () => {
   renderApp();
   expect(screen.getByRole("heading", { name: /Fort Pierce 34950/i })).toBeInTheDocument();
-  expect(screen.getByText(/Choose today's work/i)).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /Solano Healthcare Partners|Apex Manufacturing/i })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Start visit/i })).toBeInTheDocument();
 });
 
 test("moves from territory through A1 to the route", async () => {

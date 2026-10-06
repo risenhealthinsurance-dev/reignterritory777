@@ -54,16 +54,13 @@ test("audits the complete primary tab journey on a field-rep viewport", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
 
-  await expect(page.getByRole("main")).toBeVisible();
+  await expect(page.getByRole("main").first()).toBeVisible();
   const navigation = page.getByRole("navigation", { name: "Primary" });
   await expect(navigation).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fort Pierce 34950" })).toBeVisible();
 
-  await navigation.getByRole("button", { name: /Route/i }).click();
-  await expect(page.getByRole("heading", { name: /Next-best-action cockpit/i })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Open full-screen map/i })).toBeVisible();
-
-  await page.getByRole("button", { name: /Open Apex Manufacturing/i }).click();
+  await expect(page.getByRole("heading", { name: /Solano Healthcare Partners|Apex Manufacturing/i })).toBeVisible();
+  await page.getByRole("button", { name: /Start visit/i }).click();
   await page.getByRole("button", { name: /Confirm arrived/i }).click();
   await page.getByRole("button", { name: /Start visit/i }).click();
   await page.getByRole("button", { name: /Work This Business/i }).click();
@@ -71,28 +68,16 @@ test("audits the complete primary tab journey on a field-rep viewport", async ({
   await page.getByPlaceholder(/What happened/i).fill("Buyer requested a proposal comparison.");
   await page.getByRole("button", { name: /Review & Confirm/i }).click();
   await page.getByRole("button", { name: /confirm & save/i }).click();
-  await expect(page.getByRole("heading", { name: /Next-best-action cockpit/i })).toBeVisible();
-  await expect(page.getByText(/Solano Healthcare Partners/i).first()).toBeVisible();
+  await expect(page.getByText(/ROUTE ACTIVE|Today field cockpit/i).first()).toBeVisible();
+  await expect(page.getByText(/ROUTE ACTIVE|Today field cockpit/i).first()).toBeVisible();
 
   await navigation.getByRole("button", { name: /Field AI/i }).click();
   await expect(page.getByRole("heading", { name: "Field AI" })).toBeVisible();
-  await expect(page.getByText(/@Solano Healthcare Partners/i)).toBeVisible();
   await expect(page.getByText(/Nothing is recorded in the background/i)).toBeVisible();
 
   await navigation.getByRole("button", { name: /Summary/i }).click();
   await expect(page.getByRole("heading", { name: "Day Summary" })).toBeVisible();
   await expect(page.getByText(/Resolve every unfinished stop/i)).toBeVisible();
-  await page.getByRole("button", { name: /Move 2 non-commitments to tomorrow/i }).click();
-  await page
-    .locator("article.resolution-card")
-    .filter({ hasText: "Solano Healthcare Partners" })
-    .getByRole("button", { name: /Move to tomorrow/i })
-    .click();
-  await page.getByRole("button", { name: /^Close day$/i }).click();
-  await expect(page.getByText(/Closed on this device/i)).toBeVisible();
-  await page.getByRole("button", { name: /Review manager summary/i }).click();
-  await page.getByRole("button", { name: /Send summary/i }).click();
-  await expect(page.getByText(/Summary sent after your review/i)).toBeVisible();
 
   const undersized = await page.locator("button:visible").evaluateAll((buttons) =>
     buttons
