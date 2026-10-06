@@ -1,7 +1,6 @@
 export type DrawerSnap = "peek" | "half" | "full";
 
 export type AppScreen =
-  | "today"
   | "kickoff"
   | "route"
   | "stop"

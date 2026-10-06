@@ -18,8 +18,7 @@ const ROUTE_SCREENS: AppScreen[] = [
   "recovery",
 ];
 
-function activeGroup(s: AppScreen): "today" | "territory" | "route" | "chat" | "summary" {
-  if (s === "today") return "today";
+function activeGroup(s: AppScreen): "territory" | "route" | "chat" | "summary" {
   if (TERRITORY_SCREENS.includes(s)) return "territory";
   if (ROUTE_SCREENS.includes(s)) return "route";
   if (s === "chat" || s === "enrichment") return "chat";
@@ -37,16 +36,17 @@ export function BottomNav({
 
   const items = [
     {
-      key: "today" as const,
-      icon: "◉",
-      label: "Today",
-      group: "today" as const,
-    },
-    {
       key: "territory" as const,
       icon: "📍",
       label: "Territory",
       group: "territory" as const,
+    },
+    {
+      key: "route" as const,
+      icon: "🗺",
+      label: "Route",
+      detail: `${completedCount}/${totalCount}`,
+      group: "route" as const,
     },
     {
       key: "chat" as const,
@@ -81,7 +81,7 @@ export function BottomNav({
             key={item.key}
             aria-label={`${item.label}${"detail" in item ? `, ${item.detail} complete` : ""}${"badge" in item && item.badge ? `, ${item.badge} unsynced` : ""}`}
             aria-current={isActive ? "page" : undefined}
-            onClick={() => onNavigate(item.key)}
+            onClick={() => onNavigate(item.key === "route" ? "route" : item.key)}
             style={{
               flex: 1,
               padding: "10px 8px 8px",
