@@ -444,3 +444,4 @@ create trigger audit_ai_runs after insert or update or delete on public.ai_runs
 for each row execute function private.capture_audit_event();
 create trigger audit_sync_mutations after insert or update or delete on public.sync_mutations
 for each row execute function private.capture_audit_event();
+;
