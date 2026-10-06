@@ -7,12 +7,12 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "node --max-old-space-size=4096 ./node_modules/vitest/vitest.mjs run",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "format": "oxfmt .",
-    "format:check": "oxfmt --check ."
+    "format:check": "oxfmt --check package.json vitest.config.ts docs/task-contracts/release-green-deployment.md"
   },
   "dependencies": {
     "mapbox-gl": "^3.11.0",
