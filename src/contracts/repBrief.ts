@@ -1,0 +1,5 @@
+export const REP_BRIEF_CONTRACT_VERSION = "1" as const;
+export type BriefConfidence = "high" | "medium" | "low" | "unknown";
+export type EnrichmentStatus = "enriched" | "partial" | "unavailable";
+export interface RepAccountBrief { businessId: string; name: string; category?: string; address?: string; zip?: string; quadrant?: string; phone?: string; website?: string; confidence: BriefConfidence; freshness?: string; enrichmentStatus: EnrichmentStatus; suggestedOpener?: string; recommendedAction?: string; publicSignals?: Array<{ label: string; value: string; source?: string; observedAt?: string }>; evidence?: Array<{ label: string; value: string; source?: string; confidence?: BriefConfidence }>; }
+export interface RepBriefResponse { contractVersion: typeof REP_BRIEF_CONTRACT_VERSION; generatedAt: string; expiresAt?: string; territory: { zip: string; quadrant?: string }; accounts: RepAccountBrief[]; coverage: { discovered: number; enriched: number; remaining?: number }; warnings: Array<{ code: string; message: string }>; }

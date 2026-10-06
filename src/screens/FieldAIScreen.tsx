@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { accounts } from "../data/accounts";
+import { fetchRepBrief, readCachedRepBrief } from "../lib/repBrief";
 
 export const AUDIT_STEP_DELAY_MS = 600;
 
@@ -44,6 +45,8 @@ export function FieldAIScreen({
   const [result, setResult] = useState<ResultKind>(null);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [draftOpen, setDraftOpen] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [briefStatus, setBriefStatus] = useState("Local account context");
   const account = accounts.find((candidate) => candidate.id === accountId) ?? null;
 
   useEffect(() => {
@@ -80,6 +83,29 @@ export function FieldAIScreen({
         ? "Queued until connectivity returns"
         : "Research queued · results will stay in this account context",
     );
+  }
+
+  async function loadIntelligence() {
+    setBriefStatus("Refreshing intelligence…");
+    try {
+      const live = await fetchRepBrief();
+      setBriefStatus(`Live OSINT · ${new Date(live.generatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+    } catch {
+      const cached = readCachedRepBrief();
+      setBriefStatus(cached ? "Cached OSINT brief" : "Local account context · research unavailable");
+    }
+    setResult("brief");
+  }
+
+  function submitPrompt(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = prompt.trim().toLowerCase();
+    if (!value) return;
+    if (value.includes("follow") || value.includes("callback")) setDraftOpen(true);
+    else if (value.includes("route") || value.includes("next stop")) setResult("brief");
+    else if (value.includes("note") || value.includes("log")) setResult("visit_note");
+    else setResult("brief");
+    setPrompt("");
   }
 
   return (
@@ -201,8 +227,17 @@ export function FieldAIScreen({
               </button>
             </div>
 
+            <form className="field-ai-prompt" onSubmit={submitPrompt} aria-label="Ask Field AI">
+              <label htmlFor="field-ai-prompt-input">Ask Field AI</label>
+              <div>
+                <input id="field-ai-prompt-input" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about this account, your route, or a follow-up…" />
+                <button className="primary-button" type="submit">Ask</button>
+              </div>
+              <small>Read answers are immediate. Any write appears as a reviewable card first.</small>
+            </form>
+
             <div className="copilot-actions">
-              <button onClick={() => setResult("brief")}>
+              <button onClick={loadIntelligence}>
                 <span>⚡</span>
                 <strong>30-second brief</strong>
                 <small>What matters before walking in</small>
@@ -247,6 +282,7 @@ export function FieldAIScreen({
                   ANSWER FOR {account ? "@" + account.name : "FORT PIERCE 34950"}
                 </div>
                 <h2>{RESULT_HEADINGS[result]}</h2>
+                <p className="cache-label">Source: {briefStatus}</p>
                 <p>
                   {account?.notes ??
                     "Compare the strongest opportunities across today’s territory."}
