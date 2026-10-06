@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { accounts } from "../data/accounts";
 import { fetchRepBrief, readCachedRepBrief } from "../lib/repBrief";
+import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
+import { appendAgentMessage, saveAgentAction } from "../lib/agentStore";
 
 export const AUDIT_STEP_DELAY_MS = 600;
 
@@ -101,6 +103,7 @@ export function FieldAIScreen({
     event.preventDefault();
     const value = prompt.trim().toLowerCase();
     if (!value) return;
+    appendAgentMessage("field-session", { id: `m-${Date.now()}`, role: "user", content: prompt.trim(), createdAt: new Date().toISOString() });
     if (value.includes("follow") || value.includes("callback")) setDraftOpen(true);
     else if (value.includes("route") || value.includes("next stop")) setResult("brief");
     else if (value.includes("note") || value.includes("log")) setResult("visit_note");
@@ -357,6 +360,9 @@ export function FieldAIScreen({
               <button
                 className="primary-button"
                 onClick={() => {
+                  const action = createAgentAction({ type: "schedule_follow_up", accountId: accountId ?? undefined, payload: { message: "Send compliance comparison and confirm board-review timing." }, sourceMessageId: `draft-${Date.now()}` });
+                  const stored = isOffline ? queueAgentAction(action) : { ...action, status: "completed" as const, confirmedAt: new Date().toISOString(), completedAt: new Date().toISOString() };
+                  saveAgentAction(stored);
                   onQueueAction?.({ type: "follow_up", accountId, status: "approved" });
                   setDraftOpen(false);
                   setQueuedMessage("Approved · queued locally");

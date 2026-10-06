@@ -7,8 +7,8 @@ export function normalizeRepBrief(value: unknown): RepBriefResponse {
 }
 export function cacheRepBrief(value: RepBriefResponse) { localStorage.setItem(CACHE_KEY, JSON.stringify(value)); }
 export function readCachedRepBrief(): RepBriefResponse | null { try { const value = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); return value?.contractVersion === REP_BRIEF_CONTRACT_VERSION ? normalizeRepBrief(value) : null; } catch { return null; } }
-export async function fetchRepBrief(url = import.meta.env.VITE_OSINT_API_URL || ""): Promise<RepBriefResponse> {
-  const response = await fetch(`${url}/api/rep-brief?zip=34950&quadrant=A1&rep=field-rep`);
+export async function fetchRepBrief(url = "/api/rep-brief"): Promise<RepBriefResponse> {
+  const response = await fetch(`${url}?zip=34950&quadrant=A1&rep=field-rep`);
   if (!response.ok) throw new Error(`Rep brief unavailable (${response.status})`);
   const result = normalizeRepBrief(await response.json()); cacheRepBrief(result); return result;
 }
