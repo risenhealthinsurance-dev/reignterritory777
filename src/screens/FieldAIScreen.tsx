@@ -3,6 +3,7 @@ import { accounts } from "../data/accounts";
 import { fetchRepBrief, readCachedRepBrief } from "../lib/repBrief";
 import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
 import { appendAgentMessage, saveAgentAction } from "../lib/agentStore";
+import { sendFieldAIMessage, toAssistantMessage } from "../lib/fieldGateway";
 
 export const AUDIT_STEP_DELAY_MS = 600;
 
@@ -49,6 +50,8 @@ export function FieldAIScreen({
   const [draftOpen, setDraftOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [briefStatus, setBriefStatus] = useState("Local account context");
+  const [agentResponse, setAgentResponse] = useState<string | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
   const account = accounts.find((candidate) => candidate.id === accountId) ?? null;
 
   useEffect(() => {
@@ -99,15 +102,27 @@ export function FieldAIScreen({
     setResult("brief");
   }
 
-  function submitPrompt(event: FormEvent<HTMLFormElement>) {
+  async function submitPrompt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = prompt.trim().toLowerCase();
     if (!value) return;
     appendAgentMessage("field-session", { id: `m-${Date.now()}`, role: "user", content: prompt.trim(), createdAt: new Date().toISOString() });
-    if (value.includes("follow") || value.includes("callback")) setDraftOpen(true);
-    else if (value.includes("route") || value.includes("next stop")) setResult("brief");
-    else if (value.includes("note") || value.includes("log")) setResult("visit_note");
-    else setResult("brief");
+    setAgentLoading(true);
+    try {
+      const response = await sendFieldAIMessage({ message: prompt.trim(), accountId, sessionId: "field-session" });
+      setAgentResponse(response.text);
+      appendAgentMessage("field-session", toAssistantMessage(response));
+      if (response.proposedAction) setDraftOpen(true);
+      else if (value.includes("route") || value.includes("next stop")) setResult("brief");
+      else if (value.includes("note") || value.includes("log")) setResult("visit_note");
+      else setResult("brief");
+    } catch {
+      if (value.includes("follow") || value.includes("callback")) setDraftOpen(true);
+      else if (value.includes("route") || value.includes("next stop")) setResult("brief");
+      else if (value.includes("note") || value.includes("log")) setResult("visit_note");
+      else setResult("brief");
+      setAgentResponse("Gateway unavailable. I kept this answer local and did not send any external action.");
+    } finally { setAgentLoading(false); }
     setPrompt("");
   }
 
@@ -234,10 +249,11 @@ export function FieldAIScreen({
               <label htmlFor="field-ai-prompt-input">Ask Field AI</label>
               <div>
                 <input id="field-ai-prompt-input" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about this account, your route, or a follow-up…" />
-                <button className="primary-button" type="submit">Ask</button>
+                <button className="primary-button" type="submit" disabled={agentLoading}>{agentLoading ? "Thinking…" : "Ask"}</button>
               </div>
               <small>Read answers are immediate. Any write appears as a reviewable card first.</small>
             </form>
+            {agentResponse && <div className="queue-banner" role="status">{agentResponse}</div>}
 
             <div className="copilot-actions">
               <button onClick={loadIntelligence}>
