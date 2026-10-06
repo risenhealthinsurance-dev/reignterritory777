@@ -3,6 +3,36 @@ import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 import { FieldAIScreen } from "./FieldAIScreen";
 
+const fieldAiResult = {
+  status: "complete" as const,
+  answer: "Lead with the verified compliance comparison.",
+  facts: [
+    {
+      text: "The buyer requested a compliance comparison.",
+      evidenceIds: ["evidence-1"],
+      confidence: "high" as const,
+      sources: [
+        {
+          id: "evidence-1",
+          name: "Representative visit note",
+          url: null,
+          retrievedAt: "2026-10-04T12:00:00.000Z",
+        },
+      ],
+    },
+  ],
+  inferences: [
+    {
+      text: "This is likely the strongest opening.",
+      evidenceIds: ["evidence-1"],
+      confidence: "medium" as const,
+    },
+  ],
+  uncertainties: ["Decision timing is not verified."],
+  confidence: "high" as const,
+  suggestedActions: [],
+};
+
 test("inherits the current route stop and allows an explicit context change", async () => {
   const user = userEvent.setup();
   render(<FieldAIScreen currentAccountId="apex" />);
@@ -36,14 +66,39 @@ test("uses rep-controlled push-to-talk and never implies background listening", 
 
 test("shows evidence source, date, confidence, and fact versus inference", async () => {
   const user = userEvent.setup();
-  render(<FieldAIScreen currentAccountId="apex" />);
+  const ask = vi.fn().mockResolvedValue(fieldAiResult);
+  render(<FieldAIScreen currentAccountId="apex" fieldAiClient={{ ask }} />);
 
   await user.click(screen.getByRole("button", { name: /30-second brief/i }));
-  expect(screen.getByText(/Source: CRM visit history/i)).toBeInTheDocument();
-  expect(screen.getAllByText(/Updated Oct 4, 2026/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/High confidence/i)).toBeInTheDocument();
+  expect(
+    await screen.findByText(/Lead with the verified compliance comparison/i),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/Source: Representative visit note/i)).toBeInTheDocument();
+  expect(screen.getByText(/Updated Oct 4, 2026/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/High confidence/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/^Fact$/i)).toBeInTheDocument();
   expect(screen.getByText(/^AI inference$/i)).toBeInTheDocument();
+  expect(screen.getByText(/Decision timing is not verified/i)).toBeInTheDocument();
+  expect(ask).toHaveBeenCalledWith(
+    expect.objectContaining({
+      scope: { type: "account", accountId: "apex" },
+      intent: "brief",
+    }),
+  );
+});
+
+test("shows a recoverable error instead of a fabricated answer", async () => {
+  const user = userEvent.setup();
+  render(
+    <FieldAIScreen
+      currentAccountId="apex"
+      fieldAiClient={{ ask: vi.fn().mockRejectedValue(new Error("Provider unavailable")) }}
+    />,
+  );
+
+  await user.click(screen.getByRole("button", { name: /30-second brief/i }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/Provider unavailable/i);
+  expect(screen.queryByText(/Lead with compliance readiness/i)).not.toBeInTheDocument();
 });
 
 test("stops recording when the pointer is released outside the control", () => {

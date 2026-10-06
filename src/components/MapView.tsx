@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import type { Account } from "../data/accounts";
 import { quadrantGeoJSON, boundaryGeoJSON, quadrantLabelGeoJSON } from "../data/territory_grid";
 import { MapFallback } from "./MapFallback";
+import type { GeoJsonFeatureCollection } from "../lib/gis";
 
 const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
 if (mapboxAccessToken) mapboxgl.accessToken = mapboxAccessToken;
@@ -17,6 +18,7 @@ export interface MapViewProps {
   showTerritoryMode?: boolean;
   activeQuadrantId?: string;
   onQuadrantTap?: (id: string) => void;
+  zoningOverlay?: GeoJsonFeatureCollection;
 }
 
 export const FORT_PIERCE_CENTER: [number, number] = [-80.337, 27.44];
@@ -43,6 +45,7 @@ export function MapView({
   showTerritoryMode,
   activeQuadrantId,
   onQuadrantTap,
+  zoningOverlay,
 }: MapViewProps) {
   if (!mapboxAccessToken) {
     return (
@@ -146,6 +149,37 @@ export function MapView({
       map.addSource("territory-labels", {
         type: "geojson",
         data: quadrantLabelGeoJSON(),
+      });
+      map.addSource("zoning-overlay", {
+        type: "geojson",
+        data: zoningOverlay ?? { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "zoning-fill",
+        type: "fill",
+        source: "zoning-overlay",
+        slot: "top",
+        paint: {
+          "fill-color": [
+            "match",
+            ["get", "classification"],
+            "business_priority", "#10b981",
+            "business_permitted_mixed", "#22d3ee",
+            "conditional_verify", "#f59e0b",
+            "residential_non_target", "#64748b",
+            "#64748b",
+          ],
+          "fill-opacity": 0.16,
+        },
+        layout: { visibility: "visible" },
+      });
+      map.addLayer({
+        id: "zoning-line",
+        type: "line",
+        source: "zoning-overlay",
+        slot: "top",
+        paint: { "line-color": "#94a3b8", "line-width": 1, "line-opacity": 0.72 },
+        layout: { visibility: "visible" },
       });
 
       // Boundary fill (dim everything outside the ZIP)
@@ -296,6 +330,13 @@ export function MapView({
       initialized.current = false;
     };
   }, [height]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || typeof (map as mapboxgl.Map & { getSource?: unknown }).getSource !== "function") return;
+    const source = map.getSource("zoning-overlay") as mapboxgl.GeoJSONSource | undefined;
+    if (source) source.setData(zoningOverlay ?? { type: "FeatureCollection", features: [] });
+  }, [zoningOverlay]);
 
   // Sync pin visibility + styles
   useEffect(() => {
