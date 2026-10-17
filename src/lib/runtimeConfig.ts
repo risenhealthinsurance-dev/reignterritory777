@@ -8,6 +8,11 @@ const publicRuntimeConfigSchema = z.object({
 export interface PublicRuntimeConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
+  authBypass: boolean;
+}
+
+export function isAuthBypassEnabled(env: Record<string, unknown>): boolean {
+  return env.VITE_AUTH_BYPASS === "true";
 }
 
 export function readPublicRuntimeConfig(env: Record<string, unknown>): PublicRuntimeConfig | null {
@@ -16,5 +21,6 @@ export function readPublicRuntimeConfig(env: Record<string, unknown>): PublicRun
   return {
     supabaseUrl: parsed.data.VITE_SUPABASE_URL,
     supabaseAnonKey: parsed.data.VITE_SUPABASE_ANON_KEY,
+    authBypass: isAuthBypassEnabled(env),
   };
 }

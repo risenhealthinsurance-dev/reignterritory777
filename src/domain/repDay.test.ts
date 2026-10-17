@@ -12,6 +12,8 @@ import {
   completeVisit,
   failVisit,
   sendManagerSummary,
+  scheduleFollowUp,
+  suggestScheduleAwareRoute,
   updateManagerSummary,
 } from "./repDay";
 
@@ -145,5 +147,34 @@ describe("field-day domain", () => {
 
     const sent = sendManagerSummary({ ...draft, closedAt: new Date("2026-10-04T21:00:00Z") });
     expect(sent.managerSummarySentAt).toBeInstanceOf(Date);
+  });
+
+  test("stores callback windows and hard appointments as route constraints", () => {
+    const day = createInitialRepDay();
+    const callbackDay = scheduleFollowUp(day, {
+      stopId: "apex",
+      date: "Thu, Oct 9, 2026",
+      time: "2:00 PM",
+      endTime: "4:00 PM",
+      kind: "callback_window",
+      agenda: "Demo follow-up",
+    });
+    const scheduled = callbackDay.stops.find((stop) => stop.accountId === "apex");
+    expect(scheduled?.schedule).toEqual(
+      expect.objectContaining({ kind: "callback_window", startTime: "2:00 PM", endTime: "4:00 PM" }),
+    );
+
+    const appointmentDay = scheduleFollowUp(callbackDay, {
+      stopId: "solano",
+      date: "Thu, Oct 9, 2026",
+      time: "10:00 AM",
+      kind: "hard_appointment",
+      agenda: "Executive intro meeting",
+    });
+    expect(suggestScheduleAwareRoute({ ...appointmentDay, routeStopIds: ["apex", "bravo", "solano"] })).toEqual([
+      "solano",
+      "apex",
+      "bravo",
+    ]);
   });
 });

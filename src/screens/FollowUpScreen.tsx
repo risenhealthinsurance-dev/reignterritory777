@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { Account } from "../data/accounts";
-import type { FollowUpDraft } from "../types";
+import type { FollowUpDraft, ScheduleKind } from "../types";
 
 interface FollowUpScreenProps {
   account: Account;
@@ -95,6 +95,8 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
   const [step, setStep] = useState<Step>("draft");
   const [dateKey, setDateKey] = useState<string>("");
   const [time, setTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
+  const [kind, setKind] = useState<ScheduleKind>("callback_window");
   const [agenda, setAgenda] = useState(AGENDA_OPTS[0]);
   const [customNote, setCustomNote] = useState("");
   const submittedRef = useRef(false);
@@ -356,7 +358,7 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
             onClick={() => {
               if (submittedRef.current) return;
               submittedRef.current = true;
-              onConfirm({ stopId: account.id, date: dateKey, time, agenda });
+              onConfirm({ stopId: account.id, date: dateKey, time, endTime: endTime || undefined, kind, agenda, note: customNote || undefined });
               setStep("saved");
             }}
             style={{
@@ -677,6 +679,18 @@ export function FollowUpScreen({ account, onConfirm, onCancel }: FollowUpScreenP
               );
             })}
           </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: 11, fontFamily: "DM Mono,monospace", color: "#6b7490", letterSpacing: 0.5, marginBottom: 8 }}>SCHEDULE TYPE</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {(["callback_window", "hard_appointment"] as ScheduleKind[]).map((option) => (
+              <button key={option} onClick={() => setKind(option)} style={{ minHeight: 44, borderRadius: 9, cursor: "pointer", background: kind === option ? "rgba(59,130,246,0.15)" : "#0d1117", border: `1px solid ${kind === option ? "#3b82f6" : "#1a2030"}`, color: kind === option ? "#93c5fd" : "#9ba3b8", fontSize: 12 }}>
+                {option === "callback_window" ? "Flexible window" : "Hard appointment"}
+              </button>
+            ))}
+          </div>
+          {kind === "callback_window" && <label style={{ display: "block", marginTop: 8, fontSize: 10, color: "#6b7490", fontFamily: "DM Mono,monospace" }}>WINDOW ENDS<select aria-label="Callback window end" value={endTime} onChange={(event) => setEndTime(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, minHeight: 40, background: "#0d1117", color: "#c8cbd6", border: "1px solid #1a2030", borderRadius: 8 }}><option value="">Use start time only</option>{TIMES.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>}
         </div>
 
         {/* Agenda */}

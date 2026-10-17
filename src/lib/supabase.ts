@@ -1,7 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import { readPublicRuntimeConfig } from "./runtimeConfig";
+import { isAuthBypassEnabled, readPublicRuntimeConfig } from "./runtimeConfig";
 
 export const publicRuntimeConfig = readPublicRuntimeConfig(import.meta.env);
+
+export const authBypass = isAuthBypassEnabled(import.meta.env);
 
 export const supabase = publicRuntimeConfig
   ? createClient(publicRuntimeConfig.supabaseUrl, publicRuntimeConfig.supabaseAnonKey, {

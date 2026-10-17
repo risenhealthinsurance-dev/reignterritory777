@@ -4,11 +4,11 @@ import App from "./App";
 import "./index.css";
 import { AuthProvider, RequireAuth } from "./auth/AuthProvider";
 import { AuthScreen } from "./auth/AuthScreen";
-import { supabase } from "./lib/supabase";
+import { authBypass, supabase } from "./lib/supabase";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AuthProvider client={supabase}>
+    <AuthProvider client={supabase} bypass={authBypass}>
       <RequireAuth
         loading={<main className="auth-screen">Checking secure session…</main>}
         fallback={<AuthScreen />}

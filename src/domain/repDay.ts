@@ -1,6 +1,6 @@
 import { accounts } from "../data/accounts";
 import { initialStops } from "../data/territory";
-import type { DraftDisposition, StopRecord, StopResolution } from "../types";
+import type { DraftDisposition, FollowUpDraft, StopRecord, StopResolution } from "../types";
 
 export interface DayStop extends StopRecord {
   resolution: StopResolution;
@@ -140,7 +140,9 @@ export function previewRouteChange(day: RepDay, proposedStopIds: string[]): Rout
   const after = routeTotals(day, proposedStopIds);
   const warnings: string[] = [];
   let commitmentDelta = 0;
-  for (const stop of day.stops.filter((candidate) => candidate.hardCommitment)) {
+  for (const stop of day.stops.filter(
+    (candidate) => candidate.hardCommitment || candidate.schedule?.kind === "hard_appointment",
+  )) {
     const oldIndex = day.routeStopIds.indexOf(stop.accountId);
     const newIndex = proposedStopIds.indexOf(stop.accountId);
     if (newIndex !== oldIndex) {
@@ -186,6 +188,62 @@ export function getSyncQueue(day: RepDay) {
   return day.stops.filter((stop) =>
     ["local_only", "queued", "syncing", "error"].includes(stop.syncStatus),
   );
+}
+
+export function scheduleFollowUp(
+  day: RepDay,
+  draft: FollowUpDraft,
+  mutatedAt = new Date(),
+): RepDay {
+  if (!day.stops.some((stop) => stop.accountId === draft.stopId)) {
+    throw new Error(`Unknown stop: ${draft.stopId}`);
+  }
+  return {
+    ...day,
+    stops: day.stops.map((stop) =>
+      stop.accountId === draft.stopId
+        ? {
+            ...stop,
+            followUpDate: draft.date,
+            followUpTime: draft.time,
+            nextAction: draft.agenda,
+            hardCommitment: stop.hardCommitment || draft.kind === "hard_appointment",
+            schedule: {
+              kind: draft.kind,
+              date: draft.date,
+              startTime: draft.time,
+              ...(draft.endTime ? { endTime: draft.endTime } : {}),
+              agenda: draft.agenda,
+              ...(draft.note ? { note: draft.note } : {}),
+            },
+            syncStatus: "local_only",
+            mutatedAt,
+          }
+        : stop,
+    ),
+  };
+}
+
+function scheduleRank(stop: DayStop) {
+  if (stop.schedule?.kind === "hard_appointment") return 0;
+  if (stop.schedule?.kind === "callback_window") return 1;
+  return 2;
+}
+
+export function suggestScheduleAwareRoute(day: RepDay): string[] {
+  return [...day.routeStopIds].sort((firstId, secondId) => {
+    const first = day.stops.find((stop) => stop.accountId === firstId);
+    const second = day.stops.find((stop) => stop.accountId === secondId);
+    const rankDelta = scheduleRank(first!) - scheduleRank(second!);
+    if (rankDelta !== 0) return rankDelta;
+    const firstTime = first?.schedule
+      ? Date.parse(`${first.schedule.date} ${first.schedule.startTime}`)
+      : Number.MAX_SAFE_INTEGER;
+    const secondTime = second?.schedule
+      ? Date.parse(`${second.schedule.date} ${second.schedule.startTime}`)
+      : Number.MAX_SAFE_INTEGER;
+    return firstTime - secondTime;
+  });
 }
 
 export type StopResolutionInput =

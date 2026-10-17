@@ -66,6 +66,20 @@ describe("AuthProvider", () => {
 
     expect(await screen.findByText("rep@example.com")).toBeInTheDocument();
   });
+
+  it("opens protected content immediately in explicit test bypass mode", async () => {
+    const client = createClient();
+    render(
+      <AuthProvider client={client} bypass>
+        <RequireAuth fallback={<div>Sign in required</div>} loading={<div>Checking session</div>}>
+          <div>Protected territory</div>
+        </RequireAuth>
+      </AuthProvider>,
+    );
+
+    expect(await screen.findByText("Protected territory")).toBeInTheDocument();
+    expect(client.auth.getSession).not.toHaveBeenCalled();
+  });
 });
 
 describe("AuthScreen", () => {

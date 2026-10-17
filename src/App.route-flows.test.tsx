@@ -5,6 +5,8 @@ import { accounts } from "./data/accounts";
 import { DispositionScreen } from "./screens/DispositionScreen";
 import { FollowUpScreen } from "./screens/FollowUpScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
+import { StopScreen } from "./screens/StopScreen";
+import { createInitialRepDay } from "./domain/repDay";
 
 const apex = accounts.find((account) => account.id === "apex")!;
 const westside = accounts.find((account) => account.id === "westside")!;
@@ -71,4 +73,31 @@ test("opens a failed stop with its recovery plan and applies it only once", asyn
 
   expect(onReloop).toHaveBeenCalledTimes(1);
   expect(onReloop).toHaveBeenCalledWith("westside", "Contact unavailable");
+});
+
+test("offers one-tap reversible disposition actions from a business stop", async () => {
+  const user = userEvent.setup();
+  const day = createInitialRepDay();
+  const stop = {
+    ...day.stops.find((candidate) => candidate.accountId === "apex")!,
+    arrivedAt: new Date(),
+    visitStartedAt: new Date(),
+  };
+  const onQuickDisposition = vi.fn();
+  render(
+    <StopScreen
+      account={apex}
+      stop={stop}
+      onConfirmArrival={() => undefined}
+      onStartVisit={() => undefined}
+      onLogVisit={() => undefined}
+      onScheduleFollowUp={() => undefined}
+      onReportFailed={() => undefined}
+      onBack={() => undefined}
+      onQuickDisposition={onQuickDisposition}
+    />,
+  );
+
+  await user.click(screen.getByRole("button", { name: /No answer/i }));
+  expect(onQuickDisposition).toHaveBeenCalledWith("no_contact");
 });

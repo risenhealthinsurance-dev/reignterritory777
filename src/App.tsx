@@ -8,6 +8,7 @@ import type {
   StopRecord,
   DraftDisposition,
   FollowUpDraft,
+  QuickDisposition,
 } from "./types";
 import { accounts } from "./data/accounts";
 import { territory } from "./data/territory";
@@ -46,6 +47,8 @@ import {
   resolveStop,
   sendManagerSummary,
   updateManagerSummary,
+  scheduleFollowUp,
+  suggestScheduleAwareRoute,
 } from "./domain/repDay";
 import type { DayStop, RouteProposal } from "./domain/repDay";
 
@@ -378,23 +381,37 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
 
   const handleFollowUpConfirm = useCallback((fu: FollowUpDraft) => {
     const mutatedAt = new Date();
-    setDay((current) => ({
-      ...current,
-      stops: current.stops.map((stop) =>
-        stop.accountId === fu.stopId
-          ? {
-              ...stop,
-              followUpDate: fu.date,
-              followUpTime: fu.time,
-              nextAction: fu.agenda,
-              syncStatus: "local_only",
-              mutatedAt,
-            }
-          : stop,
-      ),
-    }));
+    setDay((current) => {
+      const scheduled = scheduleFollowUp(current, fu, mutatedAt);
+      return {
+        ...scheduled,
+        routeProposal: previewRouteChange(scheduled, suggestScheduleAwareRoute(scheduled)),
+      };
+    });
     setScreen("stop");
   }, []);
+
+  const handleQuickDisposition = useCallback(
+    (outcome: QuickDisposition) => {
+      if (!activeStopId) return;
+      const nextAction =
+        outcome === "callback"
+          ? "Schedule a callback"
+          : outcome === "no_contact"
+            ? "Try again during the next route window"
+            : "Remove from active canvassing queue";
+      setDay((current) =>
+        completeVisit(
+          current,
+          { stopId: activeStopId, outcome, note: "Quick action from stop", nextAction },
+          new Date(),
+        ),
+      );
+      setActiveStopId(null);
+      setScreen("route");
+    },
+    [activeStopId],
+  );
 
   const handleSkip = useCallback(
     (failureReason?: string, recoveryPlan?: "skip" | "reloop" | "call_ahead") => {
@@ -527,6 +544,7 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
           }}
           onEditRoute={() => setScreen("quad_route")}
           onEndDay={() => setScreen("summary")}
+          routeProposal={day.routeProposal}
         />
       );
     }
@@ -540,6 +558,7 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
           onStartVisit={startVisit}
           onLogVisit={() => setScreen("disposition")}
           onScheduleFollowUp={() => setScreen("followup")}
+          onQuickDisposition={handleQuickDisposition}
           onReportFailed={() => setScreen("recovery")}
           onBack={() => setScreen("route")}
           quadrantContext={quadrantContext ?? undefined}
@@ -662,6 +681,7 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
             }
           }}
           onBack={() => setScreen("quadrant")}
+          suggestedRouteStopIds={day.routeProposal?.proposedStopIds}
         />
       );
     }

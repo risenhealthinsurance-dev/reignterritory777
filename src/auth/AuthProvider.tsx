@@ -40,17 +40,25 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({
   client,
+  bypass = false,
   children,
 }: {
   client: AuthClient | null;
+  bypass?: boolean;
   children: ReactNode;
 }) {
-  const [status, setStatus] = useState<AuthStatus>(client ? "loading" : "unavailable");
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [status, setStatus] = useState<AuthStatus>(
+    bypass ? "authenticated" : client ? "loading" : "unavailable",
+  );
+  const [session, setSession] = useState<AuthSession | null>(
+    bypass
+      ? { access_token: "test-bypass", user: { id: "test-representative", email: "test@local" } }
+      : null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!client) return;
+    if (!client || bypass) return;
     let active = true;
     void client.auth.getSession().then(({ data, error: sessionError }) => {
       if (!active) return;
@@ -72,7 +80,7 @@ export function AuthProvider({
       active = false;
       data.subscription.unsubscribe();
     };
-  }, [client]);
+  }, [bypass, client]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

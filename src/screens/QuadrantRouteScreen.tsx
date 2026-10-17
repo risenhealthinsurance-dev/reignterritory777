@@ -12,6 +12,7 @@ interface QuadrantRouteScreenProps {
   onStartLoop: (firstStopAccountId?: string) => void;
   onSelectStop: (stop: QuadrantStop) => void;
   onBack: () => void;
+  suggestedRouteStopIds?: string[];
 }
 
 function money(value: number) {
@@ -27,8 +28,9 @@ export function QuadrantRouteScreen({
   onStartLoop,
   onSelectStop,
   onBack,
+  suggestedRouteStopIds,
 }: QuadrantRouteScreenProps) {
-  const [draft, setDraft] = useState(() => routeStopIds);
+  const [draft, setDraft] = useState(() => suggestedRouteStopIds ?? routeStopIds);
   const [preview, setPreview] = useState<RouteProposal | null>(null);
   const [updated, setUpdated] = useState(false);
   const stops = draft

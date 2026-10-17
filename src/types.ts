@@ -40,6 +40,19 @@ export type OutcomeKey =
   | "demo_set"
   | "left_info";
 
+export type QuickDisposition = Extract<OutcomeKey, "callback" | "no_contact" | "not_interested">;
+
+export type ScheduleKind = "callback_window" | "hard_appointment";
+
+export interface ScheduleRecord {
+  kind: ScheduleKind;
+  date: string;
+  startTime: string;
+  endTime?: string;
+  agenda: string;
+  note?: string;
+}
+
 export interface StopRecord {
   accountId: string;
   status: StopStatus;
@@ -54,6 +67,7 @@ export interface StopRecord {
   syncStatus: SyncStatus;
   failureReason?: string;
   recoveryPlan?: "skip" | "reloop" | "call_ahead";
+  schedule?: ScheduleRecord;
 }
 
 export type StopResolution =
@@ -75,7 +89,10 @@ export interface FollowUpDraft {
   stopId: string;
   date: string;
   time: string;
+  endTime?: string;
+  kind: ScheduleKind;
   agenda: string;
+  note?: string;
 }
 
 export interface ToolCall {

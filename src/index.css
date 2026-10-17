@@ -690,6 +690,23 @@ body,
   grid-template-columns: repeat(3, 1fr);
   gap: 5px;
 }
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin: 8px 0;
+}
+.quick-actions button {
+  min-height: 44px;
+  border: 1px solid #263247;
+  background: #0c1119;
+  color: #9eabc1;
+  border-radius: 9px;
+  font-size: 8px;
+  line-height: 1.15;
+  padding: 3px 2px;
+  cursor: pointer;
+}
 .quick-grid a,
 .quick-grid button {
   min-height: 44px;

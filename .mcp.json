@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "regrid": {
+      "url": "https://support.regrid.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${REGRID_TOKEN}"
+      }
+    }
+  }
+}
