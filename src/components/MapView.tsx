@@ -265,14 +265,6 @@ export function MapView({
           visibility: "visible",
         },
       });
-      map.addLayer({
-        id: "selected-map-entity-point",
-        type: "circle",
-        source: "selected-map-entity",
-        slot: "top",
-        paint: { "circle-color": "#22d3ee", "circle-radius": 8, "circle-stroke-color": "#e0f2fe", "circle-stroke-width": 3 },
-      });
-
       // ── Territory layers (always added, visibility toggled via prop) ──────
       map.addSource("territory-boundary", {
         type: "geojson",
@@ -293,6 +285,13 @@ export function MapView({
       map.addSource("selected-map-entity", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "selected-map-entity-point",
+        type: "circle",
+        source: "selected-map-entity",
+        slot: "top",
+        paint: { "circle-color": "#22d3ee", "circle-radius": 8, "circle-stroke-color": "#e0f2fe", "circle-stroke-width": 3 },
       });
       map.addLayer({
         id: "selected-map-entity-fill",
