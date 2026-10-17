@@ -38,13 +38,13 @@ function AssistantAvatar({ avatar = "orb" }: { avatar?: AgentConfig["avatar"] })
   return <div className={`mapgpt-avatar mapgpt-avatar--${avatar}`} aria-hidden="true"><span>✦</span></div>;
 }
 
-function HomeScreen({ selectedAccountId, onSelectAccount, onOpenPipeline }: { selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void }) {
+function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline }: { accounts: Account[]; selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
     { role: "assistant", text: "I’m ready. Ask about a business, your territory, or the next best action." },
   ]);
   const [loading, setLoading] = useState(false);
-  const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? accounts[0];
+  const selectedAccount = businesses.find((account) => account.id === selectedAccountId) ?? businesses[0];
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,14 +79,14 @@ function HomeScreen({ selectedAccountId, onSelectAccount, onOpenPipeline }: { se
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map">
-        <MapView height={window.innerHeight} accounts={accounts} routeStopIds={accounts.map((account) => account.id)} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} doneAccountIds={accounts.filter((account) => account.done).map((account) => account.id)} minimalChrome />
+        <MapView height={window.innerHeight} accounts={businesses} routeStopIds={businesses.map((account) => account.id)} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} doneAccountIds={businesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
         <button className="mapgpt-icon-button" aria-label="Open pipeline" onClick={onOpenPipeline}>▤</button>
       </header>
       <div className="mapgpt-home__business-picker" aria-label="Businesses on map">
-        {accounts.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}</button>)}
+        {businesses.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}</button>)}
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
         <div className="mapgpt-context"><span>Current business</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small></div>
@@ -132,7 +132,15 @@ function PipelineScreen({ repo, onOpenHome }: { repo: AgentStudioRepository; onO
 
 export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" }: { initialScreen?: AppScreen; initialAccountId?: string | null }) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen === "studio" || initialScreen === "pipeline" ? initialScreen : "home");
+  const [businesses, setBusinesses] = useState<Account[]>(accounts);
   const [selectedAccountId, setSelectedAccountId] = useState(initialAccountId ?? "apex");
-  const selectedAccount = useMemo(() => accounts.find((account) => account.id === selectedAccountId) ?? accounts[0], [selectedAccountId]);
-  return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;
+  useEffect(() => {
+    void repository.listBusinesses().then((liveBusinesses) => {
+      if (!liveBusinesses.length) return;
+      setBusinesses(liveBusinesses);
+      setSelectedAccountId((current) => liveBusinesses.some((business) => business.id === current) ? current : liveBusinesses[0].id);
+    });
+  }, []);
+  const selectedAccount = useMemo(() => businesses.find((account) => account.id === selectedAccountId) ?? businesses[0], [businesses, selectedAccountId]);
+  return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen accounts={businesses} selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;
 }

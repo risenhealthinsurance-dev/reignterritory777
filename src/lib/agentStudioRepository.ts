@@ -1,4 +1,4 @@
-import { accounts } from "../data/accounts";
+import { accounts, type Account } from "../data/accounts";
 import type {
   AgentActionBinding,
   AgentConfig,
@@ -24,6 +24,7 @@ export const DEFAULT_AGENT_CONFIG: AgentConfig = {
 };
 
 export interface AgentStudioRepository {
+  listBusinesses(): Promise<Account[]>;
   loadAgentConfig(): Promise<AgentConfig>;
   saveAgentConfig(config: AgentConfig): Promise<AgentConfig>;
   addKnowledgeSource(input: { kind: AgentKnowledgeSource["kind"]; name: string; url?: string; content?: string; fileName?: string }): Promise<AgentKnowledgeSource>;
@@ -61,6 +62,48 @@ function seededPipeline(): PipelineOpportunity[] {
   }));
 }
 
+function coordinatesFromLocation(location: unknown): { lat: number; lng: number } | null {
+  if (location && typeof location === "object" && "coordinates" in location) {
+    const coordinates = (location as { coordinates?: unknown }).coordinates;
+    if (Array.isArray(coordinates) && coordinates.length >= 2 && coordinates.every((value) => typeof value === "number")) {
+      return { lng: coordinates[0], lat: coordinates[1] };
+    }
+  }
+  if (typeof location === "string") {
+    const point = location.match(/POINT\s*\(\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\)/i);
+    if (point) return { lng: Number(point[1]), lat: Number(point[2]) };
+    try { return coordinatesFromLocation(JSON.parse(location)); } catch { return null; }
+  }
+  return null;
+}
+
+function mapBusinessRow(row: any, index: number): Account | null {
+  if (!row?.id || !row?.display_name) return null;
+  const fallback = accounts.find((account) => account.id === row.external_key);
+  const location = row.business_locations?.[0];
+  const coordinates = coordinatesFromLocation(location?.location) ?? (fallback ? { lat: fallback.lat, lng: fallback.lng } : null);
+  if (!coordinates) return null;
+  return {
+    ...(fallback ?? {
+      industry: "Technology",
+      tier: "SMB",
+      contact: { name: "Contact not yet verified", title: "Decision maker", phone: "" },
+      revenue: 0,
+      lastVisit: "",
+      lastVisitDaysAgo: 0,
+      activities: [],
+      notes: "Live business record. Contact and commercial details are not verified yet.",
+      done: false,
+    }),
+    id: row.id,
+    name: row.display_name,
+    address: location?.formatted_address ?? fallback?.address ?? "Address not yet verified",
+    lat: coordinates.lat,
+    lng: coordinates.lng,
+    routeOrder: index + 1,
+  };
+}
+
 export function createLocalAgentStudioRepository(): AgentStudioRepository {
   const load = () => read<AgentConfig>(CONFIG_KEY, { ...DEFAULT_AGENT_CONFIG, actions: DEFAULT_AGENT_ACTIONS.map((action) => ({ ...action })) });
   const save = (config: AgentConfig) => {
@@ -69,6 +112,7 @@ export function createLocalAgentStudioRepository(): AgentStudioRepository {
     return next;
   };
   return {
+    async listBusinesses() { return accounts; },
     async loadAgentConfig() { return load(); },
     async saveAgentConfig(config) { return save(config); },
     async addKnowledgeSource(input) {
@@ -110,6 +154,14 @@ export function createAgentStudioRepository(client: SupabaseAgentClient | null):
     return activeAgentId;
   }
   return {
+    async listBusinesses() {
+      return remoteOr(async () => {
+        const { data, error } = await remoteClient.from("businesses").select("id,external_key,display_name,status,business_locations(business_id,formatted_address,location)").limit(250);
+        if (error) throw error;
+        const businesses = (data ?? []).map((businessRow: any, index: number) => mapBusinessRow(businessRow, index)).filter((business: Account | null): business is Account => Boolean(business));
+        return businesses.length ? businesses : local.listBusinesses();
+      }, () => local.listBusinesses());
+    },
     async loadAgentConfig() {
       return remoteOr(async () => {
         const { data, error } = await remoteClient.from("agent_configs").select("*").limit(1);
@@ -173,7 +225,14 @@ export function createAgentStudioRepository(client: SupabaseAgentClient | null):
         if (error) throw error;
         if (!data?.length) return local.listPipelineOpportunities();
         const fallback = await local.listPipelineOpportunities();
-        return data.map((row: any) => ({ ...fallback.find((item) => item.id === row.business_id), id: row.business_id, stage: row.stage, estimatedValue: row.estimated_value, nextAction: row.next_action, commitment: row.commitment }));
+        const liveBusinesses = await remoteClient.from("businesses").select("id,external_key,display_name,status,business_locations(business_id,formatted_address,location)").limit(250);
+        if (liveBusinesses.error) throw liveBusinesses.error;
+        return data.map((row: any) => {
+          const mappedLiveBusinesses = (liveBusinesses.data ?? []).map((businessRow: any, index: number) => mapBusinessRow(businessRow, index));
+          const account = mapBusinessRow(row.businesses, 0) ?? mappedLiveBusinesses.find((business: Account | null) => business?.id === row.business_id) ?? fallback.find((item) => item.id === row.business_id);
+          if (!account) return null;
+          return { id: row.business_id, account, stage: row.stage, estimatedValue: row.estimated_value ?? account.revenue, nextAction: row.next_action ?? "Research decision-maker timing", commitment: row.commitment };
+        }).filter(Boolean) as PipelineOpportunity[];
       }, () => local.listPipelineOpportunities());
     },
     async updatePipelineStage(id, stage) {

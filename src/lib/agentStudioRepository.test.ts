@@ -1,4 +1,4 @@
-import { beforeEach, expect, test } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import {
   createAgentStudioRepository,
   createLocalAgentStudioRepository,
@@ -11,6 +11,45 @@ let repository: AgentStudioRepository;
 beforeEach(() => {
   localStorage.clear();
   repository = createLocalAgentStudioRepository();
+});
+
+test("lists local businesses with stable account-shaped records", async () => {
+  const businesses = await repository.listBusinesses();
+
+  expect(businesses).toHaveLength(6);
+  expect(businesses[0]).toMatchObject({ id: "meridian", name: "Meridian Medical Devices" });
+});
+
+test("maps live businesses and coordinates from the Supabase repository", async () => {
+  const liveBusiness = {
+    id: "aaaaaaaa-0000-0000-0000-000000000099",
+    display_name: "Live Territory Business",
+    status: "active",
+    business_locations: [
+      {
+        formatted_address: "1 Live Way, Fort Pierce, FL 34950",
+        location: { type: "Point", coordinates: [-80.31, 27.44] },
+      },
+    ],
+  };
+  const client = {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        limit: vi.fn(async () => ({ data: [liveBusiness], error: null })),
+      })),
+    })),
+  };
+
+  const businesses = await createAgentStudioRepository(client).listBusinesses();
+
+  expect(businesses).toHaveLength(1);
+  expect(businesses[0]).toMatchObject({
+    id: liveBusiness.id,
+    name: "Live Territory Business",
+    address: "1 Live Way, Fort Pierce, FL 34950",
+    lat: 27.44,
+    lng: -80.31,
+  });
 });
 
 test("persists agent identity, knowledge sources, and approved actions locally", async () => {
