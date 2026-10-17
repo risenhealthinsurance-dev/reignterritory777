@@ -11,7 +11,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   if (!token) return response.status(503).json({ error: "Mapbox search is not configured" });
   // Search Box forward returns POIs by relevance; `types=poi` is a Geocoding
   // parameter and causes a 400 on some Search Box API token configurations.
-  const params = new URLSearchParams({ q: query, access_token: token, limit: "25", show_closed_pois: "false" });
+  const params = new URLSearchParams({ q: query, access_token: token, limit: "10", show_closed_pois: "false" });
   for (const key of ["proximity", "open_now", "poi_category", "minimum_rating"]) {
     const value = first(request.query?.[key]);
     if (value) params.set(key, value);
@@ -26,7 +26,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       // Some Mapbox public tokens have tiles/geocoding access before Search Box access.
       // Keep ordinary discovery useful while retaining Search Box for open_now searches.
       if (first(request.query?.open_now) === "true") return response.status(upstream.status).json({ error: "Mapbox open-hours search is not enabled for this token" });
-      const fallbackParams = new URLSearchParams({ access_token: token, limit: "25", types: "poi" });
+      const fallbackParams = new URLSearchParams({ access_token: token, limit: "10", types: "poi" });
       const proximity = first(request.query?.proximity);
       if (proximity) fallbackParams.set("proximity", proximity);
       const fallback = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?${fallbackParams.toString()}`);
