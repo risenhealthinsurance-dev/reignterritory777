@@ -32,6 +32,7 @@ import { ActiveQuadrantScreen } from "./screens/ActiveQuadrantScreen";
 import { QuadrantRouteScreen } from "./screens/QuadrantRouteScreen";
 import { EnrichmentScreen } from "./screens/EnrichmentScreen";
 import { FieldAIScreen } from "./screens/FieldAIScreen";
+import { MapGptShell } from "./screens/MapGptShell";
 import { A1_STOPS } from "./data/territory_grid";
 import type { QuadrantStop } from "./data/territory_grid";
 import type { QuadrantContext } from "./types";
@@ -205,7 +206,7 @@ interface AppProps {
   initialAccountId?: string | null;
 }
 
-export default function App({ initialScreen = "territory", initialAccountId = "apex" }: AppProps) {
+export default function App({ initialScreen = "home", initialAccountId = "apex" }: AppProps) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen);
   const [activeStopId, setActiveStopId] = useState<string | null>(initialAccountId);
   const [day, setDay] = useState(createInitialRepDay);
@@ -773,6 +774,10 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
         }}
       />
     );
+  }
+
+  if (screen === "home" || screen === "studio" || screen === "pipeline") {
+    return <MapGptShell initialScreen={screen} initialAccountId={activeStopId} />;
   }
 
   return (

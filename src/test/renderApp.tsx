@@ -8,5 +8,5 @@ export interface AppInitialState {
 }
 
 export function renderApp(initialState: AppInitialState = {}) {
-  return render(<App {...initialState} />);
+  return render(<App initialScreen="territory" {...initialState} />);
 }

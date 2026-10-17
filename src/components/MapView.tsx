@@ -19,6 +19,7 @@ export interface MapViewProps {
   doneAccountIds: string[];
   routeStopIds?: string[];
   showTerritoryMode?: boolean;
+  minimalChrome?: boolean;
   activeQuadrantId?: string;
   onQuadrantTap?: (id: string) => void;
   zoningOverlay?: GeoJsonFeatureCollection;
@@ -53,6 +54,7 @@ export function MapView({
   doneAccountIds,
   routeStopIds,
   showTerritoryMode,
+  minimalChrome = false,
   activeQuadrantId,
   onQuadrantTap,
   zoningOverlay,
@@ -74,6 +76,7 @@ export function MapView({
         routeStopIds={routeStopIds}
         onPinTap={onPinTap}
         showTerritoryMode={showTerritoryMode}
+        minimalChrome={minimalChrome}
         cockpitAccount={cockpitAccount}
         cockpitStop={cockpitStop}
         showCockpit={showCockpit}

@@ -11,6 +11,7 @@ export interface MapFallbackProps {
   routeStopIds?: string[];
   onPinTap: (id: string) => void;
   showTerritoryMode?: boolean;
+  minimalChrome?: boolean;
   cockpitAccount?: Account;
   cockpitStop?: DayStop;
   showCockpit?: boolean;
@@ -37,6 +38,7 @@ export function MapFallback({
   routeStopIds,
   onPinTap,
   showTerritoryMode = false,
+  minimalChrome = false,
   cockpitAccount,
   cockpitStop,
   showCockpit = false,
@@ -102,7 +104,7 @@ export function MapFallback({
         />
       )}
 
-      <div
+      {!minimalChrome && <div
         style={{
           position: "absolute",
           top: 12,
@@ -144,7 +146,7 @@ export function MapFallback({
         >
           {showTerritoryMode ? "24 available · A1 recommended" : "14.4 mi · A1 loop"}
         </div>
-      </div>
+      </div>}
 
       {showCockpit && cockpitAccount && onNavigate && onCall && onSchedule && onDisposition && (
         <>
@@ -195,7 +197,7 @@ export function MapFallback({
             );
           })}
 
-      <div
+      {!minimalChrome && <div
         style={{
           position: "absolute",
           left: 12,
@@ -208,7 +210,7 @@ export function MapFallback({
         }}
       >
         MAP PREVIEW · ADD MAPBOX TOKEN FOR LIVE MAP
-      </div>
+      </div>}
     </div>
   );
 }

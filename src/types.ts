@@ -1,6 +1,9 @@
 export type DrawerSnap = "peek" | "half" | "full";
 
 export type AppScreen =
+  | "home"
+  | "studio"
+  | "pipeline"
   | "kickoff"
   | "route"
   | "stop"
