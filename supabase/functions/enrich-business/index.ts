@@ -50,6 +50,11 @@ const sourceMetadata: Record<string, { name: string; license: string; rate: stri
     license: "US Government public data",
     rate: "Requires configured authorized API access",
   },
+  regrid: {
+    name: "Regrid parcel data",
+    license: "Regrid API plan terms",
+    rate: "Token-protected; cache parcel responses and keep limits low",
+  },
 };
 
 Deno.serve(async (request) => {
@@ -100,7 +105,7 @@ Deno.serve(async (request) => {
     if (jobError || !job)
       throw new FunctionError(500, "job_create_failed", "Unable to create enrichment job.");
 
-    const connectors = createConnectorCatalog(fetch);
+    const connectors = createConnectorCatalog(fetch, { regridToken: Deno.env.get("REGRID_TOKEN") });
     const { error: registryError } = await client.from("source_registry").upsert(
       connectors.map((connector) => ({
         id: connector.id,

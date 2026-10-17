@@ -51,7 +51,7 @@ describe("runConnectors", () => {
   });
 
   it("registers every approved source with a stable identifier", () => {
-    const ids = createConnectorCatalog(async () => new Response("{}", { status: 200 })).map(
+    const ids = createConnectorCatalog(async () => new Response("{}", { status: 200 }), { regridToken: "sandbox-token" }).map(
       (connector) => connector.id,
     );
     expect(ids).toEqual([
@@ -63,6 +63,29 @@ describe("runConnectors", () => {
       "sec-edgar",
       "icann-rdap",
       "sam-gov",
+      "regrid",
+    ]);
+  });
+
+  it("queries Regrid by address with a server-side token and preserves parcel provenance", async () => {
+    const fetcher = vi.fn(async (input: string, init?: RequestInit) => {
+      expect(input).toContain("https://app.regrid.com/api/v2/parcels/address?");
+      expect(input).toContain("query=100+Main+St%2C+Fort+Pierce%2C+FL+34950");
+      expect(input).toContain("limit=1");
+      expect(input).not.toContain("sandbox-token");
+      expect(new Headers(init?.headers).get("x-regrid-token")).toBe("sandbox-token");
+      return new Response(JSON.stringify({ features: [{ id: "parcel-1", properties: { ll_uuid: "parcel-1", owner: "Example Holdings" }, geometry: null }] }), { status: 200 });
+    });
+    const regrid = createConnectorCatalog(fetcher, { regridToken: "sandbox-token" }).find((connector) => connector.id === "regrid");
+    expect(regrid).toBeDefined();
+    const records = await regrid!.lookup({ name: "Example Holdings", address: "100 Main St, Fort Pierce, FL 34950" });
+    expect(records).toEqual([
+      expect.objectContaining({
+        field: "regrid_parcel",
+        sourceRecordId: "parcel-1",
+        sourceUrl: "https://app.regrid.com/api/v2/parcels/address",
+        value: { ll_uuid: "parcel-1", owner: "Example Holdings" },
+      }),
     ]);
   });
 

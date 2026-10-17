@@ -112,8 +112,8 @@ function genericJsonConnector(
   };
 }
 
-export function createConnectorCatalog(fetcher: typeof fetch): SourceConnector[] {
-  return [
+export function createConnectorCatalog(fetcher: typeof fetch, options: { regridToken?: string } = {}): SourceConnector[] {
+  const connectors: SourceConnector[] = [
     {
       id: "official-website",
       async lookup(input) {
@@ -186,6 +186,33 @@ export function createConnectorCatalog(fetcher: typeof fetch): SourceConnector[]
       },
     },
   ];
+  if (options.regridToken?.trim()) {
+    connectors.push({
+      id: "regrid",
+      async lookup(input) {
+        if (!input.address) return [];
+        const url = new URL("https://app.regrid.com/api/v2/parcels/address");
+        url.searchParams.set("query", input.address);
+        url.searchParams.set("limit", "1");
+        url.searchParams.set("return_geometry", "false");
+        const payload = (await jsonFrom(await fetcher(url.toString(), {
+          headers: { accept: "application/json", "x-regrid-token": options.regridToken!.trim() },
+        }))) as { features?: Array<{ id?: string | number; properties?: Record<string, unknown> }> };
+        const feature = payload.features?.[0];
+        if (!feature?.properties) return [];
+        const sourceRecordId = String(feature.properties.ll_uuid ?? feature.id ?? "");
+        return [{
+          field: "regrid_parcel",
+          value: feature.properties,
+          sourceUrl: url.origin + url.pathname,
+          sourceRecordId: sourceRecordId || undefined,
+          confidence: 0.9,
+          rawPayload: feature,
+        }];
+      },
+    });
+  }
+  return connectors;
 }
 
 export interface ArcGisRecord {
