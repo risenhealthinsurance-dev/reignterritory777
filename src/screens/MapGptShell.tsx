@@ -15,6 +15,7 @@ import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteSt
 import { authBypass, supabase } from "../lib/supabase";
 import { filterBusinesses } from "../lib/businessFilters";
 import { reverseMapboxPlace, searchMapboxPlaces } from "../lib/mapboxPlaces";
+import type { MapEntitySelection } from "../components/MapView";
 
 const repository = createAgentStudioRepository(supabase);
 const fieldAiClient: FieldAiClient | null = supabase ? createFieldAiClient(supabase) : null;
@@ -71,9 +72,20 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [search, setSearch] = useState("");
   const [searching, setSearching] = useState(false);
   const [pinDraft, setPinDraft] = useState<{ lat: number; lng: number; name: string; note: string } | null>(null);
+  const [selectedMapEntity, setSelectedMapEntity] = useState<MapEntitySelection | null>(null);
   const allBusinesses = useMemo(() => [...businesses, ...pins, ...discovered.filter((item) => !businesses.some((business) => business.id === item.id))], [businesses, discovered, pins]);
   const visibleBusinesses = useMemo(() => filterBusinesses(allBusinesses, filters), [allBusinesses, filters]);
-  const selectedAccount = allBusinesses.find((account) => account.id === selectedAccountId) ?? visibleBusinesses[0] ?? allBusinesses[0] ?? businesses[0];
+  const selectedAccountBase = allBusinesses.find((account) => account.id === selectedAccountId) ?? visibleBusinesses[0] ?? allBusinesses[0] ?? businesses[0];
+  const selectedAccount = selectedMapEntity
+    ? {
+      ...selectedAccountBase,
+      id: selectedMapEntity.entityId,
+      name: selectedMapEntity.name ?? "Business name needed",
+      address: selectedMapEntity.address ?? selectedAccountBase.address,
+      lat: selectedMapEntity.lat,
+      lng: selectedMapEntity.lng,
+    }
+    : selectedAccountBase;
   const latestDisposition = findLatestDispositionAction(listAgentActions(), selectedAccount.id);
   const dispositionByAccount = useMemo(() => Object.fromEntries(allBusinesses.map((account) => {
     const action = findLatestDispositionAction(listAgentActions(), account.id);
@@ -102,6 +114,38 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
     setPins((current) => [...current, pin]);
     onSelectAccount(pin.id);
     setPinDraft(null);
+  }
+
+  function selectMapEntity(entity: MapEntitySelection) {
+    setSelectedMapEntity(entity);
+    const contextualAccount: Account = {
+      id: entity.entityId,
+      name: entity.name ?? "Business name needed",
+      industry: "Technology",
+      tier: "SMB",
+      contact: { name: "Unknown", title: "Unknown", phone: "" },
+      address: entity.address ?? "Resolving address…",
+      lat: entity.lat,
+      lng: entity.lng,
+      revenue: 0,
+      lastVisit: "",
+      lastVisitDaysAgo: 0,
+      activities: [],
+      notes: entity.unitIdentifier ? `Selected unit ${entity.unitIdentifier} from the map.` : entity.source === "mapbox-address" ? "Selected map address fallback; building geometry was not exposed by the current Mapbox style." : "Selected building from the map.",
+      routeOrder: 0,
+      done: false,
+      source: "mapbox",
+    };
+    setDiscovered((current) => [...current.filter((item) => item.id !== entity.entityId), contextualAccount]);
+    onSelectAccount(entity.entityId);
+    void reverseMapboxPlace(entity).then((place) => {
+      setDiscovered((current) => current.map((item) => item.id === entity.entityId ? {
+        ...item,
+        name: entity.name ?? (place.name || "Business name needed"),
+        address: place.address,
+      } : item));
+      setSelectedMapEntity((current) => current?.entityId === entity.entityId ? { ...current, address: place.address, name: current.name ?? (place.name || undefined) } : current);
+    }).catch(() => undefined);
   }
 
   useEffect(() => {
@@ -174,15 +218,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => {
-          const id = `map-selection-${point.lat.toFixed(5)}-${point.lng.toFixed(5)}`;
-          const contextualAccount: Account = { id, name: point.suggestedName ?? "Map selection", industry: "Technology", tier: "SMB", contact: { name: "Unknown", title: "Unknown", phone: "" }, address: point.note ?? "Selected from the map", lat: point.lat, lng: point.lng, revenue: 0, lastVisit: "", lastVisitDaysAgo: 0, activities: [], notes: "Selected from the map.", routeOrder: 0, done: false, source: "mapbox" };
-          setDiscovered((current) => [...current.filter((item) => item.id !== id), contextualAccount]);
-          onSelectAccount(id);
-          void reverseMapboxPlace(point).then((place) => {
-            setDiscovered((current) => current.map((item) => item.id === id ? { ...item, name: place.name, address: place.address } : item));
-          }).catch(() => undefined);
-        }} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
@@ -196,7 +232,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         </div>
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
-        <div className="mapgpt-context"><span>Current business</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small>{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
+        <div className="mapgpt-context"><span>{selectedMapEntity ? (selectedMapEntity.source === "mapbox-unit" ? "Selected unit" : selectedMapEntity.source === "mapbox-address" ? "Selected map address" : "Selected building") : "Current business"}</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small>{selectedMapEntity && <label className="mapgpt-context__edit">Business name<input aria-label="Edit selected business name" value={selectedAccount.name === "Business name needed" ? "" : selectedAccount.name} placeholder="Business name needed" onChange={(event) => { const name = event.target.value || "Business name needed"; setDiscovered((current) => current.map((item) => item.id === selectedMapEntity.entityId ? { ...item, name } : item)); setSelectedMapEntity((current) => current ? { ...current, name: event.target.value || undefined } : current); }} /></label>}{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
         <div className="mapgpt-chat-window">
           <div className="mapgpt-chat-window__header"><AssistantAvatar /><div><strong>Ask Reign</strong><small>AI field assistant</small></div><button aria-label="Voice-ready assistant control">◉</button></div>
           <div className="mapgpt-messages">{messages.slice(-3).map((message, index) => <div key={`${message.role}-${index}`} className={`mapgpt-message mapgpt-message--${message.role}`}>{message.text}</div>)}{loading && <div className="mapgpt-message mapgpt-message--assistant">Thinking with your business context…</div>}<div ref={bottomRef} /></div>

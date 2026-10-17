@@ -6,7 +6,7 @@ import { MapGptShell } from "./MapGptShell";
 import { listAgentActions } from "../lib/agentStore";
 
 vi.mock("../components/MapView", () => ({
-  MapView: (props: { routeStopIds?: string[] }) => <div aria-label="Live territory map" data-route-stop-ids={props.routeStopIds?.join(",")} />,
+  MapView: (props: { routeStopIds?: string[]; onEntitySelect?: (entity: unknown) => void }) => <div aria-label="Live territory map" data-route-stop-ids={props.routeStopIds?.join(",")}><button onClick={() => props.onEntitySelect?.({ entityId: "mapbox-building-123", source: "mapbox-building", lat: 27.44, lng: -80.337, properties: {} })}>Select building</button></div>,
 }));
 
 beforeEach(() => localStorage.clear());
@@ -28,6 +28,16 @@ test("selecting a business on Home scopes the assistant context", async () => {
   await user.click(screen.getByRole("button", { name: /Apex Manufacturing Group/i }));
   expect(screen.getAllByText(/Apex Manufacturing Group/).length).toBeGreaterThan(0);
   expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Apex Manufacturing Group/);
+});
+
+test("selecting a building creates an assistant entity context without a pin dialog", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+  await user.click(screen.getByRole("button", { name: "Select building" }));
+  expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Selected building/);
+  expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Business name needed/);
+  expect(screen.getByLabelText(/Edit selected business name/i)).toBeInTheDocument();
+  expect(screen.queryByRole("dialog", { name: /Create map pin/i })).not.toBeInTheDocument();
 });
 
 test("opens Studio and Pipeline from the primary navigation", async () => {

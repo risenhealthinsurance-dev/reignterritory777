@@ -18,6 +18,7 @@ export interface MapViewProps {
   activeAccountId: string | null;
   onPinTap: (id: string) => void;
   onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
+  onEntitySelect?: (entity: MapEntitySelection) => void;
   doneAccountIds: string[];
   routeStopIds?: string[];
   showTerritoryMode?: boolean;
@@ -33,6 +34,19 @@ export interface MapViewProps {
   onSchedule?: () => void;
   onDisposition?: () => void;
   dispositionByAccount?: Record<string, string | undefined>;
+}
+
+export interface MapEntitySelection {
+  entityId: string;
+  parentBuildingId?: string;
+  unitIdentifier?: string;
+  name?: string;
+  address?: string;
+  lat: number;
+  lng: number;
+  source: "mapbox-building" | "mapbox-unit" | "mapbox-address";
+  geometry?: { type: string; coordinates?: unknown };
+  properties: Record<string, unknown>;
 }
 
 export const FORT_PIERCE_CENTER: [number, number] = [-80.337, 27.44];
@@ -71,6 +85,7 @@ export function MapView({
   activeAccountId,
   onPinTap,
   onMapClick,
+  onEntitySelect,
   doneAccountIds,
   routeStopIds,
   showTerritoryMode,
@@ -97,6 +112,7 @@ export function MapView({
         routeStopIds={routeStopIds}
         onPinTap={onPinTap}
         onMapClick={onMapClick}
+        onEntitySelect={onEntitySelect}
         showTerritoryMode={showTerritoryMode}
         minimalChrome={minimalChrome}
         cockpitAccount={cockpitAccount}
@@ -246,6 +262,13 @@ export function MapView({
           visibility: "visible",
         },
       });
+      map.addLayer({
+        id: "selected-map-entity-point",
+        type: "circle",
+        source: "selected-map-entity",
+        slot: "top",
+        paint: { "circle-color": "#22d3ee", "circle-radius": 8, "circle-stroke-color": "#e0f2fe", "circle-stroke-width": 3 },
+      });
 
       // ── Territory layers (always added, visibility toggled via prop) ──────
       map.addSource("territory-boundary", {
@@ -263,6 +286,24 @@ export function MapView({
       map.addSource("zoning-overlay", {
         type: "geojson",
         data: zoningOverlay ?? { type: "FeatureCollection", features: [] },
+      });
+      map.addSource("selected-map-entity", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "selected-map-entity-fill",
+        type: "fill",
+        source: "selected-map-entity",
+        slot: "top",
+        paint: { "fill-color": "#22d3ee", "fill-opacity": 0.2 },
+      });
+      map.addLayer({
+        id: "selected-map-entity-line",
+        type: "line",
+        source: "selected-map-entity",
+        slot: "top",
+        paint: { "line-color": "#67e8f9", "line-width": 4, "line-opacity": 1 },
       });
       map.addLayer({
         id: "zoning-fill",
@@ -427,35 +468,49 @@ export function MapView({
           .addTo(map);
         markersRef.current.set(acc.id, marker);
       }
-      map.on("click", (event) => {
-        if (!onMapClick) return;
-        const building = map.queryRenderedFeatures(event.point).find((feature) => {
+      const handleMapClick = (clientX: number, clientY: number) => {
+        const rect = map.getCanvas().getBoundingClientRect();
+        const point = { x: clientX - rect.left, y: clientY - rect.top };
+        const lngLat = map.unproject([point.x, point.y]);
+        const building = map.queryRenderedFeatures([point.x, point.y]).find((feature) => {
           const layer = feature.layer as { id?: string; type?: string } | undefined;
           const sourceLayer = String((feature as { sourceLayer?: string }).sourceLayer ?? "").toLowerCase();
           const layerId = String(layer?.id ?? "").toLowerCase();
           return layer?.type === "fill-extrusion" || sourceLayer.includes("building") || layerId.includes("building");
         });
-        if (building) {
+        if (building && onEntitySelect) {
           const properties = (building as { properties?: Record<string, unknown> }).properties ?? {};
-          const name = String(properties.name ?? properties.name_en ?? properties.address ?? properties.house_num ?? "Mapbox building");
-          const details = [properties.address, properties.unit, properties.house_num]
-            .filter((value) => typeof value === "string" && value.trim())
-            .join(" · ");
-          onMapClick({
-            lat: event.lngLat.lat,
-            lng: event.lngLat.lng,
-            suggestedName: name,
-            note: `Selected from the Mapbox building footprint${details ? ` (${details})` : ""}. Review and confirm before saving.`,
+          const sourceLayer = String((building as { sourceLayer?: string }).sourceLayer ?? "").toLowerCase();
+          const unitIdentifier = ["unit", "suite", "unit_name", "addr:unit", "level"]
+            .map((key) => properties[key]).find((value) => typeof value === "string" && value.trim()) as string | undefined;
+          const featureId = (building as { id?: string | number }).id;
+          const entityId = `mapbox-${unitIdentifier ? "unit" : "building"}-${String(featureId ?? `${lngLat.lng.toFixed(6)}-${lngLat.lat.toFixed(6)}`)}`;
+          const geometry = (building as { geometry?: { type: string; coordinates?: unknown } }).geometry;
+          const source = map.getSource("selected-map-entity") as mapboxgl.GeoJSONSource | undefined;
+          if (source && geometry) source.setData({ type: "FeatureCollection", features: [{ type: "Feature", id: entityId, properties: {}, geometry }] } as never);
+          onEntitySelect({
+            entityId,
+            parentBuildingId: unitIdentifier ? String(properties.building_id ?? properties.parent_id ?? "") || undefined : undefined,
+            unitIdentifier,
+            name: [properties.name, properties.name_en, properties.business_name].find((value) => typeof value === "string" && value.trim()) as string | undefined,
+            address: [properties.address, properties.full_address, properties.house_num].find((value) => typeof value === "string" && value.trim()) as string | undefined,
+            lat: lngLat.lat,
+            lng: lngLat.lng,
+            source: unitIdentifier || sourceLayer.includes("unit") ? "mapbox-unit" : "mapbox-building",
+            geometry,
+            properties,
           });
           return;
         }
-        onMapClick({
-          lat: event.lngLat.lat,
-          lng: event.lngLat.lng,
-          suggestedName: "Mapbox location",
-          note: "Selected from the map. Review the location and update the business or unit name before saving.",
-        });
-      });
+        if (onEntitySelect) {
+          const entityId = `mapbox-address-${lngLat.lng.toFixed(6)}-${lngLat.lat.toFixed(6)}`;
+          const source = map.getSource("selected-map-entity") as mapboxgl.GeoJSONSource | undefined;
+          if (source) source.setData({ type: "FeatureCollection", features: [{ type: "Feature", id: entityId, properties: {}, geometry: { type: "Point", coordinates: [lngLat.lng, lngLat.lat] } }] } as never);
+          onEntitySelect({ entityId, lat: lngLat.lat, lng: lngLat.lng, source: "mapbox-address", properties: {} });
+        }
+      };
+      const canvasContainer = map.getCanvasContainer();
+      canvasContainer.addEventListener("click", (event) => handleMapClick(event.clientX, event.clientY));
     });
 
     const ro = new ResizeObserver(() => mapRef.current?.resize());

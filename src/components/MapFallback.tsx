@@ -1,4 +1,5 @@
 import type { Account } from "../data/accounts";
+import type { MapEntitySelection } from "./MapView";
 import type { DayStop } from "../domain/repDay";
 import { NextBusinessCard } from "./NextBusinessCard";
 import { FieldActionSheet } from "./FieldActionSheet";
@@ -12,6 +13,7 @@ export interface MapFallbackProps {
   routeStopIds?: string[];
   onPinTap: (id: string) => void;
   onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
+  onEntitySelect?: (entity: MapEntitySelection) => void;
   showTerritoryMode?: boolean;
   minimalChrome?: boolean;
   cockpitAccount?: Account;
