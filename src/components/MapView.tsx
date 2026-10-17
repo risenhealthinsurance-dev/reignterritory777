@@ -107,6 +107,8 @@ export function MapView({
   onDisposition,
   dispositionByAccount = {},
 }: MapViewProps) {
+  const onMapClickRef = useRef(onMapClick);
+  useEffect(() => { onMapClickRef.current = onMapClick; }, [onMapClick]);
   if (!mapboxAccessToken) {
     return (
       <MapFallback
@@ -489,8 +491,8 @@ export function MapView({
         const lngLat = map.unproject([point.x, point.y]);
         // Drawing mode owns map clicks. Do this before entity hit-testing so a boundary
         // point cannot be swallowed by Mapbox building/address selection.
-        if (onMapClick) {
-          onMapClick({ lat: lngLat.lat, lng: lngLat.lng });
+        if (onMapClickRef.current) {
+          onMapClickRef.current({ lat: lngLat.lat, lng: lngLat.lng });
           return;
         }
         const building = map.queryRenderedFeatures([point.x, point.y]).find((feature) => {
