@@ -169,7 +169,8 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         setMessages((current) => [...current, { role: "assistant", text }]);
       }
     } catch {
-      setMessages((current) => [...current, { role: "assistant", text: "I couldn’t reach the live agent, so I kept this response local. Try the brief again when connected." }]);
+      const localResponse = buildLocalAssistantResponse(prompt, selectedAccount, listAgentActions());
+      setMessages((current) => [...current, { role: "assistant", text: `${localResponse}\n\nLive agent is unavailable, so this answer uses the saved account context.` }]);
     } finally {
       setLoading(false);
     }

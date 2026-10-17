@@ -40,6 +40,14 @@ test("selecting a building creates an assistant entity context without a pin dia
   expect(screen.queryByRole("dialog", { name: /Create map pin/i })).not.toBeInTheDocument();
 });
 
+test("chat returns a local answer when the live agent is unavailable", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+  await user.type(screen.getByRole("textbox", { name: /Ask the AI assistant/i }), "Give me a brief");
+  await user.click(screen.getByRole("button", { name: /Send message/i }));
+  expect(await screen.findByText(/Here’s Apex Manufacturing Group/i)).toBeInTheDocument();
+});
+
 test("opens Studio and Pipeline from the primary navigation", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);
