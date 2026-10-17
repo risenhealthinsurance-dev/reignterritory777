@@ -16,14 +16,28 @@ export default async function handler(request: VercelRequest, response: VercelRe
   }
   try {
     const upstream = await fetch(`https://api.mapbox.com/search/searchbox/v1/forward?${params.toString()}`);
-    if (!upstream.ok) return response.status(upstream.status).json({ error: "Mapbox search request failed" });
-    const payload = await upstream.json() as { features?: Array<{ id?: string; geometry?: { coordinates?: unknown }; properties?: Record<string, unknown> }> };
+    let payload: { features?: Array<{ id?: string; text?: string; place_name?: string; geometry?: { coordinates?: unknown }; properties?: Record<string, unknown> }> };
+    let source = "searchbox";
+    if (upstream.ok) {
+      payload = await upstream.json();
+    } else {
+      // Some Mapbox public tokens have tiles/geocoding access before Search Box access.
+      // Keep ordinary discovery useful while retaining Search Box for open_now searches.
+      if (first(request.query?.open_now) === "true") return response.status(upstream.status).json({ error: "Mapbox open-hours search is not enabled for this token" });
+      const fallbackParams = new URLSearchParams({ access_token: token, limit: "25", types: "poi" });
+      const proximity = first(request.query?.proximity);
+      if (proximity) fallbackParams.set("proximity", proximity);
+      const fallback = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?${fallbackParams.toString()}`);
+      if (!fallback.ok) return response.status(upstream.status).json({ error: "Mapbox search request failed" });
+      payload = await fallback.json();
+      source = "geocoding";
+    }
     const businesses = (payload.features ?? []).flatMap((feature, index) => {
       const coordinates = feature.geometry?.coordinates;
       if (!Array.isArray(coordinates) || typeof coordinates[0] !== "number" || typeof coordinates[1] !== "number") return [];
       const properties = feature.properties ?? {};
       const isOpen = typeof properties.open === "boolean" ? properties.open : null;
-      const name = String(properties.name ?? properties.name_preferred ?? "Mapbox place");
+      const name = String(properties.name ?? properties.name_preferred ?? feature.text ?? properties.text ?? "Mapbox place");
       return [{
         id: `mapbox-${feature.id ?? index}`,
         externalId: feature.id,
@@ -31,14 +45,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
         industry: "Technology" as const,
         tier: "SMB" as const,
         contact: { name: "Mapbox place", title: "Unverified", phone: "" },
-        address: String(properties.full_address ?? properties.place_formatted ?? properties.address ?? "Address from Mapbox"),
+        address: String(properties.full_address ?? properties.place_formatted ?? properties.address ?? feature.place_name ?? "Address from Mapbox"),
         lat: coordinates[1] as number,
         lng: coordinates[0] as number,
         revenue: 0,
         lastVisit: "",
         lastVisitDaysAgo: 0,
         activities: [],
-        notes: "Live place discovered through Mapbox Search Box.",
+        notes: `Live place discovered through Mapbox ${source}.`,
         routeOrder: index + 1,
         done: false,
         source: "mapbox" as const,
