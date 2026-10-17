@@ -85,7 +85,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         const result = await fieldAiClient.ask({ scope: { type: "account", accountId: selectedAccount.id }, intent, idempotencyKey: crypto.randomUUID() });
         setMessages((current) => [...current, { role: "assistant", text: result.answer }]);
       } else {
-        const text = buildLocalAssistantResponse(prompt, selectedAccount);
+        const text = buildLocalAssistantResponse(prompt, selectedAccount, listAgentActions());
         setMessages((current) => [...current, { role: "assistant", text }]);
       }
     } catch {
