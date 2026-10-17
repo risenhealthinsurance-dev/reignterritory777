@@ -18,6 +18,7 @@ import { filterBusinesses } from "../lib/businessFilters";
 import { reverseMapboxPlace, searchMapboxPlaces } from "../lib/mapboxPlaces";
 import { buildPipelineContext, locationStateLabel, type LocationContext } from "../lib/fieldContext";
 import type { MapEntitySelection } from "../components/MapView";
+import type { GeoJsonFeature, GeoJsonFeatureCollection } from "../lib/gis";
 
 const repository = createAgentStudioRepository(supabase);
 const fieldAiClient: FieldAiClient | null = supabase ? createFieldAiClient(supabase) : null;
@@ -60,15 +61,36 @@ interface ActionDraft {
   note: string;
 }
 
-type TerritoryPlan = { size: number; locked: boolean; quadrantsSaved: boolean; completedQuadrants: number[] };
+type TerritoryPlan = { size: number; locked: boolean; quadrantsSaved: boolean; completedQuadrants: number[]; boundary: GeoJsonFeature; quadrants: GeoJsonFeatureCollection };
+
+function buildTerritoryGeometry(center: { lat: number; lng: number }, size: number, completedQuadrants: number[] = []): { boundary: GeoJsonFeature; quadrants: GeoJsonFeatureCollection } {
+  const metersPerPixel = (156543.03392 * Math.cos((center.lat * Math.PI) / 180)) / 2 ** 13.8;
+  const halfDegreesLat = (size * metersPerPixel) / 2 / 111_320;
+  const halfDegreesLng = (size * metersPerPixel) / 2 / (111_320 * Math.cos((center.lat * Math.PI) / 180));
+  const west = center.lng - halfDegreesLng;
+  const east = center.lng + halfDegreesLng;
+  const south = center.lat - halfDegreesLat;
+  const north = center.lat + halfDegreesLat;
+  const boundary: GeoJsonFeature = { type: "Feature", properties: { locked: true }, geometry: { type: "Polygon", coordinates: [[[west, north], [east, north], [east, south], [west, south], [west, north]]] } };
+  const features: GeoJsonFeature[] = [];
+  for (let row = 0; row < 4; row += 1) for (let col = 0; col < 4; col += 1) {
+    const number = row * 4 + col + 1;
+    const qWest = west + ((east - west) * col) / 4;
+    const qEast = west + ((east - west) * (col + 1)) / 4;
+    const qSouth = south + ((north - south) * (3 - row)) / 4;
+    const qNorth = south + ((north - south) * (4 - row)) / 4;
+    features.push({ type: "Feature", properties: { id: `Q${number}`, label: String(number), status: completedQuadrants.includes(number) ? "completed" : "active" }, geometry: { type: "Polygon", coordinates: [[[qWest, qNorth], [qEast, qNorth], [qEast, qSouth], [qWest, qSouth], [qWest, qNorth]]] } });
+  }
+  return { boundary, quadrants: { type: "FeatureCollection", features } };
+}
 
 function readTerritoryPlan(): TerritoryPlan | null {
   try {
     const stored = window.localStorage.getItem("reign.territoryPlan");
     if (!stored) return null;
     const parsed = JSON.parse(stored) as Partial<TerritoryPlan>;
-    if (typeof parsed.size !== "number" || !parsed.locked || !Array.isArray(parsed.completedQuadrants)) return null;
-    return { size: parsed.size, locked: true, quadrantsSaved: Boolean(parsed.quadrantsSaved), completedQuadrants: parsed.completedQuadrants.filter((value): value is number => Number.isInteger(value) && value >= 1 && value <= 16) };
+    if (typeof parsed.size !== "number" || !parsed.locked || !Array.isArray(parsed.completedQuadrants) || !parsed.boundary || !parsed.quadrants) return null;
+    return { size: parsed.size, locked: true, quadrantsSaved: Boolean(parsed.quadrantsSaved), completedQuadrants: parsed.completedQuadrants.filter((value): value is number => Number.isInteger(value) && value >= 1 && value <= 16), boundary: parsed.boundary as GeoJsonFeature, quadrants: parsed.quadrants as GeoJsonFeatureCollection };
   } catch { return null; }
 }
 
@@ -95,6 +117,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [territorySize, setTerritorySize] = useState(() => readTerritoryPlan()?.size ?? 280);
   const [completedQuadrants, setCompletedQuadrants] = useState<number[]>(() => readTerritoryPlan()?.completedQuadrants ?? []);
   const [resizingTerritory, setResizingTerritory] = useState(false);
+  const [territoryError, setTerritoryError] = useState<string | null>(null);
   const [savedTerritories, setSavedTerritories] = useState<Array<Array<{ lat: number; lng: number }>>>(() => {
     try {
       const stored = window.localStorage.getItem("reign.savedTerritories");
@@ -282,7 +305,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className={`mapgpt-home ${territoryStage !== "idle" ? "mapgpt-home--territory-editing" : ""} ${territoryStage === "quadrants" ? "mapgpt-home--territory-quadrants" : ""}`} aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} showTerritoryMode={territoryStage === "quadrants"} onLocationChange={(location) => setLocationContext({ state: "available", ...location, updatedAt: Date.now() })} onLocationStateChange={setLocationContext} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} showTerritoryMode={territoryStage === "quadrants"} territoryBoundary={territoryPlan?.boundary} territoryGrid={territoryPlan?.quadrants} onLocationChange={(location) => setLocationContext({ state: "available", ...location, updatedAt: Date.now() })} onLocationStateChange={setLocationContext} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
         {territoryStage !== "idle" && <div className={`mapgpt-territory-editor mapgpt-territory-editor--${territoryStage}`} style={{ width: territorySize, height: territorySize }} aria-label={territoryStage === "drawing" ? "Resize territory boundary" : "Territory quadrants"}>
           {territoryStage === "quadrants" && <div className="mapgpt-territory-grid">{Array.from({ length: 16 }, (_, index) => { const number = index + 1; const completed = completedQuadrants.includes(number); return <button key={number} className={`mapgpt-territory-quadrant mapgpt-territory-quadrant--${index % 4} ${completed ? "mapgpt-territory-quadrant--complete" : ""}`} aria-label={`Quadrant ${number}`} aria-pressed={completed} onClick={() => setCompletedQuadrants((current) => completed ? current.filter((item) => item !== number) : [...current, number])}>{number}</button>; })}</div>}
           {territoryStage === "drawing" && <button className="mapgpt-territory-handle" aria-label="Resize territory boundary" onPointerDown={() => setResizingTerritory(true)} />}
@@ -323,8 +346,8 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>
         </div>
       </div>
-      {territoryStage === "drawing" && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Draw territory"><strong>Set territory boundary</strong><small>Drag the corner handle to resize the square.</small><p>Boundary ready to lock</p><div><button onClick={() => { setTerritoryStage("idle"); setTerritoryDraft(null); }}>Cancel</button><button onClick={() => { setSavedTerritories((current) => [...current, []]); setTerritoryPlan({ size: territorySize, locked: true, quadrantsSaved: false, completedQuadrants: [] }); setCompletedQuadrants([]); setTerritoryStage("quadrants"); setTerritoryDraft(null); setMessages((current) => [...current, { role: "assistant", text: "Boundary locked. Set every quadrant, then save the quadrant plan." }]); }}>Save boundary</button></div></div>}
-      {territoryStage === "quadrants" && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Set territory quadrants"><strong>Set territory quadrants</strong><small>Sky view is fitted to the locked territory. Tap each square as you set it.</small><p>{completedQuadrants.length}/16 quadrants set</p><div><button disabled={completedQuadrants.length !== 16} onClick={() => { setTerritoryPlan((current) => current ? { ...current, quadrantsSaved: true, completedQuadrants } : current); setTerritoryStage("idle"); setMessages((current) => [...current, { role: "assistant", text: "Quadrants saved. Returning to normal map navigation." }]); }}>Save quadrants</button></div></div>}
+      {territoryStage === "drawing" && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Draw territory"><strong>Set territory boundary</strong><small>Drag the corner handle to resize the square.</small><p>{territoryError ?? "Boundary ready to lock"}</p><div><button onClick={() => { setTerritoryStage("idle"); setTerritoryDraft(null); setTerritoryError(null); }}>Cancel</button><button onClick={() => { const geometry = buildTerritoryGeometry({ lat: selectedAccount.lat, lng: selectedAccount.lng }, territorySize); const boundaryCoordinates = geometry.boundary.geometry.coordinates as number[][][]; const [west, north] = boundaryCoordinates[0][0]; const [east] = boundaryCoordinates[0][1]; const [, south] = boundaryCoordinates[0][2]; const overlaps = savedTerritories.some((existing) => { const lngs = existing.map((point) => point.lng); const lats = existing.map((point) => point.lat); return lngs.length > 2 && Math.max(...lngs) > west && Math.min(...lngs) < east && Math.max(...lats) > south && Math.min(...lats) < north; }); if (overlaps) { setTerritoryError("This territory overlaps a locked territory. Resize or move to a clear area."); return; } setSavedTerritories((current) => [...current, boundaryCoordinates[0].map(([lng, lat]) => ({ lat, lng }))]); setTerritoryPlan({ size: territorySize, locked: true, quadrantsSaved: false, completedQuadrants: [], ...geometry }); setCompletedQuadrants([]); setTerritoryStage("quadrants"); setTerritoryDraft(null); setTerritoryError(null); setMessages((current) => [...current, { role: "assistant", text: "Boundary locked. Set every quadrant, then save the quadrant plan." }]); }}>Save boundary</button></div></div>}
+      {territoryStage === "quadrants" && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Set territory quadrants"><strong>Set territory quadrants</strong><small>Sky view is fitted to the locked territory. Tap each square as you set it.</small><p>{completedQuadrants.length}/16 quadrants set</p><div><button disabled={completedQuadrants.length !== 16} onClick={() => { setTerritoryPlan((current) => current ? { ...current, quadrantsSaved: true, completedQuadrants, quadrants: { ...current.quadrants, features: current.quadrants.features.map((feature, index) => ({ ...feature, properties: { ...feature.properties, status: completedQuadrants.includes(index + 1) ? "completed" : "active" } })) } } : current); setTerritoryStage("idle"); setMessages((current) => [...current, { role: "assistant", text: "Quadrants saved. Returning to normal map navigation." }]); }}>Save quadrants</button></div></div>}
       {pinDraft && <div className="mapgpt-pin-dialog" role="dialog" aria-modal="true" aria-label="Create map pin"><strong>Create your map pin</strong><small>{pinDraft.lat.toFixed(5)}, {pinDraft.lng.toFixed(5)}</small><label>Business or location name<input autoFocus value={pinDraft.name} onChange={(event) => setPinDraft({ ...pinDraft, name: event.target.value })} placeholder="e.g. New prospect" /></label><label>Note<textarea value={pinDraft.note} onChange={(event) => setPinDraft({ ...pinDraft, note: event.target.value })} placeholder="Why this point matters" /></label><div><button onClick={() => setPinDraft(null)}>Cancel</button><button onClick={() => void savePin()} disabled={!pinDraft.name.trim()}>Save pin</button></div></div>}
     </section>
   );

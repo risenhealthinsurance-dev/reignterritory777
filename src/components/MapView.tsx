@@ -6,7 +6,7 @@ import { quadrantGeoJSON, boundaryGeoJSON, quadrantLabelGeoJSON } from "../data/
 import { MapFallback } from "./MapFallback";
 import { NextBusinessCard } from "./NextBusinessCard";
 import { FieldActionSheet } from "./FieldActionSheet";
-import type { GeoJsonFeatureCollection } from "../lib/gis";
+import type { GeoJsonFeature, GeoJsonFeatureCollection } from "../lib/gis";
 import { dispositionColor } from "../lib/dispositionColor";
 import type { LocationContext } from "../lib/fieldContext";
 
@@ -29,6 +29,8 @@ export interface MapViewProps {
   activeQuadrantId?: string;
   onQuadrantTap?: (id: string) => void;
   zoningOverlay?: GeoJsonFeatureCollection;
+  territoryBoundary?: GeoJsonFeature;
+  territoryGrid?: GeoJsonFeatureCollection;
   cockpitAccount?: Account;
   cockpitStop?: DayStop;
   showCockpit?: boolean;
@@ -98,6 +100,8 @@ export function MapView({
   activeQuadrantId,
   onQuadrantTap,
   zoningOverlay,
+  territoryBoundary,
+  territoryGrid,
   cockpitAccount,
   cockpitStop,
   showCockpit = false,
@@ -283,11 +287,11 @@ export function MapView({
       // ── Territory layers (always added, visibility toggled via prop) ──────
       map.addSource("territory-boundary", {
         type: "geojson",
-        data: boundaryGeoJSON(),
+        data: territoryBoundary ?? boundaryGeoJSON(),
       });
       map.addSource("territory-grid", {
         type: "geojson",
-        data: quadrantGeoJSON(),
+        data: territoryGrid ?? quadrantGeoJSON(),
       });
       map.addSource("territory-labels", {
         type: "geojson",
@@ -557,6 +561,15 @@ export function MapView({
     if (source) source.setData(zoningOverlay ?? { type: "FeatureCollection", features: [] });
   }, [zoningOverlay]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const boundarySource = map.getSource("territory-boundary") as mapboxgl.GeoJSONSource | undefined;
+    const gridSource = map.getSource("territory-grid") as mapboxgl.GeoJSONSource | undefined;
+    if (boundarySource && territoryBoundary) boundarySource.setData(territoryBoundary as never);
+    if (gridSource && territoryGrid) gridSource.setData(territoryGrid as never);
+  }, [territoryBoundary, territoryGrid]);
+
   // Sync pin visibility + styles
   useEffect(() => {
     updatePins(showTerritoryMode ?? false);
@@ -579,13 +592,17 @@ export function MapView({
     }
     if (map.getLayer("route-line")) map.setLayoutProperty("route-line", "visibility", routeVis);
     if (showTerritoryMode) {
-      map.flyTo({
-        center: FORT_PIERCE_CENTER,
-        zoom: 12.2,
-        pitch: 0,
-        bearing: 0,
-        duration: 700,
-      });
+      if (territoryBoundary) {
+        const coordinates = territoryBoundary.geometry.coordinates as number[][][];
+        const points = coordinates[0] ?? [];
+        const lngs = points.map(([lng]) => lng);
+        const lats = points.map(([, lat]) => lat);
+        if (lngs.length && lats.length) {
+          map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]] as mapboxgl.LngLatBoundsLike, { padding: 72, pitch: 0, bearing: 0, duration: 700 });
+        }
+      } else {
+        map.flyTo({ center: FORT_PIERCE_CENTER, zoom: 12.2, pitch: 0, bearing: 0, duration: 700 });
+      }
     } else {
       map.flyTo({
         center: FORT_PIERCE_CENTER,
@@ -595,7 +612,7 @@ export function MapView({
         duration: 700,
       });
     }
-  }, [showTerritoryMode]);
+  }, [showTerritoryMode, territoryBoundary]);
 
   useEffect(() => {
     mapRef.current?.resize();

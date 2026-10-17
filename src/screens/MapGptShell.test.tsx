@@ -48,7 +48,18 @@ test("forces the locked territory into quadrant setup before returning to the ma
   for (const quadrant of screen.getAllByRole("button", { name: /Quadrant/ })) await user.click(quadrant);
   await user.click(screen.getByRole("button", { name: /Save quadrants/i }));
   expect(screen.queryByRole("dialog", { name: /Set territory quadrants/i })).not.toBeInTheDocument();
-  expect(JSON.parse(localStorage.getItem("reign.territoryPlan") ?? "{}")).toEqual(expect.objectContaining({ locked: true, quadrantsSaved: true, completedQuadrants: expect.arrayContaining([1, 16]) }));
+  expect(JSON.parse(localStorage.getItem("reign.territoryPlan") ?? "{}")).toEqual(expect.objectContaining({ locked: true, quadrantsSaved: true, completedQuadrants: expect.arrayContaining([1, 16]), boundary: expect.objectContaining({ geometry: expect.objectContaining({ type: "Polygon" }) }), quadrants: expect.objectContaining({ type: "FeatureCollection", features: expect.any(Array) }) }));
+});
+
+test("rejects a new territory that overlaps an existing locked boundary", async () => {
+  const user = userEvent.setup();
+  const boundary = [{ lat: 27.45, lng: -80.34 }, { lat: 27.45, lng: -80.33 }, { lat: 27.43, lng: -80.33 }, { lat: 27.43, lng: -80.34 }, { lat: 27.45, lng: -80.34 }];
+  localStorage.setItem("reign.savedTerritories", JSON.stringify([boundary]));
+  render(<MapGptShell />);
+  await user.click(screen.getByRole("button", { name: /Draw boundary/i }));
+  await user.click(screen.getByRole("button", { name: /Save boundary/i }));
+  expect(screen.getByRole("dialog", { name: /Draw territory/i })).toHaveTextContent(/overlaps a locked territory/i);
+  expect(screen.queryByRole("dialog", { name: /Set territory quadrants/i })).not.toBeInTheDocument();
 });
 
 test("selecting a business on Home scopes the assistant context", async () => {
