@@ -19,6 +19,7 @@ export interface MapViewProps {
   onPinTap: (id: string) => void;
   onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
   onEntitySelect?: (entity: MapEntitySelection) => void;
+  onLocationChange?: (location: { lat: number; lng: number; accuracyMeters?: number }) => void;
   doneAccountIds: string[];
   routeStopIds?: string[];
   showTerritoryMode?: boolean;
@@ -86,6 +87,7 @@ export function MapView({
   onPinTap,
   onMapClick,
   onEntitySelect,
+  onLocationChange,
   doneAccountIds,
   routeStopIds,
   showTerritoryMode,
@@ -164,6 +166,7 @@ export function MapView({
           ? compassHeadingRef.current
           : gpsHeading;
         latestLocationRef.current = { lat: position.coords.latitude, lng: position.coords.longitude, heading, speedKmh };
+        onLocationChange?.({ lat: position.coords.latitude, lng: position.coords.longitude, accuracyMeters: position.coords.accuracy });
         setMovementMode(nextMode);
         setLocationState("available");
         if (isFollowing) applyCamera(latestLocationRef.current, nextMode);
@@ -180,7 +183,7 @@ export function MapView({
       window.removeEventListener("deviceorientationabsolute", onOrientation as EventListener);
       window.removeEventListener("deviceorientation", onOrientation as EventListener);
     };
-  }, [applyCamera, isFollowing]);
+  }, [applyCamera, isFollowing, onLocationChange]);
 
   const updatePins = useCallback(
     (hidePins: boolean) => {

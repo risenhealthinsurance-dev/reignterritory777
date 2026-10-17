@@ -73,6 +73,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [searching, setSearching] = useState(false);
   const [pinDraft, setPinDraft] = useState<{ lat: number; lng: number; name: string; note: string } | null>(null);
   const [selectedMapEntity, setSelectedMapEntity] = useState<MapEntitySelection | null>(null);
+  const [liveLocation, setLiveLocation] = useState<{ lat: number; lng: number; accuracyMeters?: number } | null>(null);
   const allBusinesses = useMemo(() => [...businesses, ...pins, ...discovered.filter((item) => !businesses.some((business) => business.id === item.id))], [businesses, discovered, pins]);
   const visibleBusinesses = useMemo(() => filterBusinesses(allBusinesses, filters), [allBusinesses, filters]);
   const selectedAccountBase = allBusinesses.find((account) => account.id === selectedAccountId) ?? visibleBusinesses[0] ?? allBusinesses[0] ?? businesses[0];
@@ -169,6 +170,8 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           conversation: {
             messages: [...messages, { role: "user" as const, text: prompt }].slice(-12),
             selectedEntity: selectedMapEntity ?? undefined,
+            liveLocation: liveLocation ?? undefined,
+            route: { routeId: "A1", stopIds: routeStopIds, currentStopId: selectedAccount.id },
             pipeline: allBusinesses.map((account) => {
               const opportunity = businesses.find((business) => business.id === account.id);
               return {
@@ -237,7 +240,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} onLocationChange={setLiveLocation} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
