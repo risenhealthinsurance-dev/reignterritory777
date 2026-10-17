@@ -9,7 +9,7 @@ import type { AgentConfig, AgentKnowledgeSource, PipelineOpportunity, PipelineSt
 import { PIPELINE_STAGES } from "../contracts/mapGpt";
 import { createAgentStudioRepository, type AgentStudioRepository } from "../lib/agentStudioRepository";
 import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
-import { listAgentActions, saveAgentAction } from "../lib/agentStore";
+import { listAgentActions, replayStoredAgentActions, saveAgentAction } from "../lib/agentStore";
 import { createFieldActionClient } from "../lib/fieldAction";
 import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteStopIds } from "../lib/routePriority";
 import { authBypass, supabase } from "../lib/supabase";
@@ -231,6 +231,16 @@ export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" 
       setBusinesses(liveBusinesses);
       setSelectedAccountId((current) => liveBusinesses.some((business) => business.id === current) ? current : liveBusinesses[0].id);
     });
+  }, []);
+  useEffect(() => {
+    if (!fieldActionClient || !supabase) return;
+    let active = true;
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session || !active) return;
+      const accepted = await replayStoredAgentActions((action) => fieldActionClient.replay(action));
+      if (active && accepted.length) setRouteRevision((revision) => revision + 1);
+    }).catch(() => undefined);
+    return () => { active = false; };
   }, []);
   const selectedAccount = useMemo(() => businesses.find((account) => account.id === selectedAccountId) ?? businesses[0], [businesses, selectedAccountId]);
   return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen accounts={businesses} selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} onActionQueued={() => setRouteRevision((revision) => revision + 1)} routeRevision={routeRevision} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;

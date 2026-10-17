@@ -11,3 +11,15 @@ export function appendAgentMessage(id: string, message: AgentMessage) { const se
 export function saveAgentAction(action: AgentAction) { const actions = read<AgentAction[]>(ACTION_KEY, []); const index = actions.findIndex((item) => item.id === action.id); if (index >= 0) actions[index] = action; else actions.push(action); write(ACTION_KEY, actions); }
 export function getQueuedActions() { return read<AgentAction[]>(ACTION_KEY, []).filter((action) => action.status === "queued"); }
 export function listAgentActions() { return read<AgentAction[]>(ACTION_KEY, []); }
+export async function replayStoredAgentActions(writer: (action: AgentAction) => Promise<AgentAction>) {
+  const queued = getQueuedActions();
+  const results = await Promise.allSettled(queued.map((action) => writer(action)));
+  const accepted: AgentAction[] = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      saveAgentAction(result.value);
+      accepted.push(result.value);
+    }
+  }
+  return accepted;
+}
