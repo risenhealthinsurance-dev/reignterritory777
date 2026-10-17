@@ -1,4 +1,7 @@
 import type { Account } from "../data/accounts";
+import type { DayStop } from "../domain/repDay";
+import { NextBusinessCard } from "./NextBusinessCard";
+import { FieldActionSheet } from "./FieldActionSheet";
 
 export interface MapFallbackProps {
   height: number;
@@ -8,6 +11,13 @@ export interface MapFallbackProps {
   routeStopIds?: string[];
   onPinTap: (id: string) => void;
   showTerritoryMode?: boolean;
+  cockpitAccount?: Account;
+  cockpitStop?: DayStop;
+  showCockpit?: boolean;
+  onNavigate?: () => void;
+  onCall?: () => void;
+  onSchedule?: () => void;
+  onDisposition?: () => void;
 }
 
 const PIN_POSITIONS = [
@@ -27,6 +37,13 @@ export function MapFallback({
   routeStopIds,
   onPinTap,
   showTerritoryMode = false,
+  cockpitAccount,
+  cockpitStop,
+  showCockpit = false,
+  onNavigate,
+  onCall,
+  onSchedule,
+  onDisposition,
 }: MapFallbackProps) {
   const doneCount = doneAccountIds.length;
 
@@ -128,6 +145,13 @@ export function MapFallback({
           {showTerritoryMode ? "24 available · A1 recommended" : "14.4 mi · A1 loop"}
         </div>
       </div>
+
+      {showCockpit && cockpitAccount && onNavigate && onCall && onSchedule && onDisposition && (
+        <>
+          <NextBusinessCard account={cockpitAccount} stop={cockpitStop} onNavigate={onNavigate} />
+          <FieldActionSheet account={cockpitAccount} onCall={onCall} onSchedule={onSchedule} onDisposition={onDisposition} />
+        </>
+      )}
 
       {!showTerritoryMode &&
         accounts

@@ -76,6 +76,29 @@ test("shows territory context in the fallback", async () => {
   );
 });
 
+test("renders the mobile cockpit actions in fallback mode", async () => {
+  const { MapView } = await import("./MapView");
+  render(
+    <MapView
+      height={520}
+      accounts={accounts}
+      activeAccountId="apex"
+      doneAccountIds={[]}
+      onPinTap={() => undefined}
+      cockpitAccount={accounts.find((account) => account.id === "apex")}
+      showCockpit
+      onNavigate={() => undefined}
+      onCall={() => undefined}
+      onSchedule={() => undefined}
+      onDisposition={() => undefined}
+    />,
+  );
+
+  expect(screen.getByRole("region", { name: /Next best business: Apex/i })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Schedule Apex Manufacturing/i })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Set disposition for Apex/i })).toBeInTheDocument();
+});
+
 test("constructs the interactive route map when a token is configured", async () => {
   vi.resetModules();
   vi.stubEnv("VITE_MAPBOX_ACCESS_TOKEN", "test-public-token");

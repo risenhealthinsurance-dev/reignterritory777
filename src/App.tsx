@@ -227,7 +227,11 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const mapHeight = mapExpanded ? Math.max(vh - 190, MAP_H) : MAP_H;
+  const mapHeight = mapExpanded
+    ? Math.max(vh - 190, MAP_H)
+    : screen === "territory" || screen === "route"
+      ? Math.max(460, Math.round(vh * 0.58))
+      : MAP_H;
   const showMap = screen !== "chat" && screen !== "summary";
 
   const stops = day.stops;
@@ -509,6 +513,16 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
     screen === "stop" || screen === "disposition" || screen === "followup" || screen === "recovery"
       ? activeStopId
       : null;
+  const cockpitAccountId = day.currentStopId ?? day.routeStopIds[0] ?? accounts[0]?.id;
+  const cockpitAccount = accounts.find((account) => account.id === cockpitAccountId);
+  const cockpitStop = day.stops.find((stop) => stop.accountId === cockpitAccountId);
+
+  const openCockpitStop = useCallback((nextScreen: AppScreen) => {
+    if (!cockpitAccountId) return;
+    setActiveStopId(cockpitAccountId);
+    setDay((current) => ({ ...current, currentStopId: cockpitAccountId }));
+    setScreen(nextScreen);
+  }, [cockpitAccountId]);
 
   // ── Render bottom panel content ─────────────────────────────────────────
   function renderPanel() {
@@ -802,6 +816,13 @@ export default function App({ initialScreen = "territory", initialAccountId = "a
                   screen === "territory" || screen === "quadrant" || screen === "quad_route"
                 }
                 activeQuadrantId={activeQuadrantId}
+                cockpitAccount={cockpitAccount}
+                cockpitStop={cockpitStop}
+                showCockpit={screen === "territory" || screen === "route"}
+                onNavigate={() => openCockpitStop("stop")}
+                onCall={() => openCockpitStop("stop")}
+                onSchedule={() => openCockpitStop("followup")}
+                onDisposition={() => openCockpitStop("disposition")}
                 onQuadrantTap={(id) => {
                   setActiveQuadrantId(id);
                   setScreen("quadrant");

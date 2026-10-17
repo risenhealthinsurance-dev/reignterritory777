@@ -1,8 +1,11 @@
 import { useEffect, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import type { Account } from "../data/accounts";
+import type { DayStop } from "../domain/repDay";
 import { quadrantGeoJSON, boundaryGeoJSON, quadrantLabelGeoJSON } from "../data/territory_grid";
 import { MapFallback } from "./MapFallback";
+import { NextBusinessCard } from "./NextBusinessCard";
+import { FieldActionSheet } from "./FieldActionSheet";
 import type { GeoJsonFeatureCollection } from "../lib/gis";
 
 const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
@@ -19,6 +22,13 @@ export interface MapViewProps {
   activeQuadrantId?: string;
   onQuadrantTap?: (id: string) => void;
   zoningOverlay?: GeoJsonFeatureCollection;
+  cockpitAccount?: Account;
+  cockpitStop?: DayStop;
+  showCockpit?: boolean;
+  onNavigate?: () => void;
+  onCall?: () => void;
+  onSchedule?: () => void;
+  onDisposition?: () => void;
 }
 
 export const FORT_PIERCE_CENTER: [number, number] = [-80.337, 27.44];
@@ -46,6 +56,13 @@ export function MapView({
   activeQuadrantId,
   onQuadrantTap,
   zoningOverlay,
+  cockpitAccount,
+  cockpitStop,
+  showCockpit = false,
+  onNavigate,
+  onCall,
+  onSchedule,
+  onDisposition,
 }: MapViewProps) {
   if (!mapboxAccessToken) {
     return (
@@ -57,6 +74,13 @@ export function MapView({
         routeStopIds={routeStopIds}
         onPinTap={onPinTap}
         showTerritoryMode={showTerritoryMode}
+        cockpitAccount={cockpitAccount}
+        cockpitStop={cockpitStop}
+        showCockpit={showCockpit}
+        onNavigate={onNavigate}
+        onCall={onCall}
+        onSchedule={onSchedule}
+        onDisposition={onDisposition}
       />
     );
   }
@@ -561,6 +585,12 @@ export function MapView({
             </span>
           </div>
         </div>
+      )}
+      {showCockpit && cockpitAccount && onNavigate && onCall && onSchedule && onDisposition && (
+        <>
+          <NextBusinessCard account={cockpitAccount} stop={cockpitStop} onNavigate={onNavigate} />
+          <FieldActionSheet account={cockpitAccount} onCall={onCall} onSchedule={onSchedule} onDisposition={onDisposition} />
+        </>
       )}
     </div>
   );
