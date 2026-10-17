@@ -429,7 +429,12 @@ export function MapView({
       }
       map.on("click", (event) => {
         if (!onMapClick) return;
-        const building = map.queryRenderedFeatures(event.point, { layers: ["building"] })[0];
+        const building = map.queryRenderedFeatures(event.point).find((feature) => {
+          const layer = feature.layer as { id?: string; type?: string } | undefined;
+          const sourceLayer = String((feature as { sourceLayer?: string }).sourceLayer ?? "").toLowerCase();
+          const layerId = String(layer?.id ?? "").toLowerCase();
+          return layer?.type === "fill-extrusion" || sourceLayer.includes("building") || layerId.includes("building");
+        });
         if (building) {
           const properties = (building as { properties?: Record<string, unknown> }).properties ?? {};
           const name = String(properties.name ?? properties.name_en ?? properties.address ?? properties.house_num ?? "Mapbox building");
