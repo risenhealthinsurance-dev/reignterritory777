@@ -261,7 +261,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       : Boolean(actionDraft?.note.trim());
 
   return (
-    <section className="mapgpt-home" aria-label="Home map and assistant">
+    <section className={`mapgpt-home ${territoryStage !== "idle" ? "mapgpt-home--territory-editing" : ""} ${territoryStage === "quadrants" ? "mapgpt-home--territory-quadrants" : ""}`} aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
         <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} showTerritoryMode={territoryStage === "quadrants"} onLocationChange={(location) => setLocationContext({ state: "available", ...location, updatedAt: Date.now() })} onLocationStateChange={setLocationContext} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
         {territoryStage !== "idle" && <div className={`mapgpt-territory-editor mapgpt-territory-editor--${territoryStage}`} style={{ width: territorySize, height: territorySize }} aria-label={territoryStage === "drawing" ? "Resize territory boundary" : "Territory quadrants"}>

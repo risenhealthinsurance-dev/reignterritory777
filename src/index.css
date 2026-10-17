@@ -177,6 +177,9 @@ body,
 .mapgpt-nav button span { font-size: 20px; line-height: 1; }
 .mapgpt-nav button strong { font-size: 10px; letter-spacing: .02em; }
 .mapgpt-home { position: relative; height: 100%; overflow: hidden; background: #081221; }
+.mapgpt-home--territory-editing .mapgpt-home__assistant { opacity: 0; pointer-events: none; }
+.mapgpt-home--territory-quadrants .mapgpt-home__topbar,
+.mapgpt-home--territory-quadrants .mapgpt-home__business-picker { opacity: 0; pointer-events: none; }
 .mapgpt-home__map { position: absolute; inset: 0; }
 .mapgpt-home__map > div.mapboxgl-map { height: 100% !important; }
 .mapgpt-territory-editor { position: absolute; z-index: 6; top: 44%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(226,232,240,.92); background: rgba(15,23,42,.42); box-shadow: 0 0 0 9999px rgba(2,6,23,.16), 0 0 26px rgba(15,23,42,.45); pointer-events: auto; }
