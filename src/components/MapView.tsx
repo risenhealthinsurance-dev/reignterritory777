@@ -532,8 +532,7 @@ export function MapView({
           onEntitySelect({ entityId, lat: lngLat.lat, lng: lngLat.lng, source: "mapbox-address", properties: {} });
         }
       };
-      const canvasContainer = map.getCanvasContainer();
-      canvasContainer.addEventListener("click", (event) => handleMapClick(event.clientX, event.clientY));
+      map.on("click", (event) => handleMapClick(event.originalEvent.clientX, event.originalEvent.clientY));
     });
 
     const ro = new ResizeObserver(() => mapRef.current?.resize());
