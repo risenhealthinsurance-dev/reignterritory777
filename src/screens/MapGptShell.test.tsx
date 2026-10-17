@@ -6,7 +6,7 @@ import { MapGptShell } from "./MapGptShell";
 import { listAgentActions } from "../lib/agentStore";
 
 vi.mock("../components/MapView", () => ({
-  MapView: (props: { routeStopIds?: string[]; onEntitySelect?: (entity: unknown) => void }) => <div aria-label="Live territory map" data-route-stop-ids={props.routeStopIds?.join(",")}><button onClick={() => props.onEntitySelect?.({ entityId: "mapbox-building-123", source: "mapbox-building", lat: 27.44, lng: -80.337, properties: {} })}>Select building</button></div>,
+  MapView: (props: { routeStopIds?: string[]; onEntitySelect?: (entity: unknown) => void; onPinTap?: (id: string) => void }) => <div aria-label="Live territory map" data-route-stop-ids={props.routeStopIds?.join(",")}><button aria-label="Open Apex Manufacturing Group" onClick={() => props.onPinTap?.("apex")}>Open Apex marker</button><button onClick={() => props.onEntitySelect?.({ entityId: "mapbox-building-123", source: "mapbox-building", lat: 27.44, lng: -80.337, properties: {} })}>Select building</button></div>,
 }));
 
 beforeEach(() => localStorage.clear());
@@ -25,7 +25,7 @@ test("selecting a business on Home scopes the assistant context", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);
   expect(screen.getByRole("region", { name: /Live Mapbox territory map/i })).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: /Apex Manufacturing Group/i }));
+  await user.click(screen.getByRole("button", { name: /Open Apex Manufacturing Group/i }));
   expect(screen.getAllByText(/Apex Manufacturing Group/).length).toBeGreaterThan(0);
   expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Apex Manufacturing Group/);
 });
