@@ -9,8 +9,9 @@ import type { AgentConfig, AgentKnowledgeSource, PipelineOpportunity, PipelineSt
 import { PIPELINE_STAGES } from "../contracts/mapGpt";
 import { createAgentStudioRepository, type AgentStudioRepository } from "../lib/agentStudioRepository";
 import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
-import { saveAgentAction } from "../lib/agentStore";
+import { listAgentActions, saveAgentAction } from "../lib/agentStore";
 import { createFieldActionClient } from "../lib/fieldAction";
+import { prioritizeRouteStopIds } from "../lib/routePriority";
 import { authBypass, supabase } from "../lib/supabase";
 
 const repository = createAgentStudioRepository(supabase);
@@ -54,7 +55,7 @@ interface ActionDraft {
   note: string;
 }
 
-function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline }: { accounts: Account[]; selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void }) {
+function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline, onActionQueued, routeRevision }: { accounts: Account[]; selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void; onActionQueued: () => void; routeRevision: number }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
     { role: "assistant", text: "I’m ready. Ask about a business, your territory, or the next best action." },
@@ -63,6 +64,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
   const [actionSyncing, setActionSyncing] = useState(false);
   const selectedAccount = businesses.find((account) => account.id === selectedAccountId) ?? businesses[0];
+  const routeStopIds = useMemo(() => prioritizeRouteStopIds(businesses, listAgentActions()), [businesses, routeRevision]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -108,6 +110,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         : { note: actionDraft.note.trim() };
     const action = queueAgentAction(createAgentAction({ type, accountId: selectedAccount.id, payload, sourceMessageId: crypto.randomUUID() }));
     saveAgentAction(action);
+    onActionQueued();
     setActionDraft(null);
     try {
       const session = fieldActionClient && supabase ? (await supabase.auth.getSession()).data.session : null;
@@ -134,7 +137,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={businesses} routeStopIds={businesses.map((account) => account.id)} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} doneAccountIds={businesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
+        <MapView height={window.innerHeight} accounts={businesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} doneAccountIds={businesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
@@ -206,6 +209,7 @@ function PipelineScreen({ repo, onOpenHome }: { repo: AgentStudioRepository; onO
 export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" }: { initialScreen?: AppScreen; initialAccountId?: string | null }) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen === "studio" || initialScreen === "pipeline" ? initialScreen : "home");
   const [businesses, setBusinesses] = useState<Account[]>(accounts);
+  const [routeRevision, setRouteRevision] = useState(0);
   const [selectedAccountId, setSelectedAccountId] = useState(initialAccountId ?? "apex");
   useEffect(() => {
     void repository.listBusinesses().then((liveBusinesses) => {
@@ -215,5 +219,5 @@ export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" 
     });
   }, []);
   const selectedAccount = useMemo(() => businesses.find((account) => account.id === selectedAccountId) ?? businesses[0], [businesses, selectedAccountId]);
-  return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen accounts={businesses} selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;
+  return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen accounts={businesses} selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} onActionQueued={() => setRouteRevision((revision) => revision + 1)} routeRevision={routeRevision} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;
 }

@@ -1,13 +1,15 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { MapGptShell } from "./MapGptShell";
 import { listAgentActions } from "../lib/agentStore";
 
 vi.mock("../components/MapView", () => ({
-  MapView: () => <div aria-label="Live territory map" />,
+  MapView: (props: { routeStopIds?: string[] }) => <div aria-label="Live territory map" data-route-stop-ids={props.routeStopIds?.join(",")} />,
 }));
+
+beforeEach(() => localStorage.clear());
 
 test("exposes exactly Home, Agent Studio, and Pipeline as primary navigation", () => {
   render(<MapGptShell />);
@@ -60,6 +62,7 @@ test("requires confirmation before creating a callback draft", async () => {
 
   expect(screen.queryByRole("dialog", { name: /Schedule callback or appointment/i })).not.toBeInTheDocument();
   expect(screen.getByText(/Queued locally/i)).toBeInTheDocument();
+  expect(screen.getByLabelText("Live territory map")).toHaveAttribute("data-route-stop-ids", "apex,meridian,pacific,solano,westside,bravo");
   const actions = listAgentActions();
   expect(actions).toEqual(expect.arrayContaining([
     expect.objectContaining({
