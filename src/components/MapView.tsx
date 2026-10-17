@@ -487,6 +487,12 @@ export function MapView({
         const rect = map.getCanvas().getBoundingClientRect();
         const point = { x: clientX - rect.left, y: clientY - rect.top };
         const lngLat = map.unproject([point.x, point.y]);
+        // Drawing mode owns map clicks. Do this before entity hit-testing so a boundary
+        // point cannot be swallowed by Mapbox building/address selection.
+        if (onMapClick) {
+          onMapClick({ lat: lngLat.lat, lng: lngLat.lng });
+          return;
+        }
         const building = map.queryRenderedFeatures([point.x, point.y]).find((feature) => {
           const layer = feature.layer as { id?: string; type?: string } | undefined;
           const sourceLayer = String((feature as { sourceLayer?: string }).sourceLayer ?? "").toLowerCase();
