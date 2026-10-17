@@ -21,6 +21,13 @@ test("exposes exactly Home, Agent Studio, and Pipeline as primary navigation", (
   expect(screen.queryByRole("button", { name: /Field AI|Territory|Route|Summary/i })).not.toBeInTheDocument();
 });
 
+test("keeps saved territory status off the map surface", () => {
+  localStorage.setItem("reign.savedTerritories", JSON.stringify([[{ lat: 27.44, lng: -80.34 }, { lat: 27.45, lng: -80.34 }, { lat: 27.45, lng: -80.33 }]]));
+  render(<MapGptShell />);
+  expect(screen.queryByRole("region", { name: /Saved territories/i })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Overlapping boundaries are blocked/i)).not.toBeInTheDocument();
+});
+
 test("selecting a business on Home scopes the assistant context", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);
