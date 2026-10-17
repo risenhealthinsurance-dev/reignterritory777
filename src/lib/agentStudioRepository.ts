@@ -108,6 +108,8 @@ function mapBusinessRow(row: any, index: number): Account | null {
     lat: coordinates.lat,
     lng: coordinates.lng,
     routeOrder: index + 1,
+    source: "supabase",
+    isOpen: row.status === "open" ? true : row.status === "closed" ? false : null,
   };
 }
 

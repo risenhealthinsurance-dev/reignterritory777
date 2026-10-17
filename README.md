@@ -20,6 +20,8 @@ pnpm dev
 
 Set `VITE_MAPBOX_ACCESS_TOKEN` in `.env.local` to enable Mapbox. Without it, the application displays a fully navigable styled fallback map.
 
+On Home, use **Search live businesses** to query Mapbox Search Box, **Open now** to request currently open POIs, and **My pins** to show only rep-created map pins. Clicking the map or choosing **＋ Add pin** creates a rep pin. Pins use Supabase when an authenticated project is configured and local browser persistence during the test bypass.
+
 ## Quality checks
 
 ```bash

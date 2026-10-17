@@ -20,6 +20,12 @@ test("lists local businesses with stable account-shaped records", async () => {
   expect(businesses[0]).toMatchObject({ id: "meridian", name: "Meridian Medical Devices" });
 });
 
+test("creates and reloads rep pins through the local fallback", async () => {
+  const created = await repository.createUserPin({ name: "Corner prospect", lat: 27.44, lng: -80.33, note: "Ask for operations lead" });
+  expect(created).toMatchObject({ name: "Corner prospect", source: "user", lat: 27.44, lng: -80.33 });
+  expect(await repository.listUserPins()).toEqual([created]);
+});
+
 test("maps live businesses and coordinates from the Supabase repository", async () => {
   const liveBusiness = {
     id: "aaaaaaaa-0000-0000-0000-000000000099",
