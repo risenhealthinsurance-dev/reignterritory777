@@ -15,3 +15,10 @@ export async function searchMapboxPlaces(options: PlacesSearchOptions, fetcher: 
   const payload = await response.json() as { businesses?: Account[] };
   return payload.businesses ?? [];
 }
+
+export async function reverseMapboxPlace(point: { lat: number; lng: number }, fetcher: typeof fetch = fetch) {
+  const params = new URLSearchParams({ reverse: "true", lat: String(point.lat), lng: String(point.lng) });
+  const response = await fetcher(`/api/mapbox-places?${params.toString()}`);
+  if (!response.ok) throw new Error(`Mapbox reverse geocoding failed (${response.status})`);
+  return await response.json() as { name: string; address: string };
+}

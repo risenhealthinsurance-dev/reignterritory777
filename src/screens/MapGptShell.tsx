@@ -14,7 +14,7 @@ import { createFieldActionClient } from "../lib/fieldAction";
 import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteStopIds } from "../lib/routePriority";
 import { authBypass, supabase } from "../lib/supabase";
 import { filterBusinesses } from "../lib/businessFilters";
-import { searchMapboxPlaces } from "../lib/mapboxPlaces";
+import { reverseMapboxPlace, searchMapboxPlaces } from "../lib/mapboxPlaces";
 
 const repository = createAgentStudioRepository(supabase);
 const fieldAiClient: FieldAiClient | null = supabase ? createFieldAiClient(supabase) : null;
@@ -174,7 +174,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => setPinDraft({ ...point, name: point.suggestedName ?? "", note: point.note ?? "" })} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => { setPinDraft({ ...point, name: point.suggestedName ?? "Mapbox location", note: point.note ?? "Selected from the map. Review before saving." }); void reverseMapboxPlace(point).then((place) => setPinDraft((current) => current ? { ...current, name: place.name, note: `${place.address}. Selected from the map; review before saving.` } : current)).catch(() => undefined); }} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>

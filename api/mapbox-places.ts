@@ -5,6 +5,21 @@ function first(value: string | string[] | undefined) { return Array.isArray(valu
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== "GET") return response.status(405).json({ error: "Method not allowed" });
+  const reverse = first(request.query?.reverse) === "true";
+  if (reverse) {
+    const lng = Number(first(request.query?.lng));
+    const lat = Number(first(request.query?.lat));
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return response.status(400).json({ error: "Valid lng and lat are required" });
+    const token = process.env.MAPBOX_ACCESS_TOKEN ?? process.env.VITE_MAPBOX_ACCESS_TOKEN;
+    if (!token) return response.status(503).json({ error: "Mapbox search is not configured" });
+    try {
+      const upstream = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?${new URLSearchParams({ access_token: token, limit: "1" })}`);
+      if (!upstream.ok) return response.status(upstream.status).json({ error: "Mapbox reverse geocoding failed" });
+      const payload = await upstream.json() as { features?: Array<{ text?: string; place_name?: string; properties?: Record<string, unknown> }> };
+      const feature = payload.features?.[0];
+      return response.status(200).json({ name: feature?.text ?? "Mapbox location", address: feature?.place_name ?? "Address unavailable" });
+    } catch { return response.status(502).json({ error: "Unable to reach Mapbox" }); }
+  }
   const query = first(request.query?.q)?.trim() ?? "";
   if (!query || query.length > 256) return response.status(400).json({ error: "Query must be between 1 and 256 characters" });
   const token = process.env.MAPBOX_ACCESS_TOKEN ?? process.env.VITE_MAPBOX_ACCESS_TOKEN;
