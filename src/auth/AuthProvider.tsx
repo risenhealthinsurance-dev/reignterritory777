@@ -39,10 +39,8 @@ interface AuthContextValue {
 export function getAuthRedirectUrl(location: Pick<Location, "origin" | "hostname"> = window.location) {
   const configured = import.meta.env.VITE_AUTH_REDIRECT_URL?.trim();
   if (configured) return configured;
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-    return "https://reignterritory777.vercel.app";
-  }
-  return location.origin;
+  if (location.hostname === "reignterritory777.vercel.app") return location.origin;
+  return "https://reignterritory777.vercel.app";
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);

@@ -39,6 +39,7 @@ function SessionProbe() {
 describe("AuthProvider", () => {
   it("uses the stable deployed callback when sign-in starts on localhost", () => {
     expect(getAuthRedirectUrl({ origin: "http://localhost:3000", hostname: "localhost" })).toBe("https://reignterritory777.vercel.app");
+    expect(getAuthRedirectUrl({ origin: "https://reignterritory777-nzv0jeosx-reignagentic-9425a773.vercel.app", hostname: "reignterritory777-nzv0jeosx-reignagentic-9425a773.vercel.app" })).toBe("https://reignterritory777.vercel.app");
     expect(getAuthRedirectUrl({ origin: "https://reignterritory777.vercel.app", hostname: "reignterritory777.vercel.app" })).toBe("https://reignterritory777.vercel.app");
   });
   it("does not render protected content before session resolution", async () => {
