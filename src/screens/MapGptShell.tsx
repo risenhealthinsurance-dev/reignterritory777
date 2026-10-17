@@ -178,7 +178,9 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       <div className="mapgpt-home__business-picker" aria-label="Businesses on map">
         <div className="mapgpt-live-search"><input aria-label="Search live businesses" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search live businesses" /><button onClick={() => void discoverPlaces()} disabled={searching}>{searching ? "…" : "Search"}</button></div>
         <div className="mapgpt-filter-row"><label><input type="checkbox" checked={filters.openOnly} onChange={(event) => setFilters({ ...filters, openOnly: event.target.checked })} /> Open now</label><label><input type="checkbox" checked={filters.userPinsOnly} onChange={(event) => setFilters({ ...filters, userPinsOnly: event.target.checked })} /> My pins</label><button onClick={() => setPinDraft({ lat: selectedAccount.lat, lng: selectedAccount.lng, name: "", note: "" })}>＋ Add pin</button></div>
-        {visibleBusinesses.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}{account.source === "user" ? " · My pin" : account.isOpen === true ? " · Open" : ""}</button>)}
+        <div className="mapgpt-business-options" aria-label="Business results">
+          {visibleBusinesses.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}{account.source === "user" ? " · My pin" : account.isOpen === true ? " · Open" : ""}</button>)}
+        </div>
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
         <div className="mapgpt-context"><span>Current business</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small>{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>

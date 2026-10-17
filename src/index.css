@@ -178,9 +178,13 @@ body,
 .mapgpt-brand--light { color: #1c2b43; }
 .mapgpt-brand--light small { color: #6d7d95; }
 .mapgpt-icon-button { width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; background: rgba(5,12,24,.62); color: #fff; font-size: 18px; }
-.mapgpt-home__business-picker { position: absolute; top: 68px; left: 14px; right: 14px; display: flex; gap: 7px; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; }
+.mapgpt-home__business-picker { position: absolute; top: 68px; left: 14px; right: 14px; display: grid; gap: 7px; overflow: hidden; padding: 4px 0 8px; }
 .mapgpt-home__business-picker::-webkit-scrollbar { display: none; }
+.mapgpt-business-options { display: flex; gap: 7px; min-width: 0; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; scroll-snap-type: x proximity; }
+.mapgpt-business-options::-webkit-scrollbar { display: none; }
+.mapgpt-business-options button { max-width: min(220px, 72vw); overflow: hidden; text-overflow: ellipsis; }
 .mapgpt-home__business-picker button { flex: 0 0 auto; border: 1px solid rgba(192,220,255,.35); border-radius: 999px; padding: 8px 11px; background: rgba(7,19,38,.74); color: #d5e8ff; font-size: 11px; white-space: nowrap; backdrop-filter: blur(14px); }
+.mapgpt-business-options button { scroll-snap-align: start; }
 .mapgpt-home__business-picker button[aria-pressed="true"] { border-color: #55c8ff; background: #2379ef; color: #fff; }
 .mapgpt-home__assistant { position: absolute; left: 12px; right: 12px; bottom: 12px; display: grid; gap: 8px; }
 .mapgpt-context { align-self: end; width: min(100%, 300px); margin-left: auto; padding: 12px 14px; border: 1px solid rgba(123,191,255,.35); border-radius: 17px; background: rgba(7,17,34,.84); color: #fff; box-shadow: 0 16px 32px rgba(0,0,0,.28); backdrop-filter: blur(18px); }
@@ -218,7 +222,7 @@ body,
 .mapgpt-composer input { min-width: 0; flex: 1; border: 1px solid #27466d; border-radius: 12px; background: #0b1930; color: #fff; padding: 10px; font: inherit; font-size: 12px; }
 .mapgpt-composer button { width: 38px; border: 0; border-radius: 12px; background: #287bf0; color: #fff; font-size: 18px; }
 
-.studio-screen, .pipeline-screen { height: 100%; overflow: auto; background: #f4f7fb; }
+.studio-screen, .pipeline-screen { height: 100%; overflow: auto; background: #f4f7fb; scrollbar-gutter: stable; }
 .studio-header, .pipeline-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 14px; background: #fff; border-bottom: 1px solid #dce5f0; }
 .studio-status { color: #238b63; font-size: 11px; font-weight: 700; }
 .studio-layout { display: grid; gap: 12px; padding: 14px; }
@@ -266,10 +270,11 @@ body,
 
 .pipeline-header { align-items: end; }
 .pipeline-header p { margin: 5px 0 0; color: #71829a; font-size: 12px; }
+.pipeline-header p::after { content: " Swipe stages to browse"; color: #1c65e8; font-weight: 700; }
 .pipeline-total { color: #1c65e8; font-size: 21px; font-weight: 800; text-align: right; }
 .pipeline-total small { display: block; color: #7b8ba0; font-size: 9px; font-weight: 500; text-transform: uppercase; }
-.pipeline-board { display: flex; gap: 10px; overflow-x: auto; align-items: start; padding: 14px; }
-.pipeline-stage { width: 245px; flex: 0 0 245px; min-height: 210px; border-radius: 14px; background: #e8eef6; padding: 10px; }
+.pipeline-board { display: flex; gap: 10px; overflow-x: auto; align-items: start; padding: 14px; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.pipeline-stage { width: 245px; flex: 0 0 245px; min-height: 210px; border-radius: 14px; background: #e8eef6; padding: 10px; scroll-snap-align: start; }
 .pipeline-stage__title { display: flex; justify-content: space-between; color: #2b3c55; margin-bottom: 8px; font-size: 12px; }
 .pipeline-stage__title span { display: grid; place-items: center; min-width: 20px; height: 20px; border-radius: 50%; background: #d3dfed; color: #647993; font-size: 10px; }
 .pipeline-card { display: grid; gap: 5px; margin-bottom: 8px; border: 1px solid #d8e3ef; border-radius: 11px; background: #fff; padding: 11px; box-shadow: 0 3px 10px rgba(37,58,86,.06); }
@@ -292,6 +297,12 @@ body,
   .studio-header, .pipeline-header { padding: 20px 24px; }
   .pipeline-board { padding: 20px 24px; }
   .mapgpt-home__assistant { left: 24px; right: 24px; bottom: 24px; max-width: 430px; }
+}
+
+@media (max-width: 520px) {
+  .pipeline-board { padding-inline: 14px 22px; }
+  .pipeline-stage { width: calc(100vw - 50px); flex-basis: calc(100vw - 50px); }
+  .studio-layout { padding-bottom: 28px; }
 }
 
 @keyframes pin-pulse {
