@@ -11,6 +11,7 @@ import { DEFAULT_AGENT_ACTIONS } from "../contracts/mapGpt";
 
 const CONFIG_KEY = "reign-territory:mapgpt:agent-config:v1";
 const PIPELINE_KEY = "reign-territory:mapgpt:pipeline:v1";
+const PINS_KEY = "reign-territory:mapgpt:user-pins:v1";
 
 export const DEFAULT_AGENT_CONFIG: AgentConfig = {
   id: "reign-territory-agent",
@@ -25,6 +26,8 @@ export const DEFAULT_AGENT_CONFIG: AgentConfig = {
 
 export interface AgentStudioRepository {
   listBusinesses(): Promise<Account[]>;
+  listUserPins(): Promise<Account[]>;
+  createUserPin(input: { name: string; lat: number; lng: number; address?: string; note?: string }): Promise<Account>;
   loadAgentConfig(): Promise<AgentConfig>;
   saveAgentConfig(config: AgentConfig): Promise<AgentConfig>;
   addKnowledgeSource(input: { kind: AgentKnowledgeSource["kind"]; name: string; url?: string; content?: string; fileName?: string }): Promise<AgentKnowledgeSource>;
@@ -49,6 +52,10 @@ function read<T>(key: string, fallback: T): T {
 
 function write<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function localPins(): Account[] {
+  return read<Account[]>(PINS_KEY, []).map((pin) => ({ ...pin, source: "user" }));
 }
 
 function seededPipeline(): PipelineOpportunity[] {
@@ -112,7 +119,31 @@ export function createLocalAgentStudioRepository(): AgentStudioRepository {
     return next;
   };
   return {
-    async listBusinesses() { return accounts; },
+    async listBusinesses() { return accounts.map((account) => ({ ...account, source: "seed" as const })); },
+    async listUserPins() { return localPins(); },
+    async createUserPin(input) {
+      const pin: Account = {
+        id: `pin-${crypto.randomUUID()}`,
+        name: input.name,
+        industry: "Technology",
+        tier: "SMB",
+        contact: { name: "Rep-created pin", title: "Unverified", phone: "" },
+        address: input.address ?? `${input.lat.toFixed(5)}, ${input.lng.toFixed(5)}`,
+        lat: input.lat,
+        lng: input.lng,
+        revenue: 0,
+        lastVisit: "",
+        lastVisitDaysAgo: 0,
+        activities: [],
+        notes: input.note ?? "",
+        pinNote: input.note,
+        routeOrder: localPins().length + 1,
+        done: false,
+        source: "user",
+      };
+      write(PINS_KEY, [...localPins(), pin]);
+      return pin;
+    },
     async loadAgentConfig() { return load(); },
     async saveAgentConfig(config) { return save(config); },
     async addKnowledgeSource(input) {
@@ -161,6 +192,31 @@ export function createAgentStudioRepository(client: SupabaseAgentClient | null):
         const businesses = (data ?? []).map((businessRow: any, index: number) => mapBusinessRow(businessRow, index)).filter((business: Account | null): business is Account => Boolean(business));
         return businesses.length ? businesses : local.listBusinesses();
       }, () => local.listBusinesses());
+    },
+    async listUserPins() {
+      return remoteOr(async () => {
+        const { data, error } = await remoteClient.from("rep_map_pins").select("id,name,address,note,latitude,longitude,created_at").order("created_at", { ascending: true });
+        if (error) throw error;
+        return (data ?? []).map((row: any, index: number) => ({
+          id: row.id,
+          name: row.name,
+          industry: "Technology",
+          tier: "SMB",
+          contact: { name: "Rep-created pin", title: "Unverified", phone: "" },
+          address: row.address ?? `${row.latitude}, ${row.longitude}`,
+          lat: Number(row.latitude), lng: Number(row.longitude), revenue: 0, lastVisit: "", lastVisitDaysAgo: 0,
+          activities: [], notes: row.note ?? "", pinNote: row.note, routeOrder: index + 1, done: false, source: "user" as const,
+        }));
+      }, () => local.listUserPins());
+    },
+    async createUserPin(input) {
+      return remoteOr(async () => {
+        const id = crypto.randomUUID();
+        const { data, error } = await remoteClient.from("rep_map_pins").insert({ id, name: input.name, address: input.address, note: input.note, latitude: input.lat, longitude: input.lng }).select("id,name,address,note,latitude,longitude").single();
+        if (error) throw error;
+        const localPin = await local.createUserPin(input);
+        return { ...localPin, id: data?.id ?? id };
+      }, () => local.createUserPin(input));
     },
     async loadAgentConfig() {
       return remoteOr(async () => {

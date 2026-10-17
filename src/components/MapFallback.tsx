@@ -10,6 +10,7 @@ export interface MapFallbackProps {
   doneAccountIds: string[];
   routeStopIds?: string[];
   onPinTap: (id: string) => void;
+  onMapClick?: (point: { lat: number; lng: number }) => void;
   showTerritoryMode?: boolean;
   minimalChrome?: boolean;
   cockpitAccount?: Account;
@@ -37,6 +38,7 @@ export function MapFallback({
   doneAccountIds,
   routeStopIds,
   onPinTap,
+  onMapClick,
   showTerritoryMode = false,
   minimalChrome = false,
   cockpitAccount,
@@ -147,6 +149,8 @@ export function MapFallback({
           {showTerritoryMode ? "24 available · A1 recommended" : "14.4 mi · A1 loop"}
         </div>
       </div>}
+
+      {onMapClick && <button className="map-fallback-drop-pin" onClick={() => onMapClick({ lat: 27.44, lng: -80.337 })}>＋ Drop pin at map center</button>}
 
       {showCockpit && cockpitAccount && onNavigate && onCall && onSchedule && onDisposition && (
         <>

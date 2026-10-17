@@ -1396,6 +1396,22 @@ body,
     sans-serif;
   resize: vertical;
 }
+
+.mapgpt-live-search { display: flex; gap: 8px; min-width: 280px; }
+.mapgpt-live-search input { min-width: 0; flex: 1; border: 1px solid rgba(148,163,184,.35); border-radius: 999px; background: rgba(6,8,16,.82); color: #e2e8f0; padding: 10px 14px; }
+.mapgpt-live-search button, .mapgpt-filter-row button { border: 1px solid rgba(96,165,250,.45); background: #1d4ed8; color: white; border-radius: 999px; padding: 9px 13px; cursor: pointer; }
+.mapgpt-filter-row { display: flex; align-items: center; gap: 12px; padding: 8px 2px; color: #cbd5e1; font-size: 11px; white-space: nowrap; }
+.mapgpt-filter-row label { display: inline-flex; align-items: center; gap: 5px; }
+.mapgpt-pin-dialog { position: fixed; z-index: 20; left: 50%; bottom: 22px; transform: translateX(-50%); width: min(360px, calc(100vw - 28px)); display: grid; gap: 10px; padding: 16px; border: 1px solid rgba(96,165,250,.55); border-radius: 18px; background: rgba(7,12,24,.96); color: #e2e8f0; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
+.mapgpt-pin-dialog small { color: #93c5fd; font-family: "DM Mono", monospace; }
+.mapgpt-pin-dialog label { display: grid; gap: 5px; font-size: 11px; color: #a8b4c8; }
+.mapgpt-pin-dialog input, .mapgpt-pin-dialog textarea { border: 1px solid #334155; border-radius: 9px; padding: 9px; background: #0f172a; color: white; }
+.mapgpt-pin-dialog textarea { min-height: 56px; resize: vertical; }
+.mapgpt-pin-dialog > div { display: flex; justify-content: flex-end; gap: 8px; }
+.mapgpt-pin-dialog button { border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; background: #162238; color: #dbeafe; }
+.mapgpt-pin-dialog button:last-child { background: #2563eb; border-color: #60a5fa; }
+.map-fallback-drop-pin { position: absolute; z-index: 2; right: 12px; bottom: 12px; border: 1px solid #60a5fa; border-radius: 999px; padding: 9px 12px; background: #172554; color: white; }
+@media (max-width: 520px) { .mapgpt-live-search { min-width: 0; width: 100%; } .mapgpt-filter-row { overflow-x: auto; } }
 .inline-reason button {
   min-width: 74px;
 }

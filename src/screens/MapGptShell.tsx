@@ -13,6 +13,8 @@ import { listAgentActions, replayStoredAgentActions, saveAgentAction } from "../
 import { createFieldActionClient } from "../lib/fieldAction";
 import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteStopIds } from "../lib/routePriority";
 import { authBypass, supabase } from "../lib/supabase";
+import { filterBusinesses } from "../lib/businessFilters";
+import { searchMapboxPlaces } from "../lib/mapboxPlaces";
 
 const repository = createAgentStudioRepository(supabase);
 const fieldAiClient: FieldAiClient | null = supabase ? createFieldAiClient(supabase) : null;
@@ -63,10 +65,39 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [loading, setLoading] = useState(false);
   const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
   const [actionSyncing, setActionSyncing] = useState(false);
-  const selectedAccount = businesses.find((account) => account.id === selectedAccountId) ?? businesses[0];
+  const [pins, setPins] = useState<Account[]>([]);
+  const [discovered, setDiscovered] = useState<Account[]>([]);
+  const [filters, setFilters] = useState({ openOnly: false, userPinsOnly: false });
+  const [search, setSearch] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [pinDraft, setPinDraft] = useState<{ lat: number; lng: number; name: string; note: string } | null>(null);
+  const allBusinesses = useMemo(() => [...businesses, ...pins, ...discovered.filter((item) => !businesses.some((business) => business.id === item.id))], [businesses, discovered, pins]);
+  const visibleBusinesses = useMemo(() => filterBusinesses(allBusinesses, filters), [allBusinesses, filters]);
+  const selectedAccount = allBusinesses.find((account) => account.id === selectedAccountId) ?? visibleBusinesses[0] ?? allBusinesses[0] ?? businesses[0];
   const latestDisposition = findLatestDispositionAction(listAgentActions(), selectedAccount.id);
-  const routeStopIds = useMemo(() => prioritizeRouteStopIds(businesses, listAgentActions()), [businesses, routeRevision]);
+  const routeStopIds = useMemo(() => prioritizeRouteStopIds(allBusinesses, listAgentActions()), [allBusinesses, routeRevision]);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { void repository.listUserPins().then(setPins); }, []);
+
+  async function discoverPlaces() {
+    if (!search.trim() || searching) return;
+    setSearching(true);
+    try {
+      const results = await searchMapboxPlaces({ query: search, openNow: filters.openOnly, proximity: { lng: selectedAccount.lng, lat: selectedAccount.lat } });
+      setDiscovered(results);
+      if (results[0]) onSelectAccount(results[0].id);
+    } catch { setMessages((current) => [...current, { role: "assistant", text: "Mapbox search is unavailable right now. Your saved businesses and pins are still available." }]); }
+    finally { setSearching(false); }
+  }
+
+  async function savePin() {
+    if (!pinDraft?.name.trim()) return;
+    const pin = await repository.createUserPin({ name: pinDraft.name.trim(), note: pinDraft.note.trim(), lat: pinDraft.lat, lng: pinDraft.lng });
+    setPins((current) => [...current, pin]);
+    onSelectAccount(pin.id);
+    setPinDraft(null);
+  }
 
   useEffect(() => {
     if (typeof bottomRef.current?.scrollIntoView === "function") bottomRef.current.scrollIntoView({ behavior: "smooth" });
@@ -138,14 +169,16 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={businesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} doneAccountIds={businesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => setPinDraft({ ...point, name: "", note: "" })} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
         <button className="mapgpt-icon-button" aria-label="Open pipeline" onClick={onOpenPipeline}>▤</button>
       </header>
       <div className="mapgpt-home__business-picker" aria-label="Businesses on map">
-        {businesses.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}</button>)}
+        <div className="mapgpt-live-search"><input aria-label="Search live businesses" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search live businesses" /><button onClick={() => void discoverPlaces()} disabled={searching}>{searching ? "…" : "Search"}</button></div>
+        <div className="mapgpt-filter-row"><label><input type="checkbox" checked={filters.openOnly} onChange={(event) => setFilters({ ...filters, openOnly: event.target.checked })} /> Open now</label><label><input type="checkbox" checked={filters.userPinsOnly} onChange={(event) => setFilters({ ...filters, userPinsOnly: event.target.checked })} /> My pins</label><button onClick={() => setPinDraft({ lat: selectedAccount.lat, lng: selectedAccount.lng, name: "", note: "" })}>＋ Add pin</button></div>
+        {visibleBusinesses.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}{account.source === "user" ? " · My pin" : account.isOpen === true ? " · Open" : ""}</button>)}
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
         <div className="mapgpt-context"><span>Current business</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small>{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
@@ -174,6 +207,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>
         </div>
       </div>
+      {pinDraft && <div className="mapgpt-pin-dialog" role="dialog" aria-modal="true" aria-label="Create map pin"><strong>Create your map pin</strong><small>{pinDraft.lat.toFixed(5)}, {pinDraft.lng.toFixed(5)}</small><label>Business or location name<input autoFocus value={pinDraft.name} onChange={(event) => setPinDraft({ ...pinDraft, name: event.target.value })} placeholder="e.g. New prospect" /></label><label>Note<textarea value={pinDraft.note} onChange={(event) => setPinDraft({ ...pinDraft, note: event.target.value })} placeholder="Why this point matters" /></label><div><button onClick={() => setPinDraft(null)}>Cancel</button><button onClick={() => void savePin()} disabled={!pinDraft.name.trim()}>Save pin</button></div></div>}
     </section>
   );
 }

@@ -20,6 +20,10 @@ export interface Account {
   notes: string;
   routeOrder: number;
   done: boolean;
+  source?: "seed" | "supabase" | "mapbox" | "user";
+  isOpen?: boolean | null;
+  externalId?: string;
+  pinNote?: string;
 }
 
 export const accounts: Account[] = [

@@ -16,6 +16,7 @@ export interface MapViewProps {
   accounts: Account[];
   activeAccountId: string | null;
   onPinTap: (id: string) => void;
+  onMapClick?: (point: { lat: number; lng: number }) => void;
   doneAccountIds: string[];
   routeStopIds?: string[];
   showTerritoryMode?: boolean;
@@ -51,6 +52,7 @@ export function MapView({
   accounts,
   activeAccountId,
   onPinTap,
+  onMapClick,
   doneAccountIds,
   routeStopIds,
   showTerritoryMode,
@@ -75,6 +77,7 @@ export function MapView({
         doneAccountIds={doneAccountIds}
         routeStopIds={routeStopIds}
         onPinTap={onPinTap}
+        onMapClick={onMapClick}
         showTerritoryMode={showTerritoryMode}
         minimalChrome={minimalChrome}
         cockpitAccount={cockpitAccount}
@@ -99,7 +102,7 @@ export function MapView({
         const marker = markersRef.current.get(acc.id);
         if (!marker) continue;
         const el = marker.getElement();
-        const isScheduled = !routeStopIds || routeStopIds.includes(acc.id);
+        const isScheduled = acc.source === "mapbox" || acc.source === "user" || !routeStopIds || routeStopIds.includes(acc.id);
         el.style.display = hidePins || !isScheduled ? "none" : "";
         const pin = el.querySelector(".map-pin") as HTMLElement;
         if (!pin) continue;
@@ -324,7 +327,7 @@ export function MapView({
         const isActive = acc.id === activeAccountId;
         const wrapper = document.createElement("div");
         const pin = document.createElement("div");
-        const isScheduled = !routeStopIds || routeStopIds.includes(acc.id);
+        const isScheduled = acc.source === "mapbox" || acc.source === "user" || !routeStopIds || routeStopIds.includes(acc.id);
         wrapper.style.display = isScheduled ? "" : "none";
         pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
         pin.textContent = isDone
@@ -334,7 +337,7 @@ export function MapView({
         pin.setAttribute("tabindex", "0");
         pin.setAttribute("aria-label", `Open ${acc.name}`);
         wrapper.appendChild(pin);
-        wrapper.addEventListener("click", () => onPinTap(acc.id));
+        wrapper.addEventListener("click", (event) => { event.stopPropagation(); onPinTap(acc.id); });
         wrapper.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") onPinTap(acc.id);
         });
@@ -343,6 +346,7 @@ export function MapView({
           .addTo(map);
         markersRef.current.set(acc.id, marker);
       }
+      map.on("click", (event) => onMapClick?.({ lat: event.lngLat.lat, lng: event.lngLat.lng }));
     });
 
     const ro = new ResizeObserver(() => mapRef.current?.resize());
