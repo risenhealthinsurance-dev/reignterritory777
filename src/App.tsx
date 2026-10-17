@@ -206,7 +206,7 @@ interface AppProps {
   initialAccountId?: string | null;
 }
 
-export default function App({ initialScreen = "home", initialAccountId = "apex" }: AppProps) {
+export default function App({ initialScreen = "home", initialAccountId = null }: AppProps) {
   const [screen, setScreen] = useState<AppScreen>(initialScreen);
   const [activeStopId, setActiveStopId] = useState<string | null>(initialAccountId);
   const [day, setDay] = useState(createInitialRepDay);
