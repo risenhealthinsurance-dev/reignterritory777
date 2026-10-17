@@ -175,18 +175,13 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
         <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => {
-          if (point.suggestedName && point.suggestedName !== "Mapbox location") {
-            const id = `map-selection-${point.lat.toFixed(5)}-${point.lng.toFixed(5)}`;
-            const contextualAccount: Account = { id, name: point.suggestedName, industry: "Technology", tier: "SMB", contact: { name: "Unknown", title: "Unknown", phone: "" }, address: point.note ?? "Selected from the map", lat: point.lat, lng: point.lng, revenue: 0, lastVisit: "", lastVisitDaysAgo: 0, activities: [], notes: "Selected from the map.", routeOrder: 0, done: false, source: "mapbox" };
-            setDiscovered((current) => [...current.filter((item) => item.id !== id), contextualAccount]);
-            onSelectAccount(id);
-            void reverseMapboxPlace(point).then((place) => {
-              setDiscovered((current) => current.map((item) => item.id === id ? { ...item, name: place.name, address: place.address } : item));
-            }).catch(() => undefined);
-            return;
-          }
-          setPinDraft({ ...point, name: point.suggestedName ?? "Mapbox location", note: point.note ?? "Selected from the map. Review before saving." });
-          void reverseMapboxPlace(point).then((place) => setPinDraft((current) => current ? { ...current, name: place.name, note: `${place.address}. Selected from the map; review before saving.` } : current)).catch(() => undefined);
+          const id = `map-selection-${point.lat.toFixed(5)}-${point.lng.toFixed(5)}`;
+          const contextualAccount: Account = { id, name: point.suggestedName ?? "Map selection", industry: "Technology", tier: "SMB", contact: { name: "Unknown", title: "Unknown", phone: "" }, address: point.note ?? "Selected from the map", lat: point.lat, lng: point.lng, revenue: 0, lastVisit: "", lastVisitDaysAgo: 0, activities: [], notes: "Selected from the map.", routeOrder: 0, done: false, source: "mapbox" };
+          setDiscovered((current) => [...current.filter((item) => item.id !== id), contextualAccount]);
+          onSelectAccount(id);
+          void reverseMapboxPlace(point).then((place) => {
+            setDiscovered((current) => current.map((item) => item.id === id ? { ...item, name: place.name, address: place.address } : item));
+          }).catch(() => undefined);
         }} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
