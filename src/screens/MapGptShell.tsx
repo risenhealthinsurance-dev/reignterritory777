@@ -8,6 +8,8 @@ import type { AppScreen } from "../types";
 import type { AgentConfig, AgentKnowledgeSource, PipelineOpportunity, PipelineStage } from "../contracts/mapGpt";
 import { PIPELINE_STAGES } from "../contracts/mapGpt";
 import { createAgentStudioRepository, type AgentStudioRepository } from "../lib/agentStudioRepository";
+import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
+import { saveAgentAction } from "../lib/agentStore";
 import { supabase } from "../lib/supabase";
 
 const repository = createAgentStudioRepository(supabase);
@@ -94,8 +96,16 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   function confirmDraft() {
     if (!actionDraft) return;
     const label = actionDraft.kind === "schedule" ? "Follow-up draft" : actionDraft.kind === "disposition" ? "Disposition draft" : "Visit note draft";
+    const type = actionDraft.kind === "schedule" ? "schedule_follow_up" : actionDraft.kind === "disposition" ? "record_disposition" : "save_visit_note";
+    const payload = actionDraft.kind === "schedule"
+      ? { date: actionDraft.date, time: actionDraft.time, ...(actionDraft.appointmentType === "window" ? { endTime: actionDraft.endTime } : {}), appointmentType: actionDraft.appointmentType }
+      : actionDraft.kind === "disposition"
+        ? { outcome: actionDraft.outcome, note: actionDraft.note.trim() }
+        : { note: actionDraft.note.trim() };
+    const action = queueAgentAction(createAgentAction({ type, accountId: selectedAccount.id, payload, sourceMessageId: crypto.randomUUID() }));
+    saveAgentAction(action);
     setActionDraft(null);
-    setMessages((current) => [...current, { role: "assistant", text: `${label} approved locally for ${selectedAccount.name}. No calendar or CRM write has occurred yet.` }]);
+    setMessages((current) => [...current, { role: "assistant", text: `${label} queued locally for ${selectedAccount.name}. It is ready to sync when the live CRM/calendar writer is connected.` }]);
   }
 
   const draftReady = actionDraft?.kind === "schedule"
@@ -137,7 +147,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
             </>}
             {actionDraft.kind === "disposition" && <label>Outcome<select aria-label="Outcome" value={actionDraft.outcome} onChange={(event) => setActionDraft({ ...actionDraft, outcome: event.target.value })}><option value="">Choose outcome</option><option>Connected</option><option>Callback requested</option><option>Qualified</option><option>Not interested</option><option>No answer</option></select></label>}
             {actionDraft.kind !== "schedule" && <label>Notes<textarea aria-label="Notes" value={actionDraft.note} onChange={(event) => setActionDraft({ ...actionDraft, note: event.target.value })} placeholder="Capture what happened…" /></label>}
-            <small>Review required. This creates a draft only until the live CRM/calendar action is connected.</small>
+            <small>Review required. This queues locally until the live CRM/calendar action is connected.</small>
             <div className="mapgpt-action-draft__buttons"><button onClick={() => setActionDraft(null)}>Cancel draft</button><button onClick={confirmDraft} disabled={!draftReady}>Confirm draft</button></div>
           </div>}
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>

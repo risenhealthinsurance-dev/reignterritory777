@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { MapGptShell } from "./MapGptShell";
+import { listAgentActions } from "../lib/agentStore";
 
 vi.mock("../components/MapView", () => ({
   MapView: () => <div aria-label="Live territory map" />,
@@ -57,5 +58,14 @@ test("requires confirmation before creating a callback draft", async () => {
   await user.click(screen.getByRole("button", { name: /Confirm draft/i }));
 
   expect(screen.queryByRole("dialog", { name: /Schedule callback or appointment/i })).not.toBeInTheDocument();
-  expect(screen.getByText(/Draft approved locally/i)).toBeInTheDocument();
+  expect(screen.getByText(/Queued locally/i)).toBeInTheDocument();
+  const actions = listAgentActions();
+  expect(actions).toEqual(expect.arrayContaining([
+    expect.objectContaining({
+      type: "schedule_follow_up",
+      accountId: "apex",
+      status: "queued",
+      payload: { date: "2026-10-20", time: "10:30", endTime: "11:00", appointmentType: "window" },
+    }),
+  ]));
 });
