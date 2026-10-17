@@ -9,7 +9,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
   if (!query || query.length > 256) return response.status(400).json({ error: "Query must be between 1 and 256 characters" });
   const token = process.env.MAPBOX_ACCESS_TOKEN ?? process.env.VITE_MAPBOX_ACCESS_TOKEN;
   if (!token) return response.status(503).json({ error: "Mapbox search is not configured" });
-  const params = new URLSearchParams({ q: query, access_token: token, limit: "25", types: "poi", show_closed_pois: "false" });
+  // Search Box forward returns POIs by relevance; `types=poi` is a Geocoding
+  // parameter and causes a 400 on some Search Box API token configurations.
+  const params = new URLSearchParams({ q: query, access_token: token, limit: "25", show_closed_pois: "false" });
   for (const key of ["proximity", "open_now", "poi_category", "minimum_rating"]) {
     const value = first(request.query?.[key]);
     if (value) params.set(key, value);
