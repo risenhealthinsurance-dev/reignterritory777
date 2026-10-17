@@ -37,6 +37,13 @@ test("starts with the AI recommendation and scopes after business selection", as
   expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Selected business/);
 });
 
+test("offers a typed fallback when browser voice input is unavailable", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+  await user.click(screen.getByRole("button", { name: /Start voice input/i }));
+  expect(screen.getByText(/Voice input is not available in this browser/i)).toBeInTheDocument();
+});
+
 test("forces the locked territory into quadrant setup before returning to the map", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);

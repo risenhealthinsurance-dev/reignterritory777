@@ -63,6 +63,17 @@ interface ActionDraft {
 
 type TerritoryPlan = { size: number; locked: boolean; quadrantsSaved: boolean; completedQuadrants: number[]; boundary: GeoJsonFeature; quadrants: GeoJsonFeatureCollection };
 
+type SpeechRecognitionLike = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
 function buildTerritoryGeometry(center: { lat: number; lng: number }, size: number, completedQuadrants: number[] = []): { boundary: GeoJsonFeature; quadrants: GeoJsonFeatureCollection } {
   const metersPerPixel = (156543.03392 * Math.cos((center.lat * Math.PI) / 180)) / 2 ** 13.8;
   const halfDegreesLat = (size * metersPerPixel) / 2 / 111_320;
@@ -96,6 +107,7 @@ function readTerritoryPlan(): TerritoryPlan | null {
 
 function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline, onActionQueued, routeRevision, pipeline }: { accounts: Account[]; selectedAccountId: string | null; onSelectAccount: (id: string) => void; onOpenPipeline: () => void; onActionQueued: () => void; routeRevision: number; pipeline: PipelineOpportunity[] }) {
   const [input, setInput] = useState("");
+  const [voiceListening, setVoiceListening] = useState(false);
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
     { role: "assistant", text: "I’m ready. Ask about a business, your territory, or the next best action." },
   ]);
@@ -161,6 +173,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   })), [allBusinesses, routeRevision]);
   const routeStopIds = useMemo(() => prioritizeRouteStopIds(allBusinesses, listAgentActions()), [allBusinesses, routeRevision]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => { void repository.listUserPins().then(setPins); }, []);
   useEffect(() => { window.localStorage.setItem("reign.savedTerritories", JSON.stringify(savedTerritories)); }, [savedTerritories]);
@@ -190,6 +203,33 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       if (results[0]) onSelectAccount(results[0].id);
     } catch { setMessages((current) => [...current, { role: "assistant", text: "Mapbox search is unavailable right now. Your saved businesses and pins are still available." }]); }
     finally { setSearching(false); }
+  }
+
+  function toggleVoiceInput() {
+    if (voiceListening) {
+      recognitionRef.current?.stop();
+      setVoiceListening(false);
+      return;
+    }
+    const speechWindow = window as typeof window & { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
+    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setMessages((current) => [...current, { role: "assistant", text: "Voice input is not available in this browser. You can still type the note or command." }]);
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      const transcript = Array.from({ length: event.results.length }, (_, index) => event.results[index]?.[0]?.transcript ?? "").join(" ").trim();
+      if (transcript) setInput((current) => `${current ? `${current} ` : ""}${transcript}`);
+    };
+    recognition.onend = () => { recognitionRef.current = null; setVoiceListening(false); };
+    recognition.onerror = () => { recognitionRef.current = null; setVoiceListening(false); setMessages((current) => [...current, { role: "assistant", text: "I couldn't hear that. Try voice input again or type it instead." }]); };
+    recognitionRef.current = recognition;
+    setVoiceListening(true);
+    recognition.start();
   }
 
   async function savePin() {
@@ -332,7 +372,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
         <div className="mapgpt-context">{hasFocusedBusiness ? <><span>{selectedMapEntity ? (selectedMapEntity.source === "mapbox-unit" ? "Selected unit" : selectedMapEntity.source === "mapbox-address" ? "Selected map address" : "Selected building") : "Selected business"}</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small></> : <><span>AI recommended next action</span><strong>Work the highest-priority reloop</strong><small>Reign will prioritize due follow-ups, then fill nearby new doors.</small></>}<small className={`mapgpt-location-context mapgpt-location-context--${locationContext.state}`} role="status">{locationStateLabel(locationContext)}</small>{selectedMapEntity && <label className="mapgpt-context__edit">Business name<input aria-label="Edit selected business name" value={selectedAccount.name === "Business name needed" ? "" : selectedAccount.name} placeholder="Business name needed" onChange={(event) => { const name = event.target.value || "Business name needed"; setDiscovered((current) => current.map((item) => item.id === selectedMapEntity.entityId ? { ...item, name } : item)); setSelectedMapEntity((current) => current ? { ...current, name: event.target.value || undefined } : current); }} /></label>}{hasFocusedBusiness && latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
         <div className="mapgpt-chat-window">
-          <div className="mapgpt-chat-window__header"><AssistantAvatar /><div><strong>Ask Reign</strong><small>AI field assistant</small></div><button aria-label="Voice-ready assistant control">◉</button></div>
+          <div className="mapgpt-chat-window__header"><AssistantAvatar /><div><strong>Ask Reign</strong><small>AI field assistant</small></div><button aria-label={voiceListening ? "Stop voice input" : "Start voice input"} aria-pressed={voiceListening} onClick={toggleVoiceInput}>{voiceListening ? "●" : "◉"}</button></div>
           <div className="mapgpt-messages">{messages.slice(-6).map((message, index) => <div key={`${message.role}-${index}`} className={`mapgpt-message mapgpt-message--${message.role}`}>{message.text}</div>)}{loading && <div className="mapgpt-message mapgpt-message--assistant">Thinking with your business context…</div>}<div ref={bottomRef} /></div>
           <div className="mapgpt-prompts"><button onClick={() => void ask("Give me a 30-second brief")}>Brief</button><button onClick={() => void ask("Give me talking points")}>Talking points</button><button onClick={() => void ask("What should I do next?")}>Next action</button></div>
           <div className="mapgpt-action-chips" aria-label="Approved field actions">
