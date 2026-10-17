@@ -22,6 +22,7 @@ test("exposes exactly Home, Agent Studio, and Pipeline as primary navigation", (
 test("selecting a business on Home scopes the assistant context", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);
+  expect(screen.getByRole("region", { name: /Live Mapbox territory map/i })).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: /Apex Manufacturing Group/i }));
   expect(screen.getAllByText(/Apex Manufacturing Group/).length).toBeGreaterThan(0);
   expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Apex Manufacturing Group/);

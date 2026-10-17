@@ -116,7 +116,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
-      <div className="mapgpt-home__map">
+      <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
         <MapView height={window.innerHeight} accounts={businesses} routeStopIds={businesses.map((account) => account.id)} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} doneAccountIds={businesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
