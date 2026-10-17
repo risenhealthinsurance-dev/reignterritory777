@@ -38,7 +38,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       const coordinates = feature.geometry?.coordinates;
       if (!Array.isArray(coordinates) || typeof coordinates[0] !== "number" || typeof coordinates[1] !== "number") return [];
       const properties = feature.properties ?? {};
-      const isOpen = typeof properties.open === "boolean" ? properties.open : null;
+      const isOpen = first(request.query?.open_now) === "true"
+        ? true
+        : typeof properties.open === "boolean" ? properties.open : null;
       const name = String(properties.name ?? properties.name_preferred ?? feature.text ?? properties.text ?? "Mapbox place");
       return [{
         id: `mapbox-${feature.id ?? index}`,
