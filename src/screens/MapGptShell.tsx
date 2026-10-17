@@ -19,10 +19,12 @@ import { reverseMapboxPlace, searchMapboxPlaces } from "../lib/mapboxPlaces";
 import { buildPipelineContext, locationStateLabel, type LocationContext } from "../lib/fieldContext";
 import type { MapEntitySelection } from "../components/MapView";
 import type { GeoJsonFeature, GeoJsonFeatureCollection } from "../lib/gis";
+import { createTerritoryRepository, type TerritoryPlanPayload } from "../lib/territoryRepository";
 
 const repository = createAgentStudioRepository(supabase);
 const fieldAiClient: FieldAiClient | null = supabase ? createFieldAiClient(supabase) : null;
 const fieldActionClient = supabase && !authBypass ? createFieldActionClient(supabase) : null;
+const territoryRepository = createTerritoryRepository(supabase && !authBypass ? supabase : null);
 
 function formatMoney(value: number) {
   return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -178,6 +180,25 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   useEffect(() => { void repository.listUserPins().then(setPins); }, []);
   useEffect(() => { window.localStorage.setItem("reign.savedTerritories", JSON.stringify(savedTerritories)); }, [savedTerritories]);
   useEffect(() => { if (territoryPlan) window.localStorage.setItem("reign.territoryPlan", JSON.stringify(territoryPlan)); }, [territoryPlan]);
+  useEffect(() => {
+    let active = true;
+    void territoryRepository.load().then((remote) => {
+      if (!active || !remote) return;
+      if (remote.plan) {
+        setTerritoryPlan(remote.plan);
+        setCompletedQuadrants(remote.plan.completedQuadrants);
+        setTerritorySize(remote.plan.size);
+        setTerritoryStage(remote.plan.locked && !remote.plan.quadrantsSaved ? "quadrants" : "idle");
+      }
+      setSavedTerritories(remote.savedTerritories ?? []);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    const payload: TerritoryPlanPayload = { plan: territoryPlan, savedTerritories };
+    const timer = window.setTimeout(() => { void territoryRepository.save(payload).catch(() => undefined); }, 250);
+    return () => window.clearTimeout(timer);
+  }, [savedTerritories, territoryPlan]);
   useEffect(() => {
     if (!resizingTerritory && !movingTerritory) return;
     const onMove = (event: PointerEvent) => {
