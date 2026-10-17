@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import { AuthProvider, RequireAuth, useAuth } from "./AuthProvider";
+import { AuthProvider, getAuthRedirectUrl, RequireAuth, useAuth } from "./AuthProvider";
 import { AuthScreen } from "./AuthScreen";
 
 const signedInSession = {
@@ -37,6 +37,10 @@ function SessionProbe() {
 }
 
 describe("AuthProvider", () => {
+  it("uses the stable deployed callback when sign-in starts on localhost", () => {
+    expect(getAuthRedirectUrl({ origin: "http://localhost:3000", hostname: "localhost" })).toBe("https://reignterritory777.vercel.app");
+    expect(getAuthRedirectUrl({ origin: "https://reignterritory777.vercel.app", hostname: "reignterritory777.vercel.app" })).toBe("https://reignterritory777.vercel.app");
+  });
   it("does not render protected content before session resolution", async () => {
     const pending = deferred<{ data: { session: typeof signedInSession }; error: null }>();
     const client = createClient();
@@ -107,7 +111,7 @@ describe("AuthScreen", () => {
     await waitFor(() =>
       expect(client.auth.signInWithOtp).toHaveBeenCalledWith({
         email: "rep@example.com",
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: getAuthRedirectUrl() },
       }),
     );
     expect(

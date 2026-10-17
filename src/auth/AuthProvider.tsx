@@ -36,6 +36,15 @@ interface AuthContextValue {
   signOut(): Promise<void>;
 }
 
+export function getAuthRedirectUrl(location: Pick<Location, "origin" | "hostname"> = window.location) {
+  const configured = import.meta.env.VITE_AUTH_REDIRECT_URL?.trim();
+  if (configured) return configured;
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    return "https://reignterritory777.vercel.app";
+  }
+  return location.origin;
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({
@@ -91,7 +100,7 @@ export function AuthProvider({
         if (!client) throw new Error("Authentication is not configured.");
         const { error: signInError } = await client.auth.signInWithOtp({
           email,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: getAuthRedirectUrl() },
         });
         if (signInError) throw new Error(signInError.message);
       },
