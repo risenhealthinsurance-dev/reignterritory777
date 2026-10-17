@@ -2,6 +2,7 @@ import type { Account } from "../data/accounts";
 import type { DayStop } from "../domain/repDay";
 import { NextBusinessCard } from "./NextBusinessCard";
 import { FieldActionSheet } from "./FieldActionSheet";
+import { dispositionColor } from "../lib/dispositionColor";
 
 export interface MapFallbackProps {
   height: number;
@@ -20,6 +21,7 @@ export interface MapFallbackProps {
   onCall?: () => void;
   onSchedule?: () => void;
   onDisposition?: () => void;
+  dispositionByAccount?: Record<string, string | undefined>;
 }
 
 const PIN_POSITIONS = [
@@ -48,6 +50,7 @@ export function MapFallback({
   onCall,
   onSchedule,
   onDisposition,
+  dispositionByAccount = {},
 }: MapFallbackProps) {
   const doneCount = doneAccountIds.length;
 
@@ -171,6 +174,9 @@ export function MapFallback({
             const [left, top] = PIN_POSITIONS[index] ?? ["50%", "50%"];
             const isDone = doneAccountIds.includes(account.id);
             const isActive = activeAccountId === account.id;
+            const color = dispositionColor(dispositionByAccount[account.id]);
+            const colorTokens = { red: ["#ef4444", "#450a0a"], green: ["#10b981", "#064e3b"], yellow: ["#f59e0b", "#451a03"], blue: ["#60a5fa", "#1d4ed8"], gray: ["#94a3b8", "#111827"] } as const;
+            const [borderColor, backgroundColor] = colorTokens[color];
             return (
               <button
                 key={account.id}
@@ -187,8 +193,8 @@ export function MapFallback({
                   height: 44,
                   borderRadius: "50%",
                   cursor: "pointer",
-                  border: `2px solid ${isDone ? "#10b981" : isActive ? "#60a5fa" : "#3b82f6"}`,
-                  background: isDone ? "#064e3b" : isActive ? "#1d4ed8" : "#111827",
+                  border: `2px solid ${isDone ? "#10b981" : borderColor}`,
+                  background: isDone ? "#064e3b" : backgroundColor,
                   color: "#fff",
                   font: "700 11px DM Mono,monospace",
                   boxShadow: isActive

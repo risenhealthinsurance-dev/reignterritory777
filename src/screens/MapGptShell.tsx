@@ -75,6 +75,11 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const visibleBusinesses = useMemo(() => filterBusinesses(allBusinesses, filters), [allBusinesses, filters]);
   const selectedAccount = allBusinesses.find((account) => account.id === selectedAccountId) ?? visibleBusinesses[0] ?? allBusinesses[0] ?? businesses[0];
   const latestDisposition = findLatestDispositionAction(listAgentActions(), selectedAccount.id);
+  const dispositionByAccount = useMemo(() => Object.fromEntries(allBusinesses.map((account) => {
+    const action = findLatestDispositionAction(listAgentActions(), account.id);
+    const payload = action?.payload && typeof action.payload === "object" ? action.payload as { outcome?: unknown } : null;
+    return [account.id, typeof payload?.outcome === "string" ? payload.outcome : undefined];
+  })), [allBusinesses, routeRevision]);
   const routeStopIds = useMemo(() => prioritizeRouteStopIds(allBusinesses, listAgentActions()), [allBusinesses, routeRevision]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -169,7 +174,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => setPinDraft({ ...point, name: "", note: "" })} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => setPinDraft({ ...point, name: "", note: "" })} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>

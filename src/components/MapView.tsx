@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import type { Account } from "../data/accounts";
 import type { DayStop } from "../domain/repDay";
@@ -7,6 +7,7 @@ import { MapFallback } from "./MapFallback";
 import { NextBusinessCard } from "./NextBusinessCard";
 import { FieldActionSheet } from "./FieldActionSheet";
 import type { GeoJsonFeatureCollection } from "../lib/gis";
+import { dispositionColor } from "../lib/dispositionColor";
 
 const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
 if (mapboxAccessToken) mapboxgl.accessToken = mapboxAccessToken;
@@ -31,9 +32,26 @@ export interface MapViewProps {
   onCall?: () => void;
   onSchedule?: () => void;
   onDisposition?: () => void;
+  dispositionByAccount?: Record<string, string | undefined>;
 }
 
 export const FORT_PIERCE_CENTER: [number, number] = [-80.337, 27.44];
+export type MovementMode = "walking" | "driving";
+export const WALKING_SPEED_LIMIT_KMH = 8;
+export const DRIVING_SPEED_LIMIT_KMH = 12;
+export function getMovementMode(speedKmh: number | null | undefined, previous: MovementMode): MovementMode {
+  if (speedKmh == null || !Number.isFinite(speedKmh)) return previous;
+  if (speedKmh >= DRIVING_SPEED_LIMIT_KMH) return "driving";
+  if (speedKmh <= WALKING_SPEED_LIMIT_KMH) return "walking";
+  return previous;
+}
+export function normalizeHeading(heading: number | null | undefined): number {
+  if (heading == null || !Number.isFinite(heading)) return 0;
+  return ((heading % 360) + 360) % 360;
+}
+export function getCameraPreset(mode: MovementMode): { zoom: number; pitch: number } {
+  return mode === "driving" ? { zoom: 13.2, pitch: 48 } : { zoom: 15.2, pitch: 58 };
+}
 export function getRouteCoordinates(items: Account[], routeStopIds?: string[]): [number, number][] {
   const rank = new Map(routeStopIds?.map((id, index) => [id, index]));
   return [...items]
@@ -67,6 +85,7 @@ export function MapView({
   onCall,
   onSchedule,
   onDisposition,
+  dispositionByAccount = {},
 }: MapViewProps) {
   if (!mapboxAccessToken) {
     return (
@@ -87,6 +106,7 @@ export function MapView({
         onCall={onCall}
         onSchedule={onSchedule}
         onDisposition={onDisposition}
+        dispositionByAccount={dispositionByAccount}
       />
     );
   }
@@ -95,6 +115,56 @@ export function MapView({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const initialized = useRef(false);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const locationMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const [movementMode, setMovementMode] = useState<MovementMode>("walking");
+  const [locationState, setLocationState] = useState<"pending" | "available" | "unavailable">("pending");
+  const [isFollowing, setIsFollowing] = useState(true);
+  const latestLocationRef = useRef<{ lat: number; lng: number; heading: number; speedKmh: number | null } | null>(null);
+  const movementModeRef = useRef<MovementMode>("walking");
+  const programmaticCameraRef = useRef(false);
+  const applyCamera = useCallback((location: { lat: number; lng: number; heading: number }, mode: MovementMode) => {
+    const map = mapRef.current as (mapboxgl.Map & { easeTo?: (options: Record<string, unknown>) => void }) | null;
+    if (!map?.easeTo) return;
+    programmaticCameraRef.current = true;
+    map.easeTo({ center: [location.lng, location.lat], bearing: location.heading, ...getCameraPreset(mode), duration: 650, essential: true });
+    window.setTimeout(() => { programmaticCameraRef.current = false; }, 800);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) { setLocationState("unavailable"); return; }
+    const compassHeadingRef = { current: null as number | null };
+    const onOrientation = (event: DeviceOrientationEvent) => {
+      if (event.alpha != null) compassHeadingRef.current = normalizeHeading(360 - event.alpha);
+    };
+    window.addEventListener("deviceorientationabsolute", onOrientation as EventListener);
+    window.addEventListener("deviceorientation", onOrientation as EventListener);
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const speedKmh = position.coords.speed == null ? null : Math.max(0, position.coords.speed * 3.6);
+        const nextMode = getMovementMode(speedKmh, movementModeRef.current);
+        movementModeRef.current = nextMode;
+        const gpsHeading = normalizeHeading(position.coords.heading);
+        const heading = speedKmh != null && speedKmh <= WALKING_SPEED_LIMIT_KMH && compassHeadingRef.current != null
+          ? compassHeadingRef.current
+          : gpsHeading;
+        latestLocationRef.current = { lat: position.coords.latitude, lng: position.coords.longitude, heading, speedKmh };
+        setMovementMode(nextMode);
+        setLocationState("available");
+        if (isFollowing) applyCamera(latestLocationRef.current, nextMode);
+        const liveMarker = locationMarkerRef.current;
+        liveMarker?.setLngLat([position.coords.longitude, position.coords.latitude]);
+        const liveElement = liveMarker?.getElement();
+        if (liveElement) liveElement.style.setProperty("--map-heading", `${heading}deg`);
+      },
+      () => setLocationState("unavailable"),
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+    );
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      window.removeEventListener("deviceorientationabsolute", onOrientation as EventListener);
+      window.removeEventListener("deviceorientation", onOrientation as EventListener);
+    };
+  }, [applyCamera, isFollowing]);
 
   const updatePins = useCallback(
     (hidePins: boolean) => {
@@ -108,13 +178,14 @@ export function MapView({
         if (!pin) continue;
         const isDone = doneAccountIds.includes(acc.id);
         const isActive = acc.id === activeAccountId;
-        pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
+        const color = dispositionColor(dispositionByAccount[acc.id]);
+        pin.className = `map-pin map-pin--${color} ${isDone ? "map-pin--done" : isActive ? "map-pin--active" : ""}`;
         pin.textContent = isDone
           ? "✓"
           : String((routeStopIds?.indexOf(acc.id) ?? -1) + 1 || acc.routeOrder);
       }
     },
-    [accounts, activeAccountId, doneAccountIds, routeStopIds],
+    [accounts, activeAccountId, doneAccountIds, routeStopIds, dispositionByAccount],
   );
 
   useEffect(() => {
@@ -125,16 +196,25 @@ export function MapView({
       container: containerRef.current,
       style: "mapbox://styles/mapbox/standard",
       center: FORT_PIERCE_CENTER,
-      zoom: 13.8,
-      pitch: 45,
+      zoom: getCameraPreset("walking").zoom,
+      pitch: getCameraPreset("walking").pitch,
       bearing: -10,
     });
     mapRef.current = map;
+    map.on("dragstart", () => { if (!programmaticCameraRef.current) setIsFollowing(false); });
+    map.on("rotatestart", () => { if (!programmaticCameraRef.current) setIsFollowing(false); });
+    map.on("zoomstart", () => { if (!programmaticCameraRef.current) setIsFollowing(false); });
+    const locationElement = document.createElement("div");
+    locationElement.className = "map-location-marker";
+    locationElement.setAttribute("aria-label", "Rep live location");
+    locationMarkerRef.current = new mapboxgl.Marker({ element: locationElement })
+      .setLngLat(FORT_PIERCE_CENTER)
+      .addTo(map);
 
     map.on("style.load", () => {
       map.setConfigProperty("basemap", "lightPreset", "night");
-      map.setConfigProperty("basemap", "theme", "monochrome");
-      map.setConfigProperty("basemap", "showPointOfInterestLabels", false);
+      map.setConfigProperty("basemap", "theme", "default");
+      map.setConfigProperty("basemap", "showPointOfInterestLabels", true);
       map.setConfigProperty("basemap", "show3dBuildings", true);
 
       // Route line
@@ -325,11 +405,12 @@ export function MapView({
       for (const acc of accounts) {
         const isDone = doneAccountIds.includes(acc.id);
         const isActive = acc.id === activeAccountId;
+        const color = dispositionColor(dispositionByAccount[acc.id]);
         const wrapper = document.createElement("div");
         const pin = document.createElement("div");
         const isScheduled = acc.source === "mapbox" || acc.source === "user" || !routeStopIds || routeStopIds.includes(acc.id);
         wrapper.style.display = isScheduled ? "" : "none";
-        pin.className = `map-pin map-pin--${isDone ? "done" : isActive ? "active" : "pending"}`;
+        pin.className = `map-pin map-pin--${color} ${isDone ? "map-pin--done" : isActive ? "map-pin--active" : ""}`;
         pin.textContent = isDone
           ? "✓"
           : String((routeStopIds?.indexOf(acc.id) ?? -1) + 1 || acc.routeOrder);
@@ -358,6 +439,8 @@ export function MapView({
       markersRef.current.clear();
       map.remove();
       mapRef.current = null;
+      locationMarkerRef.current?.remove();
+      locationMarkerRef.current = null;
       initialized.current = false;
     };
   }, [height]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -413,11 +496,28 @@ export function MapView({
     mapRef.current?.resize();
   }, [height]);
 
+  const recenter = () => {
+    setIsFollowing(true);
+    if (latestLocationRef.current) applyCamera(latestLocationRef.current, movementModeRef.current);
+    else applyCamera({ lat: FORT_PIERCE_CENTER[1], lng: FORT_PIERCE_CENTER[0], heading: 0 }, movementModeRef.current);
+  };
+
   const doneCount = doneAccountIds.length;
 
   return (
     <div style={{ position: "relative", width: "100%", height }}>
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {locationState === "unavailable" && (
+        <div className="map-location-status" role="status">Live location unavailable</div>
+      )}
+      {!isFollowing && (
+        <button className="map-recenter-button" type="button" onClick={recenter} aria-label="Recenter on live location">
+          ◎ Recenter
+        </button>
+      )}
+      <div className="map-mode-badge" aria-label={`Camera mode: ${movementMode}`}>
+        {movementMode === "driving" ? "▰ Driving view" : "✦ Walking view"}
+      </div>
 
       {/* Territory overlay badge */}
       {showTerritoryMode ? (

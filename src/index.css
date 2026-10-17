@@ -79,6 +79,11 @@ body,
   color: #93c5fd;
   box-shadow: 0 2px 12px rgba(59, 130, 246, 0.25);
 }
+.map-pin--red { background: #450a0a; border-color: #ef4444; color: #fecaca; }
+.map-pin--green { background: #064e3b; border-color: #10b981; color: #a7f3d0; }
+.map-pin--yellow { background: #451a03; border-color: #f59e0b; color: #fde68a; }
+.map-pin--blue { background: #1d4ed8; border-color: #60a5fa; color: #dbeafe; }
+.map-pin--gray { background: #111827; border-color: #94a3b8; color: #e2e8f0; }
 .map-pin--active {
   background: #3b82f6;
   border: 2px solid #93c5fd;
@@ -90,6 +95,11 @@ body,
   border: 2px solid #374151;
   color: #4b5563;
 }
+.map-pin--active.map-pin--red { background: #450a0a; border-color: #ef4444; color: #fecaca; }
+.map-pin--active.map-pin--green { background: #064e3b; border-color: #10b981; color: #a7f3d0; }
+.map-pin--active.map-pin--yellow { background: #451a03; border-color: #f59e0b; color: #fde68a; }
+.map-pin--active.map-pin--blue { background: #1d4ed8; border-color: #60a5fa; color: #dbeafe; }
+.map-pin--active.map-pin--gray { background: #111827; border-color: #94a3b8; color: #e2e8f0; }
 .map-loading {
   height: 100%;
   display: grid;
@@ -1422,6 +1432,11 @@ body,
 .mapgpt-pin-dialog button { border: 1px solid #334155; border-radius: 9px; padding: 9px 12px; background: #162238; color: #dbeafe; }
 .mapgpt-pin-dialog button:last-child { background: #2563eb; border-color: #60a5fa; }
 .map-fallback-drop-pin { position: absolute; z-index: 2; right: 12px; bottom: 12px; border: 1px solid #60a5fa; border-radius: 999px; padding: 9px 12px; background: #172554; color: white; }
+.map-location-marker { position: relative; width: 18px; height: 18px; border: 3px solid #fff; border-radius: 50%; background: #287bf0; box-shadow: 0 0 0 7px rgba(40,123,240,.24), 0 3px 12px rgba(0,0,0,.35); }
+.map-location-marker::after { content: ""; position: absolute; left: 50%; top: -11px; width: 4px; height: 10px; border-radius: 4px; background: #fff; transform: translateX(-50%) rotate(var(--map-heading, 0deg)); transform-origin: 50% 20px; }
+.map-location-status { position: absolute; z-index: 5; top: 12px; left: 50%; transform: translateX(-50%); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 7px 11px; background: rgba(7,17,34,.86); color: #dcecff; font-size: 10px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.map-recenter-button { position: absolute; z-index: 5; right: 14px; bottom: 18px; border: 1px solid #7db8ff; border-radius: 999px; padding: 9px 12px; background: #1768df; color: #fff; font: inherit; font-size: 11px; box-shadow: 0 5px 16px rgba(0,0,0,.28); }
+.map-mode-badge { position: absolute; z-index: 4; left: 14px; bottom: 18px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 7px 10px; background: rgba(7,17,34,.8); color: #dcecff; font-size: 10px; }
 @media (max-width: 520px) { .mapgpt-live-search { min-width: 0; width: 100%; } .mapgpt-filter-row { overflow-x: auto; } }
 .inline-reason button {
   min-width: 74px;
