@@ -112,12 +112,14 @@ export function buildOpenAIRequest({
   repInput,
   contextLabel,
   evidence,
+  conversation,
 }: {
   model: string;
   intent: string;
   repInput: string | null;
   contextLabel: string;
   evidence: FieldAiEvidence[];
+  conversation: unknown;
 }) {
   return {
     model,
@@ -126,11 +128,11 @@ export function buildOpenAIRequest({
       {
         role: "developer",
         content:
-          "You are a B2B field representative copilot. Use only supplied evidence for factual claims. Label inference, preserve uncertainty, cite evidence IDs exactly, and say Not verified when support is absent. Suggested actions are drafts and must never claim they were sent, saved, or applied.",
+          "You are a B2B field representative copilot. Use only supplied evidence for factual claims. Use the conversation, selected map entity, live location, route, and pipeline context to make the answer relevant. Label inference, preserve uncertainty, cite evidence IDs exactly, and say Not verified when support is absent. Suggested actions are drafts and must never claim they were sent, saved, or applied.",
       },
       {
         role: "user",
-        content: JSON.stringify({ intent, repInput, contextLabel, evidence }),
+        content: JSON.stringify({ intent, repInput, contextLabel, evidence, conversation }),
       },
     ],
     text: {

@@ -162,7 +162,25 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       if (fieldAiClient) {
         const lower = prompt.toLowerCase();
         const intent = lower.includes("objection") ? "objection" : lower.includes("talking") ? "talking_points" : lower.includes("prior") ? "prior_interactions" : "brief";
-        const result = await fieldAiClient.ask({ scope: { type: "account", accountId: selectedAccount.id }, intent, idempotencyKey: crypto.randomUUID() });
+        const result = await fieldAiClient.ask({
+          scope: { type: "account", accountId: selectedAccount.id },
+          intent,
+          repInput: prompt,
+          conversation: {
+            messages: [...messages, { role: "user" as const, text: prompt }].slice(-12),
+            selectedEntity: selectedMapEntity ?? undefined,
+            pipeline: allBusinesses.map((account) => {
+              const opportunity = businesses.find((business) => business.id === account.id);
+              return {
+                accountId: account.id,
+                stage: opportunity?.done ? "won" : "active",
+                nextAction: account.notes,
+                estimatedValue: account.revenue,
+              };
+            }),
+          },
+          idempotencyKey: crypto.randomUUID(),
+        });
         setMessages((current) => [...current, { role: "assistant", text: result.answer }]);
       } else {
         const text = buildLocalAssistantResponse(prompt, selectedAccount, listAgentActions());

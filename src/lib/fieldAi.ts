@@ -14,6 +14,22 @@ export interface FieldAiRequest {
   scope: { type: "account"; accountId: string } | { type: "territory"; territoryId: string };
   intent: FieldAiIntent;
   repInput?: string;
+  conversation?: {
+    messages: Array<{ role: "user" | "assistant"; text: string }>;
+    selectedEntity?: {
+      entityId: string;
+      source: string;
+      name?: string;
+      address?: string;
+      lat: number;
+      lng: number;
+      parentBuildingId?: string;
+      unitIdentifier?: string;
+    };
+    liveLocation?: { lat: number; lng: number; accuracyMeters?: number };
+    route?: { routeId: string; stopIds: string[]; currentStopId?: string };
+    pipeline?: Array<{ accountId: string; stage: string; nextAction: string; estimatedValue: number }>;
+  };
   idempotencyKey: string;
 }
 

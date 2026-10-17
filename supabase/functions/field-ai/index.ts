@@ -14,6 +14,13 @@ interface RequestBody {
   scope?: { type: "account"; accountId: string } | { type: "territory"; territoryId: string };
   intent?: "brief" | "talking_points" | "objection" | "prior_interactions" | "visit_note";
   repInput?: string;
+  conversation?: {
+    messages?: Array<{ role: "user" | "assistant"; text: string }>;
+    selectedEntity?: Record<string, unknown>;
+    liveLocation?: Record<string, unknown>;
+    route?: Record<string, unknown>;
+    pipeline?: Array<Record<string, unknown>>;
+  };
   idempotencyKey?: string;
 }
 
@@ -124,6 +131,7 @@ Deno.serve(async (request) => {
           repInput: body.repInput ?? null,
           contextLabel: business?.display_name ?? body.scope.territoryId,
           evidence,
+          conversation: body.conversation ?? null,
         }),
       ),
     });
