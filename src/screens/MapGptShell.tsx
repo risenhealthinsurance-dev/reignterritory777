@@ -38,12 +38,25 @@ function AssistantAvatar({ avatar = "orb" }: { avatar?: AgentConfig["avatar"] })
   return <div className={`mapgpt-avatar mapgpt-avatar--${avatar}`} aria-hidden="true"><span>✦</span></div>;
 }
 
+type DraftKind = "schedule" | "disposition" | "visit_note";
+
+interface ActionDraft {
+  kind: DraftKind;
+  appointmentType: "window" | "hard";
+  date: string;
+  time: string;
+  endTime: string;
+  outcome: string;
+  note: string;
+}
+
 function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline }: { accounts: Account[]; selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
     { role: "assistant", text: "I’m ready. Ask about a business, your territory, or the next best action." },
   ]);
   const [loading, setLoading] = useState(false);
+  const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
   const selectedAccount = businesses.find((account) => account.id === selectedAccountId) ?? businesses[0];
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +87,23 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
     }
   }
 
+  function openDraft(kind: DraftKind) {
+    setActionDraft({ kind, appointmentType: "window", date: "", time: "", endTime: "", outcome: "", note: "" });
+  }
+
+  function confirmDraft() {
+    if (!actionDraft) return;
+    const label = actionDraft.kind === "schedule" ? "Follow-up draft" : actionDraft.kind === "disposition" ? "Disposition draft" : "Visit note draft";
+    setActionDraft(null);
+    setMessages((current) => [...current, { role: "assistant", text: `${label} approved locally for ${selectedAccount.name}. No calendar or CRM write has occurred yet.` }]);
+  }
+
+  const draftReady = actionDraft?.kind === "schedule"
+    ? Boolean(actionDraft.date && actionDraft.time && (actionDraft.appointmentType === "hard" || actionDraft.endTime))
+    : actionDraft?.kind === "disposition"
+      ? Boolean(actionDraft.outcome)
+      : Boolean(actionDraft?.note.trim());
+
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map">
@@ -92,6 +122,24 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           <div className="mapgpt-chat-window__header"><AssistantAvatar /><div><strong>Ask Reign</strong><small>AI field assistant</small></div><button aria-label="Voice-ready assistant control">◉</button></div>
           <div className="mapgpt-messages">{messages.slice(-3).map((message, index) => <div key={`${message.role}-${index}`} className={`mapgpt-message mapgpt-message--${message.role}`}>{message.text}</div>)}{loading && <div className="mapgpt-message mapgpt-message--assistant">Thinking with your business context…</div>}<div ref={bottomRef} /></div>
           <div className="mapgpt-prompts"><button onClick={() => void ask("Give me a 30-second brief")}>Brief</button><button onClick={() => void ask("Give me talking points")}>Talking points</button><button onClick={() => void ask("What should I do next?")}>Next action</button></div>
+          <div className="mapgpt-action-chips" aria-label="Approved field actions">
+            <button onClick={() => openDraft("schedule")}>Schedule callback or appointment</button>
+            <button onClick={() => openDraft("disposition")}>Record disposition</button>
+            <button onClick={() => openDraft("visit_note")}>Save visit note</button>
+          </div>
+          {actionDraft && <div className="mapgpt-action-draft" role="dialog" aria-modal="true" aria-label={actionDraft.kind === "schedule" ? "Schedule callback or appointment" : actionDraft.kind === "disposition" ? "Record disposition" : "Save visit note"}>
+            <strong>{actionDraft.kind === "schedule" ? `Schedule follow-up for ${selectedAccount.name}` : actionDraft.kind === "disposition" ? `Record outcome for ${selectedAccount.name}` : `Save visit note for ${selectedAccount.name}`}</strong>
+            {actionDraft.kind === "schedule" && <>
+              <label>Appointment type<select aria-label="Appointment type" value={actionDraft.appointmentType} onChange={(event) => setActionDraft({ ...actionDraft, appointmentType: event.target.value as ActionDraft["appointmentType"] })}><option value="window">Time window</option><option value="hard">Hard appointment</option></select></label>
+              <label>Date<input aria-label="Date" type="date" value={actionDraft.date} onChange={(event) => setActionDraft({ ...actionDraft, date: event.target.value })} /></label>
+              <label>{actionDraft.appointmentType === "hard" ? "Time" : "Start time"}<input aria-label={actionDraft.appointmentType === "hard" ? "Time" : "Start time"} type="time" value={actionDraft.time} onChange={(event) => setActionDraft({ ...actionDraft, time: event.target.value })} /></label>
+              {actionDraft.appointmentType === "window" && <label>End time<input aria-label="End time" type="time" value={actionDraft.endTime} onChange={(event) => setActionDraft({ ...actionDraft, endTime: event.target.value })} /></label>}
+            </>}
+            {actionDraft.kind === "disposition" && <label>Outcome<select aria-label="Outcome" value={actionDraft.outcome} onChange={(event) => setActionDraft({ ...actionDraft, outcome: event.target.value })}><option value="">Choose outcome</option><option>Connected</option><option>Callback requested</option><option>Qualified</option><option>Not interested</option><option>No answer</option></select></label>}
+            {actionDraft.kind !== "schedule" && <label>Notes<textarea aria-label="Notes" value={actionDraft.note} onChange={(event) => setActionDraft({ ...actionDraft, note: event.target.value })} placeholder="Capture what happened…" /></label>}
+            <small>Review required. This creates a draft only until the live CRM/calendar action is connected.</small>
+            <div className="mapgpt-action-draft__buttons"><button onClick={() => setActionDraft(null)}>Cancel draft</button><button onClick={confirmDraft} disabled={!draftReady}>Confirm draft</button></div>
+          </div>}
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>
         </div>
       </div>

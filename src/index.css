@@ -200,6 +200,17 @@ body,
 .mapgpt-message--user { justify-self: end; background: #2d7df3; color: #fff; }
 .mapgpt-prompts { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 9px; }
 .mapgpt-prompts button { border: 1px solid rgba(104,182,255,.35); border-radius: 999px; background: #0c1c34; color: #b9dcff; padding: 6px 9px; font-size: 10px; white-space: nowrap; }
+.mapgpt-action-chips { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 9px; }
+.mapgpt-action-chips button { flex: 0 0 auto; border: 1px solid rgba(104,182,255,.35); border-radius: 999px; background: rgba(31,67,111,.72); color: #dcecff; padding: 6px 9px; font-size: 10px; white-space: nowrap; }
+.mapgpt-action-draft { display: grid; gap: 8px; margin: 0 10px 10px; padding: 10px; border: 1px solid rgba(104,182,255,.42); border-radius: 14px; background: #0e203b; color: #dcecff; }
+.mapgpt-action-draft label { display: grid; gap: 3px; color: #9fb8d7; font-size: 10px; }
+.mapgpt-action-draft input, .mapgpt-action-draft select, .mapgpt-action-draft textarea { min-width: 0; border: 1px solid #2d537f; border-radius: 8px; background: #09172b; color: #fff; padding: 7px; font: inherit; font-size: 11px; }
+.mapgpt-action-draft textarea { min-height: 58px; resize: vertical; }
+.mapgpt-action-draft small { color: #8ca8c8; font-size: 9px; line-height: 1.3; }
+.mapgpt-action-draft__buttons { display: flex; gap: 6px; }
+.mapgpt-action-draft__buttons button { flex: 1; border: 0; border-radius: 8px; background: #213d62; color: #dcecff; padding: 7px; font-size: 10px; }
+.mapgpt-action-draft__buttons button:last-child { background: #287bf0; color: #fff; }
+.mapgpt-action-draft__buttons button:disabled { cursor: not-allowed; opacity: .45; }
 .mapgpt-composer { display: flex; gap: 7px; padding: 0 10px 10px; }
 .mapgpt-composer input { min-width: 0; flex: 1; border: 1px solid #27466d; border-radius: 12px; background: #0b1930; color: #fff; padding: 10px; font: inherit; font-size: 12px; }
 .mapgpt-composer button { width: 38px; border: 0; border-radius: 12px; background: #287bf0; color: #fff; font-size: 18px; }

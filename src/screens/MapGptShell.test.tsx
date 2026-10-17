@@ -37,3 +37,25 @@ test("opens Studio and Pipeline from the primary navigation", async () => {
   expect(screen.getByRole("heading", { name: /Current pipeline/i })).toBeInTheDocument();
   expect(screen.getByText(/Apex Manufacturing Group/i)).toBeInTheDocument();
 });
+
+test("requires confirmation before creating a callback draft", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+
+  await user.click(screen.getByRole("button", { name: /Schedule callback or appointment/i }));
+
+  expect(screen.getByRole("dialog", { name: /Schedule callback or appointment/i })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Confirm draft/i })).toBeDisabled();
+
+  await user.click(screen.getByLabelText(/Date/i));
+  await user.keyboard("2026-10-20");
+  await user.click(screen.getByLabelText("Start time"));
+  await user.keyboard("10:30");
+  await user.click(screen.getByLabelText("End time"));
+  await user.keyboard("11:00");
+  expect(screen.getByRole("button", { name: /Confirm draft/i })).toBeEnabled();
+  await user.click(screen.getByRole("button", { name: /Confirm draft/i }));
+
+  expect(screen.queryByRole("dialog", { name: /Schedule callback or appointment/i })).not.toBeInTheDocument();
+  expect(screen.getByText(/Draft approved locally/i)).toBeInTheDocument();
+});
