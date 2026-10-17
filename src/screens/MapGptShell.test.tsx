@@ -48,6 +48,16 @@ test("chat returns a local answer when the live agent is unavailable", async () 
   expect(await screen.findByText(/Here’s Apex Manufacturing Group/i)).toBeInTheDocument();
 });
 
+test("keeps a useful multi-turn conversation window visible", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+  await user.click(screen.getByRole("button", { name: "Talking points" }));
+  expect(await screen.findByText(/Here’s Apex Manufacturing Group/i)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Next action" }));
+  expect(await screen.findByText(/Next action for Apex Manufacturing Group/i)).toBeInTheDocument();
+  expect(screen.getByText(/Here’s Apex Manufacturing Group/i)).toBeInTheDocument();
+});
+
 test("opens Studio and Pipeline from the primary navigation", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);

@@ -33,7 +33,7 @@ import { QuadrantRouteScreen } from "./screens/QuadrantRouteScreen";
 import { EnrichmentScreen } from "./screens/EnrichmentScreen";
 import { FieldAIScreen } from "./screens/FieldAIScreen";
 import { MapGptShell } from "./screens/MapGptShell";
-import { A1_STOPS } from "./data/territory_grid";
+import { A1_STOPS, QUADRANTS } from "./data/territory_grid";
 import type { QuadrantStop } from "./data/territory_grid";
 import type { QuadrantContext } from "./types";
 import {
@@ -214,6 +214,18 @@ export default function App({ initialScreen = "home", initialAccountId = "apex" 
   const [activeQuadrantId, setActiveQuadrantId] = useState<string>("A1");
   const [enrichmentAction, setEnrichmentAction] = useState<string>("enrich");
   const [quadrantContext, setQuadrantContext] = useState<QuadrantContext | null>(null);
+  const [completedQuadrants, setCompletedQuadrants] = useState<string[]>([]);
+  const [territoryLocked, setTerritoryLocked] = useState(false);
+  const [quadrantOrder, setQuadrantOrder] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem("reign.quadrantOrder");
+      const parsed = stored ? JSON.parse(stored) as unknown : null;
+      return Array.isArray(parsed) && parsed.length === QUADRANTS.length && parsed.every((id) => typeof id === "string" && QUADRANTS.some((quadrant) => quadrant.id === id))
+        ? parsed as string[]
+        : QUADRANTS.map((quadrant) => quadrant.id);
+    } catch { return QUADRANTS.map((quadrant) => quadrant.id); }
+  });
+  useEffect(() => { window.localStorage.setItem("reign.quadrantOrder", JSON.stringify(quadrantOrder)); }, [quadrantOrder]);
   const [messages, setMessages] = useState<Message[]>(SEED_MESSAGES);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -632,6 +644,12 @@ export default function App({ initialScreen = "home", initialAccountId = "apex" 
     if (screen === "territory") {
       return (
         <TerritoryOverviewScreen
+          completedQuadrants={completedQuadrants}
+          locked={territoryLocked}
+          outstandingFollowUps={day.stops.filter((stop) => stop.resolution === "unresolved" || stop.resolution === "reloop" || stop.resolution === "tomorrow").length}
+          quadrantOrder={quadrantOrder}
+          onMoveQuadrant={(id, direction) => setQuadrantOrder((current) => { const index = current.indexOf(id); const target = direction === "up" ? index - 1 : index + 1; if (index < 0 || target < 0 || target >= current.length) return current; const next = [...current]; [next[index], next[target]] = [next[target], next[index]]; return next; })}
+          onLockTerritory={() => setTerritoryLocked(true)}
           onViewQuadrant={(id) => {
             setActiveQuadrantId(id);
             setScreen("quadrant");
@@ -648,6 +666,9 @@ export default function App({ initialScreen = "home", initialAccountId = "apex" 
       return (
         <ActiveQuadrantScreen
           quadrantId={activeQuadrantId}
+          completed={completedQuadrants.includes(activeQuadrantId)}
+          locked={territoryLocked}
+          onComplete={() => setCompletedQuadrants((current) => current.includes(activeQuadrantId) ? current : [...current, activeQuadrantId])}
           onPlanRoute={() => setScreen("quad_route")}
           onBack={() => setScreen("territory")}
         />

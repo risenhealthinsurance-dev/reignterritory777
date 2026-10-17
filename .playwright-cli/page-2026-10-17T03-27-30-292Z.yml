@@ -1,0 +1,141 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - region [ref=e159]:
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - text: CURRENT PIPELINE
+          - heading "Current pipeline" [level=1] [ref=e162]
+          - paragraph [ref=e163]: Keep every next action visible.
+        - generic [ref=e164]:
+          - text: $51.0M
+          - generic [ref=e165]: territory value
+      - generic [ref=e166]:
+        - region "New pipeline stage" [ref=e167]:
+          - generic [ref=e168]:
+            - strong [ref=e169]: New
+            - generic [ref=e170]: "2"
+          - article [ref=e171]:
+            - button "Westside Distribution Co" [ref=e172] [cursor=pointer]
+            - generic [ref=e173]: Tommy Park · Owner / CEO
+            - strong [ref=e174]: $1.2M
+            - paragraph [ref=e175]: Research decision-maker timing
+            - generic [ref=e176]:
+              - text: Move to
+              - combobox "Move to" [ref=e177]:
+                - option "New" [selected]
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+          - article [ref=e178]:
+            - button "Bravo Industrial Supply" [ref=e179] [cursor=pointer]
+            - generic [ref=e180]: Lisa Okonkwo · Purchasing Manager
+            - strong [ref=e181]: $4.1M
+            - paragraph [ref=e182]: Research decision-maker timing
+            - generic [ref=e183]:
+              - text: Move to
+              - combobox "Move to" [ref=e184]:
+                - option "New" [selected]
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Qualified pipeline stage" [ref=e185]:
+          - generic [ref=e186]:
+            - strong [ref=e187]: Qualified
+            - generic [ref=e188]: "1"
+          - article [ref=e189]:
+            - button "Solano Healthcare Partners" [ref=e190] [cursor=pointer]
+            - generic [ref=e191]: Maria Trevino · Director of Supply Chain
+            - strong [ref=e192]: $5.6M
+            - paragraph [ref=e193]: Research decision-maker timing
+            - generic [ref=e194]:
+              - text: Move to
+              - combobox "Move to" [ref=e195]:
+                - option "New"
+                - option "Qualified" [selected]
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Discovery pipeline stage" [ref=e196]:
+          - generic [ref=e197]:
+            - strong [ref=e198]: Discovery
+            - generic [ref=e199]: "1"
+          - article [ref=e200]:
+            - button "Apex Manufacturing Group" [ref=e201] [cursor=pointer]
+            - generic [ref=e202]: Robert Garza · Chief Procurement Officer
+            - strong [ref=e203]: $22.1M
+            - paragraph [ref=e204]: Prepare plant walkthrough brief
+            - generic [ref=e205]: ● Board review pending
+            - generic [ref=e206]:
+              - text: Move to
+              - combobox "Move to" [ref=e207]:
+                - option "New"
+                - option "Qualified"
+                - option "Discovery" [selected]
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Proposal pipeline stage" [ref=e208]:
+          - generic [ref=e209]:
+            - strong [ref=e210]: Proposal
+            - generic [ref=e211]: "1"
+          - article [ref=e212]:
+            - button "Meridian Medical Devices" [ref=e213] [cursor=pointer]
+            - generic [ref=e214]: Sandra Kowalski · VP of Operations
+            - strong [ref=e215]: $14.2M
+            - paragraph [ref=e216]: Confirm expansion path
+            - generic [ref=e217]:
+              - text: Move to
+              - combobox "Move to" [ref=e218]:
+                - option "New"
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal" [selected]
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Negotiation pipeline stage" [ref=e219]:
+          - generic [ref=e220]:
+            - strong [ref=e221]: Negotiation
+            - generic [ref=e222]: "0"
+        - region "Won pipeline stage" [ref=e223]:
+          - generic [ref=e224]:
+            - strong [ref=e225]: Won
+            - generic [ref=e226]: "1"
+          - article [ref=e227]:
+            - button "Pacific Rim Logistics" [ref=e228] [cursor=pointer]
+            - generic [ref=e229]: David Chen · Director of Procurement
+            - strong [ref=e230]: $3.8M
+            - paragraph [ref=e231]: Confirm expansion path
+            - generic [ref=e232]:
+              - text: Move to
+              - combobox "Move to" [ref=e233]:
+                - option "New"
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won" [selected]
+                - option "Lost"
+        - region "Lost pipeline stage" [ref=e234]:
+          - generic [ref=e235]:
+            - strong [ref=e236]: Lost
+            - generic [ref=e237]: "0"
+  - navigation "Primary" [ref=e51]:
+    - button [ref=e52] [cursor=pointer]:
+      - generic [aria-hidden] [ref=e53]: ⌖
+      - strong [ref=e54]: Home
+    - button [ref=e55] [cursor=pointer]:
+      - generic [aria-hidden] [ref=e56]: ✦
+      - strong [ref=e57]: Agent Studio
+    - button [active] [ref=e58] [cursor=pointer]:
+      - generic [aria-hidden] [ref=e59]: ▤
+      - strong [ref=e60]: Pipeline

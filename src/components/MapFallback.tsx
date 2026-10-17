@@ -4,6 +4,8 @@ import type { DayStop } from "../domain/repDay";
 import { NextBusinessCard } from "./NextBusinessCard";
 import { FieldActionSheet } from "./FieldActionSheet";
 import { dispositionColor } from "../lib/dispositionColor";
+import { useEffect } from "react";
+import type { LocationContext } from "../lib/fieldContext";
 
 export interface MapFallbackProps {
   height: number;
@@ -14,6 +16,7 @@ export interface MapFallbackProps {
   onPinTap: (id: string) => void;
   onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
   onEntitySelect?: (entity: MapEntitySelection) => void;
+  onLocationStateChange?: (context: LocationContext) => void;
   showTerritoryMode?: boolean;
   minimalChrome?: boolean;
   cockpitAccount?: Account;
@@ -43,6 +46,7 @@ export function MapFallback({
   routeStopIds,
   onPinTap,
   onMapClick,
+  onLocationStateChange,
   showTerritoryMode = false,
   minimalChrome = false,
   cockpitAccount,
@@ -55,6 +59,10 @@ export function MapFallback({
   dispositionByAccount = {},
 }: MapFallbackProps) {
   const doneCount = doneAccountIds.length;
+
+  useEffect(() => {
+    onLocationStateChange?.({ state: "unavailable" });
+  }, [onLocationStateChange]);
 
   return (
     <div

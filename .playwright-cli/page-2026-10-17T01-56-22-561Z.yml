@@ -1,0 +1,63 @@
+- generic [ref=f2e3]:
+  - generic "Route map fallback" [ref=f2e122]:
+    - generic:
+      - generic: ● A1 · ROUTE · 34950 · 2/6 done
+      - generic: 14.4 mi · A1 loop
+    - button "Meridian Medical Devices, route stop 1, completed" [ref=f2e124] [cursor=pointer]: ✓
+    - button "Pacific Rim Logistics, route stop 2, completed" [ref=f2e125] [cursor=pointer]: ✓
+    - button "Apex Manufacturing Group, route stop 3, active" [ref=f2e204] [cursor=pointer]: "3"
+    - button "Solano Healthcare Partners, route stop 4" [ref=f2e127] [cursor=pointer]: "4"
+    - button "Westside Distribution Co, route stop 5" [ref=f2e128] [cursor=pointer]: "5"
+    - button "Bravo Industrial Supply, route stop 6" [ref=f2e129] [cursor=pointer]: "6"
+    - generic [ref=f2e121]: MAP PREVIEW · ADD MAPBOX TOKEN FOR LIVE MAP
+  - generic [ref=f2e6]:
+    - main [ref=f2e7]:
+      - region [ref=f2e205]:
+        - generic [ref=f2e206]:
+          - button "← Route" [ref=f2e207] [cursor=pointer]
+          - generic [ref=f2e208]: ● CURRENT STOP · 11:15 AM
+          - heading "Apex Manufacturing Group" [level=1] [ref=f2e209]
+          - paragraph [ref=f2e210]: 800 Virginia Ave, Fort Pierce, FL 34950
+        - generic [ref=f2e211]:
+          - generic [ref=f2e233]:
+            - generic [ref=f2e234]:
+              - generic [ref=f2e235]: ARRIVED
+              - strong [ref=f2e236]: Prepare before starting
+              - paragraph [ref=f2e237]: Parking and preparation time stay separate from visit time.
+            - button "Start visit" [ref=f2e238] [cursor=pointer]
+            - generic [ref=f2e239]:
+              - link "Call contact" [ref=f2e240] [cursor=pointer]:
+                - /url: tel:+1 (772) 555-0318
+              - button "Review brief" [ref=f2e241] [cursor=pointer]
+              - button "Can't access location" [ref=f2e242] [cursor=pointer]
+          - article [ref=f2e218]:
+            - generic [ref=f2e219]:
+              - generic [ref=f2e220]: A
+              - generic [ref=f2e221]:
+                - heading "Robert Garza" [level=2] [ref=f2e222]
+                - paragraph [ref=f2e223]: Chief Procurement Officer
+              - generic [ref=f2e224]: Enterprise
+            - generic [ref=f2e225]:
+              - text: Today's focus
+              - paragraph [ref=f2e226]: Largest account on territory. Board approval required for enterprise tier. Robert is a champion.
+            - generic [ref=f2e227]:
+              - text: Last interaction
+              - paragraph [ref=f2e228]: Plant walkthrough — identified 3 additional SKU opportunities
+            - generic [ref=f2e229]:
+              - text: Expected value
+              - paragraph [ref=f2e230]: $22.1M account · verify needs before proposing.
+        - paragraph [ref=f2e232]: Confirm arrival and start the visit to log an outcome.
+    - navigation "Primary" [ref=f2e103]:
+      - button "Territory" [ref=f2e104] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e106]: 📍
+        - generic [ref=f2e107]: TERRITORY
+      - button "Route, 2/6 complete" [ref=f2e108] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e109]: 🗺
+        - generic [ref=f2e110]: ROUTE · 2/6
+      - button "Field AI" [ref=f2e111] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f2e112]: 🤖
+        - generic [ref=f2e113]: FIELD AI
+      - button "Summary, 2 unsynced" [ref=f2e243] [cursor=pointer]:
+        - generic [ref=f2e115]: "2"
+        - generic [aria-hidden] [ref=f2e116]: 📊
+        - generic [ref=f2e117]: SUMMARY

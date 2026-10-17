@@ -1,0 +1,9 @@
+- main [ref=f3e3]:
+  - region [ref=f3e4]:
+    - generic [ref=f3e5]: SECURE FIELD ACCESS
+    - heading "Sign in to Reign Territory" [level=1] [ref=f3e6]
+    - paragraph [ref=f3e7]: Use your work email. We’ll send a one-time secure sign-in link.
+    - generic [ref=f3e8]:
+      - text: Work email
+      - textbox "Work email" [ref=f3e9]
+      - button "Email me a sign-in link" [ref=f3e10]

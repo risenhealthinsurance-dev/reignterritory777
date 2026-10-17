@@ -1,0 +1,71 @@
+- generic [ref=f5e3]:
+  - main [ref=f5e4]:
+    - region "Home map and assistant" [ref=f5e5]:
+      - region "Live Mapbox territory map" [ref=f5e6]:
+        - generic "Route map fallback" [ref=f5e7]:
+          - button "Meridian Medical Devices, route stop 1, completed" [ref=f5e10] [cursor=pointer]: ✓
+          - button "Pacific Rim Logistics, route stop 2, completed" [ref=f5e11] [cursor=pointer]: ✓
+          - button "Apex Manufacturing Group, route stop 3, active" [ref=f5e12] [cursor=pointer]: "3"
+          - button "Solano Healthcare Partners, route stop 4" [ref=f5e13] [cursor=pointer]: "4"
+          - button "Westside Distribution Co, route stop 5" [ref=f5e14] [cursor=pointer]: "5"
+          - button "Bravo Industrial Supply, route stop 6" [ref=f5e15] [cursor=pointer]: "6"
+      - generic:
+        - generic [ref=f5e16]:
+          - generic [ref=f5e17]: ✦
+          - strong [ref=f5e18]: Reign
+          - generic [ref=f5e19]: Territory
+        - button "Open pipeline" [ref=f5e20]: ▤
+      - generic "Businesses on map" [ref=f5e21]:
+        - generic [ref=f5e22]:
+          - textbox "Search live businesses" [ref=f5e23]
+          - button "Search" [ref=f5e24] [cursor=pointer]
+        - generic [ref=f5e25]:
+          - generic [ref=f5e26]:
+            - checkbox "Open now" [ref=f5e27]
+            - text: Open now
+          - generic [ref=f5e28]:
+            - checkbox "My pins" [ref=f5e29]
+            - text: My pins
+          - button "＋ Add pin" [ref=f5e30] [cursor=pointer]
+        - generic "Business results" [ref=f5e31]:
+          - button "Meridian Medical Devices" [ref=f5e32]
+          - button "Pacific Rim Logistics" [ref=f5e33]
+          - button "Apex Manufacturing Group" [pressed] [ref=f5e34]
+          - button "Solano Healthcare Partners" [ref=f5e35]
+          - button "Westside Distribution Co" [ref=f5e36]
+          - button "Bravo Industrial Supply" [ref=f5e37]
+      - generic "AI assistant context":
+        - generic [ref=f5e38]:
+          - generic [ref=f5e39]: Current business
+          - strong [ref=f5e40]: Apex Manufacturing Group
+          - generic [ref=f5e41]: 800 Virginia Ave, Fort Pierce, FL 34950
+        - generic [ref=f5e42]:
+          - generic [ref=f5e43]:
+            - generic [ref=f5e45]: ✦
+            - generic [ref=f5e46]:
+              - strong [ref=f5e47]: Ask Reign
+              - generic [ref=f5e48]: AI field assistant
+            - button "Voice-ready assistant control" [ref=f5e49]: ◉
+          - generic [ref=f5e50]: I’m ready. Ask about a business, your territory, or the next best action.
+          - generic [ref=f5e52]:
+            - button "Brief" [ref=f5e53]
+            - button "Talking points" [ref=f5e54]
+            - button "Next action" [ref=f5e55]
+          - generic "Approved field actions" [ref=f5e56]:
+            - button "Schedule callback or appointment" [ref=f5e57]
+            - button "Record disposition" [ref=f5e58]
+            - button "Save visit note" [ref=f5e59]
+          - generic [ref=f5e60]:
+            - textbox "Ask the AI assistant" [ref=f5e61]:
+              - /placeholder: Ask anything about this territory…
+            - button "Send message" [ref=f5e62]: ↑
+  - navigation "Primary" [ref=f5e63]:
+    - button [ref=f5e64] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f5e65]: ⌖
+      - strong [ref=f5e66]: Home
+    - button [ref=f5e67] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f5e68]: ✦
+      - strong [ref=f5e69]: Agent Studio
+    - button [ref=f5e70] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f5e71]: ▤
+      - strong [ref=f5e72]: Pipeline

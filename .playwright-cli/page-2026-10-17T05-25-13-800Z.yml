@@ -1,0 +1,141 @@
+- generic [ref=f8e3]:
+  - main [ref=f8e4]:
+    - region [ref=f8e75]:
+      - generic [ref=f8e76]:
+        - generic [ref=f8e77]:
+          - text: CURRENT PIPELINE
+          - heading "Current pipeline" [level=1] [ref=f8e78]
+          - paragraph [ref=f8e79]: Keep every next action visible. Swipe stages to browse
+        - generic [ref=f8e80]:
+          - text: $51.0M
+          - generic [ref=f8e81]: territory value
+      - generic [ref=f8e82]:
+        - region "New pipeline stage" [ref=f8e83]:
+          - generic [ref=f8e84]:
+            - strong [ref=f8e85]: New
+            - generic [ref=f8e86]: "2"
+          - article [ref=f8e87]:
+            - button "Westside Distribution Co" [ref=f8e88] [cursor=pointer]
+            - generic [ref=f8e89]: Tommy Park · Owner / CEO
+            - strong [ref=f8e90]: $1.2M
+            - paragraph [ref=f8e91]: Research decision-maker timing
+            - generic [ref=f8e92]:
+              - text: Move to
+              - combobox "Move to" [ref=f8e93]:
+                - option "New" [selected]
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+          - article [ref=f8e94]:
+            - button "Bravo Industrial Supply" [ref=f8e95] [cursor=pointer]
+            - generic [ref=f8e96]: Lisa Okonkwo · Purchasing Manager
+            - strong [ref=f8e97]: $4.1M
+            - paragraph [ref=f8e98]: Research decision-maker timing
+            - generic [ref=f8e99]:
+              - text: Move to
+              - combobox "Move to" [ref=f8e100]:
+                - option "New" [selected]
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Qualified pipeline stage" [ref=f8e101]:
+          - generic [ref=f8e102]:
+            - strong [ref=f8e103]: Qualified
+            - generic [ref=f8e104]: "1"
+          - article [ref=f8e105]:
+            - button "Solano Healthcare Partners" [ref=f8e106] [cursor=pointer]
+            - generic [ref=f8e107]: Maria Trevino · Director of Supply Chain
+            - strong [ref=f8e108]: $5.6M
+            - paragraph [ref=f8e109]: Research decision-maker timing
+            - generic [ref=f8e110]:
+              - text: Move to
+              - combobox "Move to" [ref=f8e111]:
+                - option "New"
+                - option "Qualified" [selected]
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Discovery pipeline stage" [ref=f8e112]:
+          - generic [ref=f8e113]:
+            - strong [ref=f8e114]: Discovery
+            - generic [ref=f8e115]: "1"
+          - article [ref=f8e116]:
+            - button "Apex Manufacturing Group" [ref=f8e117] [cursor=pointer]
+            - generic [ref=f8e118]: Robert Garza · Chief Procurement Officer
+            - strong [ref=f8e119]: $22.1M
+            - paragraph [ref=f8e120]: Prepare plant walkthrough brief
+            - generic [ref=f8e121]: ● Board review pending
+            - generic [ref=f8e122]:
+              - text: Move to
+              - combobox "Move to" [ref=f8e123]:
+                - option "New"
+                - option "Qualified"
+                - option "Discovery" [selected]
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Proposal pipeline stage" [ref=f8e124]:
+          - generic [ref=f8e125]:
+            - strong [ref=f8e126]: Proposal
+            - generic [ref=f8e127]: "1"
+          - article [ref=f8e128]:
+            - button "Meridian Medical Devices" [ref=f8e129] [cursor=pointer]
+            - generic [ref=f8e130]: Sandra Kowalski · VP of Operations
+            - strong [ref=f8e131]: $14.2M
+            - paragraph [ref=f8e132]: Confirm expansion path
+            - generic [ref=f8e133]:
+              - text: Move to
+              - combobox "Move to" [ref=f8e134]:
+                - option "New"
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal" [selected]
+                - option "Negotiation"
+                - option "Won"
+                - option "Lost"
+        - region "Negotiation pipeline stage" [ref=f8e135]:
+          - generic [ref=f8e136]:
+            - strong [ref=f8e137]: Negotiation
+            - generic [ref=f8e138]: "0"
+        - region "Won pipeline stage" [ref=f8e139]:
+          - generic [ref=f8e140]:
+            - strong [ref=f8e141]: Won
+            - generic [ref=f8e142]: "1"
+          - article [ref=f8e143]:
+            - button "Pacific Rim Logistics" [ref=f8e144] [cursor=pointer]
+            - generic [ref=f8e145]: David Chen · Director of Procurement
+            - strong [ref=f8e146]: $3.8M
+            - paragraph [ref=f8e147]: Confirm expansion path
+            - generic [ref=f8e148]:
+              - text: Move to
+              - combobox "Move to" [ref=f8e149]:
+                - option "New"
+                - option "Qualified"
+                - option "Discovery"
+                - option "Proposal"
+                - option "Negotiation"
+                - option "Won" [selected]
+                - option "Lost"
+        - region "Lost pipeline stage" [ref=f8e150]:
+          - generic [ref=f8e151]:
+            - strong [ref=f8e152]: Lost
+            - generic [ref=f8e153]: "0"
+  - navigation "Primary" [ref=f8e65]:
+    - button [ref=f8e66] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f8e67]: ⌖
+      - strong [ref=f8e68]: Home
+    - button [ref=f8e69] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f8e70]: ✦
+      - strong [ref=f8e71]: Agent Studio
+    - button [active] [ref=f8e72] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f8e73]: ▤
+      - strong [ref=f8e74]: Pipeline

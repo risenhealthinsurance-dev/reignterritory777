@@ -12,9 +12,11 @@ import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
 import { listAgentActions, replayStoredAgentActions, saveAgentAction } from "../lib/agentStore";
 import { createFieldActionClient } from "../lib/fieldAction";
 import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteStopIds } from "../lib/routePriority";
+import { canCreateTerritory } from "../domain/territoryLifecycle";
 import { authBypass, supabase } from "../lib/supabase";
 import { filterBusinesses } from "../lib/businessFilters";
 import { reverseMapboxPlace, searchMapboxPlaces } from "../lib/mapboxPlaces";
+import { buildPipelineContext, locationStateLabel, type LocationContext } from "../lib/fieldContext";
 import type { MapEntitySelection } from "../components/MapView";
 
 const repository = createAgentStudioRepository(supabase);
@@ -58,7 +60,7 @@ interface ActionDraft {
   note: string;
 }
 
-function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline, onActionQueued, routeRevision }: { accounts: Account[]; selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void; onActionQueued: () => void; routeRevision: number }) {
+function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, onOpenPipeline, onActionQueued, routeRevision, pipeline }: { accounts: Account[]; selectedAccountId: string; onSelectAccount: (id: string) => void; onOpenPipeline: () => void; onActionQueued: () => void; routeRevision: number; pipeline: PipelineOpportunity[] }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
     { role: "assistant", text: "I’m ready. Ask about a business, your territory, or the next best action." },
@@ -72,8 +74,25 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [search, setSearch] = useState("");
   const [searching, setSearching] = useState(false);
   const [pinDraft, setPinDraft] = useState<{ lat: number; lng: number; name: string; note: string } | null>(null);
+  const [territoryDraft, setTerritoryDraft] = useState<Array<{ lat: number; lng: number }> | null>(null);
+  const [savedTerritories, setSavedTerritories] = useState<Array<Array<{ lat: number; lng: number }>>>(() => {
+    try {
+      const stored = window.localStorage.getItem("reign.savedTerritories");
+      const parsed = stored ? JSON.parse(stored) as unknown : [];
+      return Array.isArray(parsed) ? parsed.filter((boundary): boundary is Array<{ lat: number; lng: number }> => Array.isArray(boundary) && boundary.length >= 3 && boundary.every((point) => typeof point?.lat === "number" && typeof point?.lng === "number")) : [];
+    } catch { return []; }
+  });
   const [selectedMapEntity, setSelectedMapEntity] = useState<MapEntitySelection | null>(null);
-  const [liveLocation, setLiveLocation] = useState<{ lat: number; lng: number; accuracyMeters?: number } | null>(null);
+  const [locationContext, setLocationContext] = useState<LocationContext>({ state: "pending" });
+  const liveLocation = locationContext.state === "available" ? locationContext : null;
+
+  useEffect(() => {
+    if (locationContext.state !== "available" || !locationContext.updatedAt) return;
+    const interval = window.setInterval(() => {
+      if (Date.now() - locationContext.updatedAt! > 30_000) setLocationContext((current) => current.state === "available" ? { ...current, state: "stale" } : current);
+    }, 5_000);
+    return () => window.clearInterval(interval);
+  }, [locationContext.state, locationContext.updatedAt]);
   const allBusinesses = useMemo(() => [...businesses, ...pins, ...discovered.filter((item) => !businesses.some((business) => business.id === item.id))], [businesses, discovered, pins]);
   const visibleBusinesses = useMemo(() => filterBusinesses(allBusinesses, filters), [allBusinesses, filters]);
   const selectedAccountBase = allBusinesses.find((account) => account.id === selectedAccountId) ?? visibleBusinesses[0] ?? allBusinesses[0] ?? businesses[0];
@@ -97,6 +116,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { void repository.listUserPins().then(setPins); }, []);
+  useEffect(() => { window.localStorage.setItem("reign.savedTerritories", JSON.stringify(savedTerritories)); }, [savedTerritories]);
 
   async function discoverPlaces() {
     if (!search.trim() || searching) return;
@@ -170,17 +190,9 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           conversation: {
             messages: [...messages, { role: "user" as const, text: prompt }].slice(-12),
             selectedEntity: selectedMapEntity ?? undefined,
-            liveLocation: liveLocation ?? undefined,
+            liveLocation: liveLocation?.lat != null && liveLocation.lng != null ? { lat: liveLocation.lat, lng: liveLocation.lng, accuracyMeters: liveLocation.accuracyMeters } : undefined,
             route: { routeId: "A1", stopIds: routeStopIds, currentStopId: selectedAccount.id },
-            pipeline: allBusinesses.map((account) => {
-              const opportunity = businesses.find((business) => business.id === account.id);
-              return {
-                accountId: account.id,
-                stage: opportunity?.done ? "won" : "active",
-                nextAction: account.notes,
-                estimatedValue: account.revenue,
-              };
-            }),
+            pipeline: buildPipelineContext(pipeline),
           },
           idempotencyKey: crypto.randomUUID(),
         });
@@ -240,7 +252,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} onLocationChange={setLiveLocation} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} onMapClick={(point) => territoryDraft && setTerritoryDraft((current) => [...(current ?? []), { lat: point.lat, lng: point.lng }])} onLocationChange={(location) => setLocationContext({ state: "available", ...location, updatedAt: Date.now() })} onLocationStateChange={setLocationContext} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
@@ -248,13 +260,13 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       </header>
       <div className="mapgpt-home__business-picker" aria-label="Businesses on map">
         <div className="mapgpt-live-search"><input aria-label="Search live businesses" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search live businesses" /><button onClick={() => void discoverPlaces()} disabled={searching}>{searching ? "…" : "Search"}</button></div>
-        <div className="mapgpt-filter-row"><label><input type="checkbox" checked={filters.openOnly} onChange={(event) => setFilters({ ...filters, openOnly: event.target.checked })} /> Open now</label><label><input type="checkbox" checked={filters.userPinsOnly} onChange={(event) => setFilters({ ...filters, userPinsOnly: event.target.checked })} /> My pins</label><button onClick={() => setPinDraft({ lat: selectedAccount.lat, lng: selectedAccount.lng, name: "", note: "" })}>＋ Add pin</button></div>
+        <div className="mapgpt-filter-row"><label><input type="checkbox" checked={filters.openOnly} onChange={(event) => setFilters({ ...filters, openOnly: event.target.checked })} /> Open now</label><label><input type="checkbox" checked={filters.userPinsOnly} onChange={(event) => setFilters({ ...filters, userPinsOnly: event.target.checked })} /> My pins</label><button onClick={() => setPinDraft({ lat: selectedAccount.lat, lng: selectedAccount.lng, name: "", note: "" })}>＋ Add pin</button><button onClick={() => setTerritoryDraft([])} aria-pressed={territoryDraft !== null}>＋ Draw boundary</button></div>
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
-        <div className="mapgpt-context"><span>{selectedMapEntity ? (selectedMapEntity.source === "mapbox-unit" ? "Selected unit" : selectedMapEntity.source === "mapbox-address" ? "Selected map address" : "Selected building") : "Current business"}</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small>{selectedMapEntity && <label className="mapgpt-context__edit">Business name<input aria-label="Edit selected business name" value={selectedAccount.name === "Business name needed" ? "" : selectedAccount.name} placeholder="Business name needed" onChange={(event) => { const name = event.target.value || "Business name needed"; setDiscovered((current) => current.map((item) => item.id === selectedMapEntity.entityId ? { ...item, name } : item)); setSelectedMapEntity((current) => current ? { ...current, name: event.target.value || undefined } : current); }} /></label>}{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
+        <div className="mapgpt-context"><span>{selectedMapEntity ? (selectedMapEntity.source === "mapbox-unit" ? "Selected unit" : selectedMapEntity.source === "mapbox-address" ? "Selected map address" : "Selected building") : "Current business"}</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small><small className={`mapgpt-location-context mapgpt-location-context--${locationContext.state}`} role="status">{locationStateLabel(locationContext)}</small>{selectedMapEntity && <label className="mapgpt-context__edit">Business name<input aria-label="Edit selected business name" value={selectedAccount.name === "Business name needed" ? "" : selectedAccount.name} placeholder="Business name needed" onChange={(event) => { const name = event.target.value || "Business name needed"; setDiscovered((current) => current.map((item) => item.id === selectedMapEntity.entityId ? { ...item, name } : item)); setSelectedMapEntity((current) => current ? { ...current, name: event.target.value || undefined } : current); }} /></label>}{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
         <div className="mapgpt-chat-window">
           <div className="mapgpt-chat-window__header"><AssistantAvatar /><div><strong>Ask Reign</strong><small>AI field assistant</small></div><button aria-label="Voice-ready assistant control">◉</button></div>
-          <div className="mapgpt-messages">{messages.slice(-3).map((message, index) => <div key={`${message.role}-${index}`} className={`mapgpt-message mapgpt-message--${message.role}`}>{message.text}</div>)}{loading && <div className="mapgpt-message mapgpt-message--assistant">Thinking with your business context…</div>}<div ref={bottomRef} /></div>
+          <div className="mapgpt-messages">{messages.slice(-6).map((message, index) => <div key={`${message.role}-${index}`} className={`mapgpt-message mapgpt-message--${message.role}`}>{message.text}</div>)}{loading && <div className="mapgpt-message mapgpt-message--assistant">Thinking with your business context…</div>}<div ref={bottomRef} /></div>
           <div className="mapgpt-prompts"><button onClick={() => void ask("Give me a 30-second brief")}>Brief</button><button onClick={() => void ask("Give me talking points")}>Talking points</button><button onClick={() => void ask("What should I do next?")}>Next action</button></div>
           <div className="mapgpt-action-chips" aria-label="Approved field actions">
             <button onClick={() => openDraft("schedule")}>Schedule callback or appointment</button>
@@ -277,6 +289,8 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>
         </div>
       </div>
+      {territoryDraft && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Draw territory"><strong>Drawing territory</strong><small>Click map corners to place boundary points.</small><p>{territoryDraft.length} points captured{territoryDraft.length < 3 ? " · add at least 3" : " · ready to save"}</p><div><button onClick={() => setTerritoryDraft(null)}>Cancel</button><button disabled={territoryDraft.length < 3} onClick={() => { if (!canCreateTerritory(territoryDraft, savedTerritories.map((boundary, index) => ({ id: `session-${index}`, boundary, status: "active" as const })))) { setMessages((current) => [...current, { role: "assistant", text: "That boundary overlaps an existing session territory. Adjust the points before saving." }]); return; } setSavedTerritories((current) => [...current, territoryDraft]); setMessages((current) => [...current, { role: "assistant", text: `Territory boundary saved with ${territoryDraft.length} points. Review quadrants before locking.` }]); setTerritoryDraft(null); }}>Save boundary</button></div></div>}
+      {savedTerritories.length > 0 && <div className="mapgpt-context" aria-label="Saved territories"><strong>{savedTerritories.length} territory boundary{savedTerritories.length === 1 ? "" : "ies"} saved</strong><small>Overlapping boundaries are blocked in this session.</small></div>}
       {pinDraft && <div className="mapgpt-pin-dialog" role="dialog" aria-modal="true" aria-label="Create map pin"><strong>Create your map pin</strong><small>{pinDraft.lat.toFixed(5)}, {pinDraft.lng.toFixed(5)}</small><label>Business or location name<input autoFocus value={pinDraft.name} onChange={(event) => setPinDraft({ ...pinDraft, name: event.target.value })} placeholder="e.g. New prospect" /></label><label>Note<textarea value={pinDraft.note} onChange={(event) => setPinDraft({ ...pinDraft, note: event.target.value })} placeholder="Why this point matters" /></label><div><button onClick={() => setPinDraft(null)}>Cancel</button><button onClick={() => void savePin()} disabled={!pinDraft.name.trim()}>Save pin</button></div></div>}
     </section>
   );
@@ -328,6 +342,7 @@ export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" 
   const [screen, setScreen] = useState<AppScreen>(initialScreen === "studio" || initialScreen === "pipeline" ? initialScreen : "home");
   const [businesses, setBusinesses] = useState<Account[]>(accounts);
   const [routeRevision, setRouteRevision] = useState(0);
+  const [pipeline, setPipeline] = useState<PipelineOpportunity[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState(initialAccountId ?? "apex");
   useEffect(() => {
     void repository.listBusinesses().then((liveBusinesses) => {
@@ -336,6 +351,7 @@ export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" 
       setSelectedAccountId((current) => liveBusinesses.some((business) => business.id === current) ? current : liveBusinesses[0].id);
     });
   }, []);
+  useEffect(() => { void repository.listPipelineOpportunities().then(setPipeline); }, []);
   useEffect(() => {
     if (!fieldActionClient || !supabase) return;
     let active = true;
@@ -347,5 +363,5 @@ export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" 
     return () => { active = false; };
   }, []);
   const selectedAccount = useMemo(() => businesses.find((account) => account.id === selectedAccountId) ?? businesses[0], [businesses, selectedAccountId]);
-  return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen accounts={businesses} selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} onActionQueued={() => setRouteRevision((revision) => revision + 1)} routeRevision={routeRevision} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;
+  return <div className="mapgpt-shell"><main className="mapgpt-main">{screen === "home" && <HomeScreen accounts={businesses} selectedAccountId={selectedAccount.id} onSelectAccount={setSelectedAccountId} onOpenPipeline={() => setScreen("pipeline")} onActionQueued={() => setRouteRevision((revision) => revision + 1)} routeRevision={routeRevision} pipeline={pipeline} />}{screen === "studio" && <AgentStudioScreen repo={repository} />}{screen === "pipeline" && <PipelineScreen repo={repository} onOpenHome={(id) => { setSelectedAccountId(id); setScreen("home"); }} />}</main><Nav current={screen} onNavigate={setScreen} /></div>;
 }

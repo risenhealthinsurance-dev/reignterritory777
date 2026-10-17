@@ -1,0 +1,12 @@
+- generic [ref=f2e3]:
+  - generic [ref=f2e4]: "[plugin:vite:oxc] Transform failed with 1 error: [PARSE_ERROR] Error: Expected `}` but found `{` ╭─[ src/components/MapFallback.tsx:76:7 ] │ 76 │ {!showTerritoryMode && ( │ ┬ │ ╰── `}` expected ────╯"
+  - generic [ref=f2e5]: C:/Users/USUARIO/Downloads/ReignTerritory777/src/components/MapFallback.tsx
+  - generic [ref=f2e6]: at transformWithOxc (file:///C:/Users/USUARIO/Downloads/ReignTerritory777/node_modules/.pnpm/vite@8.0.5_@types+node@22.19.17_esbuild@0.28.2_jiti@2.6.1/node_modules/vite/dist/node/chunks/node.js:3739:19) at TransformPluginContext.transform (file:///C:/Users/USUARIO/Downloads/ReignTerritory777/node_modules/.pnpm/vite@8.0.5_@types+node@22.19.17_esbuild@0.28.2_jiti@2.6.1/node_modules/vite/dist/node/chunks/node.js:3807:26) at EnvironmentPluginContainer.transform (file:///C:/Users/USUARIO/Downloads/ReignTerritory777/node_modules/.pnpm/vite@8.0.5_@types+node@22.19.17_esbuild@0.28.2_jiti@2.6.1/node_modules/vite/dist/node/chunks/node.js:30128:51) at async loadAndTransform (file:///C:/Users/USUARIO/Downloads/ReignTerritory777/node_modules/.pnpm/vite@8.0.5_@types+node@22.19.17_esbuild@0.28.2_jiti@2.6.1/node_modules/vite/dist/node/chunks/node.js:24459:26) at async viteTransformMiddleware (file:///C:/Users/USUARIO/Downloads/ReignTerritory777/node_modules/.pnpm/vite@8.0.5_@types+node@22.19.17_esbuild@0.28.2_jiti@2.6.1/node_modules/vite/dist/node/chunks/node.js:24253:20)
+  - generic [ref=f2e7]:
+    - text: Click outside, press Esc key, or fix the code to dismiss.You can also disable this overlay by setting
+    - code [ref=f2e8]: server.hmr.overlay
+    - text: to
+    - code [ref=f2e9]: "false"
+    - text: in
+    - code [ref=f2e10]: vite.config.ts
+    - text: .

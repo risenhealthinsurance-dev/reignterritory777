@@ -1,0 +1,149 @@
+- generic [ref=e3]:
+  - generic "Territory map fallback" [ref=e5]:
+    - generic:
+      - generic: ● TERRITORY · 34950
+      - generic: 24 available · A1 recommended
+    - 'region "Next best business: Apex Manufacturing Group" [ref=e8]':
+      - generic [ref=e9]:
+        - generic [ref=e10]: NEXT BEST BUSINESS
+        - button "More options for Apex Manufacturing Group" [ref=e11] [cursor=pointer]: •••
+      - generic [ref=e12]:
+        - generic [aria-hidden] [ref=e13]: ▦
+        - generic [ref=e14]:
+          - heading "Apex Manufacturing Group" [level=2] [ref=e15]
+          - paragraph [ref=e16]: 800 Virginia Ave, Fort Pierce, FL 34950
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [aria-hidden] [ref=e19]: ◫
+          - generic [ref=e20]:
+            - generic [ref=e21]: Next action
+            - strong [ref=e22]: 11:15 AM
+        - generic [ref=e23]:
+          - generic [aria-hidden] [ref=e24]: ◷
+          - generic [ref=e25]:
+            - generic [ref=e26]: Est. arrival
+            - strong [ref=e27]: 12 min
+      - button "Navigate" [ref=e28] [cursor=pointer]: ➤ Navigate
+    - region "Actions for Apex Manufacturing Group" [ref=e29]:
+      - generic [aria-hidden] [ref=e31]: ●
+      - paragraph [ref=e32]: How can I help on this stop?
+      - generic [ref=e33]:
+        - button "Call Apex Manufacturing Group" [ref=e34] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e35]: ⌕
+          - strong [ref=e36]: Call
+        - button "Schedule Apex Manufacturing Group" [ref=e37] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e38]: ▣
+          - strong [ref=e39]: Schedule
+        - button "Set disposition for Apex Manufacturing Group" [ref=e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e41]: ▤
+          - strong [ref=e42]: Disposition
+    - generic [ref=e43]: MAP PREVIEW · ADD MAPBOX TOKEN FOR LIVE MAP
+  - generic [ref=e44]:
+    - main [ref=e45]:
+      - region [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]: ● ASSIGNED TERRITORY · 34950
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - heading "Fort Pierce 34950" [level=1] [ref=e51]
+              - paragraph [ref=e52]: Choose today's work
+            - generic [ref=e53]: A1 recommended
+          - generic "Territory workflow" [ref=e54]:
+            - button "Territory" [ref=e55] [cursor=pointer]
+            - button "Active quadrant" [ref=e56] [cursor=pointer]
+            - button "Today's work" [ref=e57] [cursor=pointer]
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - strong [ref=e60]: A1 is recommended
+            - generic [ref=e61]: Best mix of 3 commitments, expected value, and a compact downtown loop.
+          - generic "Fort Pierce territory quadrants" [ref=e62]:
+            - button "A1, 8 opportunities, recommended" [ref=e63] [cursor=pointer]:
+              - strong [ref=e64]: A1
+              - generic [ref=e65]: 8 opps
+            - button "B1, 5 opportunities" [ref=e66] [cursor=pointer]:
+              - strong [ref=e67]: B1
+              - generic [ref=e68]: 5 opps
+            - button "C1, 4 opportunities" [ref=e69] [cursor=pointer]:
+              - strong [ref=e70]: C1
+              - generic [ref=e71]: 4 opps
+            - button "D1, 2 opportunities" [ref=e72] [cursor=pointer]:
+              - strong [ref=e73]: D1
+              - generic [ref=e74]: 2 opps
+            - button "A2, 5 opportunities" [ref=e75] [cursor=pointer]:
+              - strong [ref=e76]: A2
+              - generic [ref=e77]: 5 opps
+            - button "B2, 5 opportunities" [ref=e78] [cursor=pointer]:
+              - strong [ref=e79]: B2
+              - generic [ref=e80]: 5 opps
+            - button "C2, 1 opportunities" [ref=e81] [cursor=pointer]:
+              - strong [ref=e82]: C2
+              - generic [ref=e83]: 1 opps
+            - button "D2, 4 opportunities" [ref=e84] [cursor=pointer]:
+              - strong [ref=e85]: D2
+              - generic [ref=e86]: 4 opps
+            - button "A3, 4 opportunities" [ref=e87] [cursor=pointer]:
+              - strong [ref=e88]: A3
+              - generic [ref=e89]: 4 opps
+            - button "B3, 1 opportunities" [ref=e90] [cursor=pointer]:
+              - strong [ref=e91]: B3
+              - generic [ref=e92]: 1 opps
+            - button "C3, 2 opportunities" [ref=e93] [cursor=pointer]:
+              - strong [ref=e94]: C3
+              - generic [ref=e95]: 2 opps
+            - button "D3, 3 opportunities" [ref=e96] [cursor=pointer]:
+              - strong [ref=e97]: D3
+              - generic [ref=e98]: 3 opps
+            - button "A4, 2 opportunities" [ref=e99] [cursor=pointer]:
+              - strong [ref=e100]: A4
+              - generic [ref=e101]: 2 opps
+            - button "B4, 4 opportunities" [ref=e102] [cursor=pointer]:
+              - strong [ref=e103]: B4
+              - generic [ref=e104]: 4 opps
+            - button "C4, 3 opportunities" [ref=e105] [cursor=pointer]:
+              - strong [ref=e106]: C4
+              - generic [ref=e107]: 3 opps
+            - button "D4, 5 opportunities" [ref=e108] [cursor=pointer]:
+              - strong [ref=e109]: D4
+              - generic [ref=e110]: 5 opps
+            - button "A5, 4 opportunities" [ref=e111] [cursor=pointer]:
+              - strong [ref=e112]: A5
+              - generic [ref=e113]: 4 opps
+            - button "B5, 4 opportunities" [ref=e114] [cursor=pointer]:
+              - strong [ref=e115]: B5
+              - generic [ref=e116]: 4 opps
+            - button "C5, 4 opportunities" [ref=e117] [cursor=pointer]:
+              - strong [ref=e118]: C5
+              - generic [ref=e119]: 4 opps
+            - button "D5, 3 opportunities" [ref=e120] [cursor=pointer]:
+              - strong [ref=e121]: D5
+              - generic [ref=e122]: 3 opps
+            - button "A6, 3 opportunities" [ref=e123] [cursor=pointer]:
+              - strong [ref=e124]: A6
+              - generic [ref=e125]: 3 opps
+            - button "B6, 4 opportunities" [ref=e126] [cursor=pointer]:
+              - strong [ref=e127]: B6
+              - generic [ref=e128]: 4 opps
+            - button "C6, 1 opportunities" [ref=e129] [cursor=pointer]:
+              - strong [ref=e130]: C6
+              - generic [ref=e131]: 1 opps
+            - button "D6, 2 opportunities" [ref=e132] [cursor=pointer]:
+              - strong [ref=e133]: D6
+              - generic [ref=e134]: 2 opps
+          - generic [ref=e135]:
+            - generic [ref=e136]: Recommended
+            - generic [ref=e138]: Available
+            - generic [ref=e140]: No artificial locks
+    - navigation "Primary" [ref=e141]:
+      - button "Territory" [ref=e142] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e144]: 📍
+        - generic [ref=e145]: TERRITORY
+      - button "Route, 2/6 complete" [ref=e146] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e147]: 🗺
+        - generic [ref=e148]: ROUTE · 2/6
+      - button "Field AI" [ref=e149] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e150]: 🤖
+        - generic [ref=e151]: FIELD AI
+      - button "Summary, 1 unsynced" [ref=e152] [cursor=pointer]:
+        - generic [ref=e153]: "1"
+        - generic [aria-hidden] [ref=e154]: 📊
+        - generic [ref=e155]: SUMMARY

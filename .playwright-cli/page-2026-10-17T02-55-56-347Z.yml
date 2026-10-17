@@ -1,0 +1,132 @@
+- generic [ref=f1e3]:
+  - generic "Route map fallback" [ref=f1e156]:
+    - generic:
+      - generic: ● A1 · ROUTE · 34950 · 2/6 done
+      - generic: 14.4 mi · A1 loop
+    - 'region "Next best business: Apex Manufacturing Group" [ref=f1e8]':
+      - generic [ref=f1e9]:
+        - generic [ref=f1e10]: NEXT BEST BUSINESS
+        - button "More options for Apex Manufacturing Group" [ref=f1e11] [cursor=pointer]: •••
+      - generic [ref=f1e12]:
+        - generic [aria-hidden] [ref=f1e13]: ▦
+        - generic [ref=f1e14]:
+          - heading "Apex Manufacturing Group" [level=2] [ref=f1e15]
+          - paragraph [ref=f1e16]: 800 Virginia Ave, Fort Pierce, FL 34950
+      - generic [ref=f1e17]:
+        - generic [ref=f1e18]:
+          - generic [aria-hidden] [ref=f1e19]: ◫
+          - generic [ref=f1e20]:
+            - generic [ref=f1e21]: Next action
+            - strong [ref=f1e22]: 11:15 AM
+        - generic [ref=f1e23]:
+          - generic [aria-hidden] [ref=f1e24]: ◷
+          - generic [ref=f1e25]:
+            - generic [ref=f1e26]: Est. arrival
+            - strong [ref=f1e27]: 12 min
+      - button "Navigate" [ref=f1e28] [cursor=pointer]: ➤ Navigate
+    - region "Actions for Apex Manufacturing Group" [ref=f1e29]:
+      - generic [aria-hidden] [ref=f1e31]: ●
+      - paragraph [ref=f1e32]: How can I help on this stop?
+      - generic [ref=f1e33]:
+        - button [ref=f1e34] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e35]: ⌕
+          - strong [ref=f1e36]: Call
+        - button [ref=f1e37] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e38]: ▣
+          - strong [ref=f1e39]: Schedule
+        - button [ref=f1e40] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e41]: ▤
+          - strong [ref=f1e42]: Disposition
+    - button "Meridian Medical Devices, route stop 1, completed" [ref=f1e158] [cursor=pointer]: ✓
+    - button "Pacific Rim Logistics, route stop 2, completed" [ref=f1e159] [cursor=pointer]: ✓
+    - button "Apex Manufacturing Group, route stop 3" [ref=f1e160] [cursor=pointer]: "3"
+    - button "Solano Healthcare Partners, route stop 4" [ref=f1e161] [cursor=pointer]: "4"
+    - button "Westside Distribution Co, route stop 5" [ref=f1e162] [cursor=pointer]: "5"
+    - button "Bravo Industrial Supply, route stop 6" [ref=f1e163] [cursor=pointer]: "6"
+    - generic [ref=f1e43]: MAP PREVIEW · ADD MAPBOX TOKEN FOR LIVE MAP
+  - generic [ref=f1e44]:
+    - main [ref=f1e45]:
+      - region [ref=f1e164]:
+        - generic [ref=f1e165]:
+          - generic [ref=f1e166]:
+            - generic [ref=f1e167]:
+              - generic [ref=f1e168]: ● ROUTE ACTIVE · 34950 · A1
+              - heading "Next-best-action cockpit" [level=1] [ref=f1e169]
+            - button "Open full-screen map" [ref=f1e170] [cursor=pointer]
+          - generic [ref=f1e171]:
+            - generic [ref=f1e172]:
+              - strong [ref=f1e173]: 2/6
+              - generic [ref=f1e174]: Complete
+            - generic [ref=f1e175]:
+              - strong [ref=f1e176]: 12.2 mi
+              - generic [ref=f1e177]: Remaining
+            - generic [ref=f1e178]:
+              - strong [ref=f1e179]: 2h 11m
+              - generic [ref=f1e180]: Travel + visits
+            - generic [ref=f1e181]:
+              - strong [ref=f1e182]: 4:42 PM
+              - generic [ref=f1e183]: Finish
+        - generic [ref=f1e184]:
+          - generic [ref=f1e185]:
+            - strong [ref=f1e186]: Recommended now · Apex Manufacturing Group
+            - generic [ref=f1e187]: High expected value nearby · 12 min away
+          - generic [ref=f1e188]:
+            - button "Open Meridian Medical Devices" [ref=f1e189] [cursor=pointer]:
+              - generic [ref=f1e190]: ✓
+              - generic [ref=f1e191]:
+                - generic [ref=f1e192]:
+                  - strong [ref=f1e193]: Meridian Medical Devices
+                  - emphasis [ref=f1e194]: COMMITMENT
+                - generic [ref=f1e195]: 100 N US Highway 1 · 9:15 AM
+              - generic [ref=f1e196]: done
+            - button "Open Pacific Rim Logistics" [ref=f1e197] [cursor=pointer]:
+              - generic [ref=f1e198]: ✓
+              - generic [ref=f1e199]:
+                - generic [ref=f1e200]:
+                  - strong [ref=f1e201]: Pacific Rim Logistics
+                  - emphasis [ref=f1e202]: COMMITMENT
+                - generic [ref=f1e203]: 500 Orange Ave · 10:05 AM
+              - generic [ref=f1e204]: done
+            - button "Open Apex Manufacturing Group" [ref=f1e205] [cursor=pointer]:
+              - generic [ref=f1e206]: "3"
+              - generic [ref=f1e207]:
+                - strong [ref=f1e209]: Apex Manufacturing Group
+                - generic [ref=f1e210]: 800 Virginia Ave · 11:15 AM
+              - generic [ref=f1e211]: NOW
+            - button "Open Solano Healthcare Partners" [ref=f1e212] [cursor=pointer]:
+              - generic [ref=f1e213]: "4"
+              - generic [ref=f1e214]:
+                - generic [ref=f1e215]:
+                  - strong [ref=f1e216]: Solano Healthcare Partners
+                  - emphasis [ref=f1e217]: COMMITMENT
+                - generic [ref=f1e218]: 2215 Okeechobee Rd · 12:10 PM
+              - generic [ref=f1e219]: pending
+            - button "Open Westside Distribution Co" [ref=f1e220] [cursor=pointer]:
+              - generic [ref=f1e221]: "5"
+              - generic [ref=f1e222]:
+                - strong [ref=f1e224]: Westside Distribution Co
+                - generic [ref=f1e225]: 130 S Indian River Dr · 1:05 PM
+              - generic [ref=f1e226]: failed
+            - button "Open Bravo Industrial Supply" [ref=f1e227] [cursor=pointer]:
+              - generic [ref=f1e228]: "6"
+              - generic [ref=f1e229]:
+                - strong [ref=f1e231]: Bravo Industrial Supply
+                - generic [ref=f1e232]: 2400 Rhode Island Ave · 2:00 PM
+              - generic [ref=f1e233]: pending
+        - generic [ref=f1e234]:
+          - button "Edit route" [ref=f1e235] [cursor=pointer]
+          - button "Review & end day" [ref=f1e236] [cursor=pointer]
+    - navigation "Primary" [ref=f1e141]:
+      - button "Territory" [ref=f1e142] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f1e144]: 📍
+        - generic [ref=f1e145]: TERRITORY
+      - button "Route, 2/6 complete" [active] [ref=f1e146] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f1e147]: 🗺
+        - generic [ref=f1e148]: ROUTE · 2/6
+      - button "Field AI" [ref=f1e149] [cursor=pointer]:
+        - generic [aria-hidden] [ref=f1e150]: 🤖
+        - generic [ref=f1e151]: FIELD AI
+      - button "Summary, 1 unsynced" [ref=f1e152] [cursor=pointer]:
+        - generic [ref=f1e153]: "1"
+        - generic [aria-hidden] [ref=f1e154]: 📊
+        - generic [ref=f1e155]: SUMMARY

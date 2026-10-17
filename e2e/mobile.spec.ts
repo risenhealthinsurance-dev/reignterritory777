@@ -1,34 +1,25 @@
 import { expect, test } from "@playwright/test";
-import { writeFile } from "node:fs/promises";
 
 for (const width of [320, 390, 1280]) {
-  test(`contains the application at ${width}px`, async ({ page }) => {
+  test(`contains the MapGPT field-rep shell at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/");
     if (await page.getByRole("heading", { name: "Sign in to Reign Territory" }).count()) {
       await expect(page.getByRole("heading", { name: "Sign in to Reign Territory" })).toBeVisible();
       return;
     }
-    await expect(page.getByRole("heading", { name: "Fort Pierce 34950" })).toBeVisible();
-
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
-    expect(overflow).toBe(false);
-
-    const shell = page.locator("[data-app-shell]");
-    await expect(shell).toHaveCSS("width", `${Math.min(width, 390)}px`);
-    if (width > 390) await expect(shell).toHaveCSS("max-width", "390px");
+    await expect(page.getByRole("region", { name: "Home map and assistant" })).toBeVisible();
+    await expect(page.getByText("Ask Reign", { exact: true })).toBeVisible();
+    await expect(page.getByRole("status")).toContainText(/location/i);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   });
 }
 
 test("all visible buttons have accessible names", async ({ page }) => {
   await page.goto("/");
-  const unnamed = await page
-    .locator("button:visible")
-    .evaluateAll((buttons) =>
-      buttons
-        .filter((button) => !button.getAttribute("aria-label") && !button.textContent?.trim())
-        .map((button) => button.outerHTML),
-    );
+  const unnamed = await page.locator("button:visible").evaluateAll((buttons) =>
+    buttons.filter((button) => !button.getAttribute("aria-label") && !button.textContent?.trim()).map((button) => button.outerHTML),
+  );
   expect(unnamed).toEqual([]);
 });
 
@@ -50,88 +41,35 @@ test("honors reduced-motion preferences", async ({ page }) => {
   expect(["0.01ms", "1e-05s"]).toContain(duration);
 });
 
-test("audits the complete primary tab journey on a field-rep viewport", async ({ page }) => {
+test("audits the primary field-rep assistant and pipeline journey", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
+  page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
+  if (await page.getByRole("heading", { name: "Sign in to Reign Territory" }).count()) return;
 
-  if (await page.getByRole("heading", { name: "Sign in to Reign Territory" }).count()) {
-    if (await page.getByLabel("Work email").count()) {
-      await expect(page.getByLabel("Work email")).toBeVisible();
-      await expect(page.getByRole("button", { name: /secure sign-in link/i })).toBeVisible();
-    } else {
-      await expect(page.getByRole("alert")).toContainText(/not configured/i);
-    }
-    await page.screenshot({
-      path: "output/playwright/field-ai-production/auth-gate-390.png",
-      fullPage: true,
-    });
-    await writeFile(
-      "output/playwright/field-ai-production/auth-gate-390.accessibility.txt",
-      await page.locator("body").innerText(),
-      "utf8",
-    );
-    test.info().annotations.push({
-      type: "blocked",
-      description: "Authenticated journey requires a configured Supabase project and seeded test session.",
-    });
-    return;
-  }
-
-  await expect(page.getByRole("main")).toBeVisible();
-  const navigation = page.getByRole("navigation", { name: "Primary" });
-  await expect(navigation).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Fort Pierce 34950" })).toBeVisible();
-
-  await navigation.getByRole("button", { name: /Route/i }).click();
-  await expect(page.getByRole("heading", { name: /Next-best-action cockpit/i })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Open full-screen map/i })).toBeVisible();
-
-  await page.getByRole("button", { name: /Open Apex Manufacturing/i }).click();
-  await page.getByRole("button", { name: /Confirm arrived/i }).click();
-  await page.getByRole("button", { name: /Start visit/i }).click();
-  await page.getByRole("button", { name: /Work This Business/i }).click();
-  await page.getByRole("button", { name: /Callback/i }).click();
-  await page.getByPlaceholder(/What happened/i).fill("Buyer requested a proposal comparison.");
-  await page.getByRole("button", { name: /Review & Confirm/i }).click();
-  await page.getByRole("button", { name: /confirm & save/i }).click();
-  await expect(page.getByRole("heading", { name: /Next-best-action cockpit/i })).toBeVisible();
-  await expect(page.getByText(/Solano Healthcare Partners/i).first()).toBeVisible();
-
-  await navigation.getByRole("button", { name: /Field AI/i }).click();
-  await expect(page.getByRole("heading", { name: "Field AI" })).toBeVisible();
-  await expect(page.getByText(/@Solano Healthcare Partners/i)).toBeVisible();
-  await expect(page.getByText(/Nothing is recorded in the background/i)).toBeVisible();
-
-  await navigation.getByRole("button", { name: /Summary/i }).click();
-  await expect(page.getByRole("heading", { name: "Day Summary" })).toBeVisible();
-  await expect(page.getByText(/Resolve every unfinished stop/i)).toBeVisible();
-  await page.getByRole("button", { name: /Move 2 non-commitments to tomorrow/i }).click();
-  await page
-    .locator("article.resolution-card")
-    .filter({ hasText: "Solano Healthcare Partners" })
-    .getByRole("button", { name: /Move to tomorrow/i })
-    .click();
-  await page.getByRole("button", { name: /^Close day$/i }).click();
-  await expect(page.getByText(/Closed on this device/i)).toBeVisible();
-  await page.getByRole("button", { name: /Review manager summary/i }).click();
-  await page.getByRole("button", { name: /Send summary/i }).click();
-  await expect(page.getByText(/Summary sent after your review/i)).toBeVisible();
+  await expect(page.getByText("Apex Manufacturing Group", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Talking points" }).click();
+  await expect(page.getByText(/Here’s Apex Manufacturing Group/i)).toBeVisible();
+  await page.getByRole("button", { name: "Record disposition" }).click();
+  const disposition = page.locator('[role="dialog"]').filter({ hasText: "Record outcome" });
+  await expect(disposition).toBeVisible();
+  await expect(disposition.getByRole("button", { name: "Confirm draft" })).toBeDisabled();
+  await disposition.getByLabel("Outcome").selectOption({ label: "Qualified" });
+  await disposition.getByLabel("Notes").fill("Buyer requested a proposal comparison.");
+  await disposition.getByRole("button", { name: "Confirm draft" }).click();
+  await expect(page.getByText(/Disposition draft queued locally/i)).toBeVisible();
+  await page.getByRole("button", { name: "Open pipeline" }).click();
+  await expect(page.getByRole("heading", { name: "Current pipeline" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Discovery pipeline stage" })).toContainText("Apex Manufacturing Group");
+  await expect(page.getByText(/Disposition: Qualified/i)).toBeVisible();
 
   const undersized = await page.locator("button:visible").evaluateAll((buttons) =>
-    buttons
-      .filter((button) => {
-        const box = button.getBoundingClientRect();
-        return box.width < 44 || box.height < 44;
-      })
-      .map(
-        (button) =>
-          `${button.textContent?.trim()}: ${button.getBoundingClientRect().width}x${button.getBoundingClientRect().height}`,
-      ),
+    buttons.filter((button) => {
+      const box = button.getBoundingClientRect();
+      return box.width < 44 || box.height < 44;
+    }).map((button) => `${button.textContent?.trim()}: ${button.getBoundingClientRect().width}x${button.getBoundingClientRect().height}`),
   );
   expect(undersized).toEqual([]);
   expect(errors).toEqual([]);

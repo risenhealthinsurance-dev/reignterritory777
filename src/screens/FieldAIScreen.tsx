@@ -7,6 +7,7 @@ import {
   type FieldAiResult,
 } from "../lib/fieldAi";
 import { supabase } from "../lib/supabase";
+import { extractVoiceDisposition, type ExtractedVoiceDisposition } from "../lib/voiceDisposition";
 
 export const AUDIT_STEP_DELAY_MS = 600;
 
@@ -48,6 +49,8 @@ export function FieldAIScreen({
   const [territoryMode, setTerritoryMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [voiceReady, setVoiceReady] = useState(false);
+  const [voiceNote, setVoiceNote] = useState("");
+  const [voiceExtraction, setVoiceExtraction] = useState<ExtractedVoiceDisposition | null>(null);
   const [result, setResult] = useState<FieldAiResult | null>(null);
   const [resultLoading, setResultLoading] = useState(false);
   const [resultError, setResultError] = useState<string | null>(null);
@@ -81,6 +84,8 @@ export function FieldAIScreen({
     setTerritoryMode(false);
     setPickerOpen(false);
     setResult(null);
+    setVoiceNote("");
+    setVoiceExtraction(null);
   }
   async function askFieldAi(intent: FieldAiIntent) {
     setResult(null);
@@ -239,6 +244,13 @@ export function FieldAIScreen({
                 {recording ? "Stop recording" : "Hold to talk"}
               </button>
             </div>
+            {voiceReady && <div className="voice-card" aria-label="Voice note extraction">
+              <label style={{ display: "block", width: "100%" }}><strong>Voice note transcript</strong>
+                <textarea value={voiceNote} onChange={(event) => setVoiceNote(event.target.value)} placeholder="Add or review what you said…" rows={3} style={{ display: "block", width: "100%", marginTop: 8 }} />
+              </label>
+              <button className="secondary-button" disabled={!voiceNote.trim()} onClick={() => setVoiceExtraction(extractVoiceDisposition(voiceNote))}>Extract disposition</button>
+            </div>}
+            {voiceExtraction && <div className="callout cyan"><strong>{voiceExtraction.disposition.replace(/_/g, " ")}</strong><span>{voiceExtraction.contactName ? `${voiceExtraction.contactName} · ` : ""}{voiceExtraction.dayOrWindow ? `${voiceExtraction.dayOrWindow} · ` : ""}{voiceExtraction.notes}</span></div>}
 
             <div className="copilot-actions">
               <button onClick={() => void askFieldAi("brief")} disabled={resultLoading}>

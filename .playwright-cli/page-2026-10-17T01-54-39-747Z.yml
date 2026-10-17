@@ -1,0 +1,98 @@
+- generic [ref=e3]:
+  - generic "Route map fallback" [ref=e118]:
+    - generic:
+      - generic: ● A1 · ROUTE · 34950 · 2/6 done
+      - generic: 14.4 mi · A1 loop
+    - button "Meridian Medical Devices, route stop 1, completed" [ref=e121] [cursor=pointer]: ✓
+    - button "Pacific Rim Logistics, route stop 2, completed" [ref=e122] [cursor=pointer]: ✓
+    - button "Apex Manufacturing Group, route stop 3" [ref=e123] [cursor=pointer]: "3"
+    - button "Solano Healthcare Partners, route stop 4" [ref=e124] [cursor=pointer]: "4"
+    - button "Westside Distribution Co, route stop 5" [ref=e125] [cursor=pointer]: "5"
+    - button "Bravo Industrial Supply, route stop 6" [ref=e126] [cursor=pointer]: "6"
+    - generic [ref=e127]: MAP PREVIEW · ADD MAPBOX TOKEN FOR LIVE MAP
+  - generic [ref=e6]:
+    - main [ref=e7]:
+      - region [ref=e128]:
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - generic [ref=e132]: ● ROUTE ACTIVE · 34950 · A1
+              - heading "Next-best-action cockpit" [level=1] [ref=e133]
+            - button "Open full-screen map" [ref=e134] [cursor=pointer]
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - strong [ref=e137]: 2/6
+              - generic [ref=e138]: Complete
+            - generic [ref=e139]:
+              - strong [ref=e140]: 12.2 mi
+              - generic [ref=e141]: Remaining
+            - generic [ref=e142]:
+              - strong [ref=e143]: 2h 11m
+              - generic [ref=e144]: Travel + visits
+            - generic [ref=e145]:
+              - strong [ref=e146]: 4:42 PM
+              - generic [ref=e147]: Finish
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - strong [ref=e150]: Recommended now · Apex Manufacturing Group
+            - generic [ref=e151]: High expected value nearby · 12 min away
+          - generic [ref=e152]:
+            - button "Open Meridian Medical Devices" [ref=e153] [cursor=pointer]:
+              - generic [ref=e154]: ✓
+              - generic [ref=e155]:
+                - generic [ref=e156]:
+                  - strong [ref=e157]: Meridian Medical Devices
+                  - emphasis [ref=e158]: COMMITMENT
+                - generic [ref=e159]: 100 N US Highway 1 · 9:15 AM
+              - generic [ref=e160]: done
+            - button "Open Pacific Rim Logistics" [ref=e161] [cursor=pointer]:
+              - generic [ref=e162]: ✓
+              - generic [ref=e163]:
+                - generic [ref=e164]:
+                  - strong [ref=e165]: Pacific Rim Logistics
+                  - emphasis [ref=e166]: COMMITMENT
+                - generic [ref=e167]: 500 Orange Ave · 10:05 AM
+              - generic [ref=e168]: done
+            - button "Open Apex Manufacturing Group" [ref=e169] [cursor=pointer]:
+              - generic [ref=e170]: "3"
+              - generic [ref=e171]:
+                - strong [ref=e173]: Apex Manufacturing Group
+                - generic [ref=e174]: 800 Virginia Ave · 11:15 AM
+              - generic [ref=e175]: NOW
+            - button "Open Solano Healthcare Partners" [ref=e176] [cursor=pointer]:
+              - generic [ref=e177]: "4"
+              - generic [ref=e178]:
+                - generic [ref=e179]:
+                  - strong [ref=e180]: Solano Healthcare Partners
+                  - emphasis [ref=e181]: COMMITMENT
+                - generic [ref=e182]: 2215 Okeechobee Rd · 12:10 PM
+              - generic [ref=e183]: pending
+            - button "Open Westside Distribution Co" [ref=e184] [cursor=pointer]:
+              - generic [ref=e185]: "5"
+              - generic [ref=e186]:
+                - strong [ref=e188]: Westside Distribution Co
+                - generic [ref=e189]: 130 S Indian River Dr · 1:05 PM
+              - generic [ref=e190]: failed
+            - button "Open Bravo Industrial Supply" [ref=e191] [cursor=pointer]:
+              - generic [ref=e192]: "6"
+              - generic [ref=e193]:
+                - strong [ref=e195]: Bravo Industrial Supply
+                - generic [ref=e196]: 2400 Rhode Island Ave · 2:00 PM
+              - generic [ref=e197]: pending
+        - generic [ref=e198]:
+          - button "Edit route" [ref=e199] [cursor=pointer]
+          - button "Review & end day" [ref=e200] [cursor=pointer]
+    - navigation "Primary" [ref=e103]:
+      - button "Territory" [ref=e104] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e106]: 📍
+        - generic [ref=e107]: TERRITORY
+      - button "Route, 2/6 complete" [active] [ref=e108] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e109]: 🗺
+        - generic [ref=e110]: ROUTE · 2/6
+      - button "Field AI" [ref=e111] [cursor=pointer]:
+        - generic [aria-hidden] [ref=e112]: 🤖
+        - generic [ref=e113]: FIELD AI
+      - button "Summary, 1 unsynced" [ref=e114] [cursor=pointer]:
+        - generic [ref=e115]: "1"
+        - generic [aria-hidden] [ref=e116]: 📊
+        - generic [ref=e117]: SUMMARY

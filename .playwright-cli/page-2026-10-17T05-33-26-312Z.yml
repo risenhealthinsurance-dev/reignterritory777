@@ -1,0 +1,104 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "Skip to content" [ref=e6] [cursor=pointer]:
+        - /url: "#main"
+      - banner [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - link "Supabase Back to organization home" [ref=e12] [cursor=pointer]:
+              - /url: /dashboard/organizations
+              - img "Supabase" [ref=e13]
+              - generic [ref=e14]: Back to organization home
+            - button "Connect" [disabled] [ref=e22]
+          - generic [ref=e27]:
+            - button "Feedback" [ref=e28] [cursor=pointer]
+            - generic [ref=e30]:
+              - button [ref=e31] [cursor=pointer]:
+                - paragraph [ref=e36]: Search...
+                - generic [ref=e38]: Ctrl K
+              - button "Help" [ref=e39] [cursor=pointer]
+              - button "Advisor Center" [ref=e46] [cursor=pointer]
+              - button "SQL Editor" [ref=e51] [cursor=pointer]
+              - button "AI Assistant" [ref=e56] [cursor=pointer]
+            - button [ref=e64] [cursor=pointer]
+      - generic [ref=e69]:
+        - generic [ref=e73]:
+          - navigation [ref=e75]:
+            - list [ref=e77]:
+              - listitem [ref=e78]:
+                - link "Project Overview" [ref=e79] [cursor=pointer]:
+                  - /url: /dashboard/project/cpbxmgdguesqcutybhic
+              - listitem [ref=e82]:
+                - button "Table Editor" [disabled]
+              - listitem [ref=e83]:
+                - button "SQL Editor" [disabled]
+            - list [ref=e85]:
+              - listitem [ref=e86]:
+                - button "Database" [disabled]
+              - listitem [ref=e87]:
+                - button "Authentication" [disabled]
+              - listitem [ref=e88]:
+                - button "Storage" [disabled]
+              - listitem [ref=e89]:
+                - link "Edge Functions" [ref=e90] [cursor=pointer]:
+                  - /url: /dashboard/project/cpbxmgdguesqcutybhic/functions
+              - listitem [ref=e96]:
+                - button "Compute New" [disabled]:
+                  - generic: Compute
+                  - generic: New
+              - listitem [ref=e97]:
+                - button "Realtime" [disabled]
+            - list [ref=e99]:
+              - listitem [ref=e100]:
+                - button "Advisors" [disabled]
+              - listitem [ref=e101]:
+                - button "Observability" [disabled]
+              - listitem [ref=e102]:
+                - link "Logs" [ref=e103] [cursor=pointer]:
+                  - /url: /dashboard/project/cpbxmgdguesqcutybhic/logs
+              - listitem [ref=e105]:
+                - button "Integrations" [disabled]
+            - list [ref=e107]:
+              - listitem [ref=e108]:
+                - link "Project Settings" [ref=e109] [cursor=pointer]:
+                  - /url: /dashboard/project/cpbxmgdguesqcutybhic/settings/general
+          - button "Sidebar control" [ref=e115] [cursor=pointer]
+        - main [ref=e122]:
+          - generic [ref=e124]:
+            - generic [ref=e128]:
+              - heading "Edge Functions" [level=4] [ref=e130]
+              - menu "Sidebar" [ref=e133]:
+                - list [ref=e134]:
+                  - generic [ref=e137]:
+                    - generic [ref=e138]: Manage
+                    - generic [ref=e142]:
+                      - link [ref=e143] [cursor=pointer]:
+                        - /url: /dashboard/project/cpbxmgdguesqcutybhic/functions
+                        - menuitem "Functions" [ref=e144]
+                      - link [ref=e149] [cursor=pointer]:
+                        - /url: /dashboard/project/cpbxmgdguesqcutybhic/functions/secrets
+                        - menuitem "Secrets" [ref=e150]
+            - separator [disabled] [ref=e155]
+            - main [ref=e166]:
+              - generic [ref=e171]:
+                - heading "Edge Function Secrets" [level=1] [ref=e172]
+                - generic [ref=e173]: Manage encrypted values for your functions
+    - generic [ref=e185]:
+      - button "Close banner" [ref=e187] [cursor=pointer]
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - generic [ref=e194]: Preview
+          - generic [ref=e195]:
+            - generic [ref=e196]:
+              - paragraph [ref=e197]: User growth
+              - paragraph [ref=e198]: Track how your user base is trending.
+            - paragraph [ref=e201]:
+              - generic [ref=e202]: select
+              - generic [ref=e203]: date_trunc('week', last_sign_in_at) as week,
+              - generic [ref=e204]: count(distinct id) as active_users
+        - generic [ref=e205]:
+          - paragraph [ref=e206]: Explorer & Notebooks
+          - paragraph [ref=e207]: New unified workspace for querying data and chatting with Assistant.
+        - button "Enable Explorer" [ref=e209] [cursor=pointer]
+  - alert [ref=e211]: Secrets | Edge Functions | Supabase

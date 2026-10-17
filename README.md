@@ -32,6 +32,8 @@ pnpm run format:check
 pnpm run build
 ```
 
+For preview QA, the deployment must be reachable by the intended test user. A Vercel Authentication wall blocks the application before the Reign shell loads; configure preview access or provide an authenticated session before validating the hosted field-rep journey.
+
 ## Screen map
 
 - Kickoff

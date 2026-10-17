@@ -1,0 +1,54 @@
+- generic [ref=f4e3]:
+  - main [ref=f4e4]:
+    - region "Home map and assistant" [ref=f4e5]:
+      - generic "Route map fallback" [ref=f4e7]:
+        - button "Meridian Medical Devices, route stop 1, completed" [ref=f4e10] [cursor=pointer]: ✓
+        - button "Pacific Rim Logistics, route stop 2, completed" [ref=f4e11] [cursor=pointer]: ✓
+        - button "Apex Manufacturing Group, route stop 3, active" [ref=f4e12] [cursor=pointer]: "3"
+        - button "Solano Healthcare Partners, route stop 4" [ref=f4e13] [cursor=pointer]: "4"
+        - button "Westside Distribution Co, route stop 5" [ref=f4e14] [cursor=pointer]: "5"
+        - button "Bravo Industrial Supply, route stop 6" [ref=f4e15] [cursor=pointer]: "6"
+      - generic:
+        - generic [ref=f4e16]:
+          - generic [ref=f4e17]: ✦
+          - strong [ref=f4e18]: Reign
+          - generic [ref=f4e19]: Territory
+        - button "Open pipeline" [ref=f4e20]: ▤
+      - generic "Businesses on map" [ref=f4e21]:
+        - button "Meridian Medical Devices" [ref=f4e22]
+        - button "Pacific Rim Logistics" [ref=f4e23]
+        - button "Apex Manufacturing Group" [pressed] [ref=f4e24]
+        - button "Solano Healthcare Partners" [ref=f4e25]
+        - button "Westside Distribution Co" [ref=f4e26]
+        - button "Bravo Industrial Supply" [ref=f4e27]
+      - generic "AI assistant context" [ref=f4e28]:
+        - generic [ref=f4e29]:
+          - generic [ref=f4e30]: Current business
+          - strong [ref=f4e31]: Apex Manufacturing Group
+          - generic [ref=f4e32]: 800 Virginia Ave, Fort Pierce, FL 34950
+        - generic [ref=f4e33]:
+          - generic [ref=f4e34]:
+            - generic [ref=f4e36]: ✦
+            - generic [ref=f4e37]:
+              - strong [ref=f4e38]: Ask Reign
+              - generic [ref=f4e39]: AI field assistant
+            - button "Voice-ready assistant control" [ref=f4e40]: ◉
+          - generic [ref=f4e41]: I’m ready. Ask about a business, your territory, or the next best action.
+          - generic [ref=f4e43]:
+            - button "Brief" [ref=f4e44]
+            - button "Talking points" [ref=f4e45]
+            - button "Next action" [ref=f4e46]
+          - generic [ref=f4e47]:
+            - textbox "Ask the AI assistant" [ref=f4e48]:
+              - /placeholder: Ask anything about this territory…
+            - button "Send message" [ref=f4e49]: ↑
+  - navigation "Primary" [ref=f4e50]:
+    - button [ref=f4e51] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f4e52]: ⌖
+      - strong [ref=f4e53]: Home
+    - button [ref=f4e54] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f4e55]: ✦
+      - strong [ref=f4e56]: Agent Studio
+    - button [ref=f4e57] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f4e58]: ▤
+      - strong [ref=f4e59]: Pipeline

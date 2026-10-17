@@ -117,8 +117,33 @@ test("constructs the interactive route map when a token is configured", async ()
   await waitFor(() => expect(mapConstructor).toHaveBeenCalled());
   expect(mapConstructor.mock.calls[0]?.[0]).toMatchObject({
     center: [-80.337, 27.44],
-    zoom: 13.8,
-    pitch: 45,
+    zoom: 15.2,
+    pitch: 58,
     bearing: -10,
   });
+});
+
+test("selects walking and driving camera modes with hysteresis", async () => {
+  const module = (await import("./MapView")) as unknown as {
+    getMovementMode: (speed: number | null | undefined, previous: "walking" | "driving") => "walking" | "driving";
+    getCameraPreset: (mode: "walking" | "driving") => { zoom: number; pitch: number };
+  };
+
+  expect(module.getMovementMode(5, "driving")).toBe("walking");
+  expect(module.getMovementMode(15, "walking")).toBe("driving");
+  expect(module.getMovementMode(10, "driving")).toBe("driving");
+  expect(module.getMovementMode(10, "walking")).toBe("walking");
+  expect(module.getMovementMode(null, "driving")).toBe("driving");
+  expect(module.getCameraPreset("walking").zoom).toBeGreaterThan(module.getCameraPreset("driving").zoom);
+  expect(module.getCameraPreset("walking").pitch).toBeGreaterThan(0);
+});
+
+test("normalizes compass headings for the map camera", async () => {
+  const module = (await import("./MapView")) as unknown as {
+    normalizeHeading: (heading: number | null | undefined) => number;
+  };
+
+  expect(module.normalizeHeading(-45)).toBe(315);
+  expect(module.normalizeHeading(405)).toBe(45);
+  expect(module.normalizeHeading(undefined)).toBe(0);
 });

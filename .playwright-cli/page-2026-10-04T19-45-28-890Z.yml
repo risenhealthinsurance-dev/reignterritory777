@@ -1,0 +1,108 @@
+- generic [ref=e6]:
+  - main [ref=e7]:
+    - region [ref=e122]:
+      - generic [ref=e123]:
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic [ref=e126]: ● CONTEXTUAL SALES COPILOT
+            - heading "Field AI" [level=1] [ref=e127]
+          - generic [ref=e128]: Online
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]: CURRENT ROUTE STOP
+            - strong [ref=e132]: "@Apex Manufacturing Group"
+          - button "Change account" [ref=e133] [cursor=pointer]
+      - generic [ref=e134]:
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - strong [ref=e137]: Ask or capture a field note
+            - paragraph [ref=e138]: Nothing is recorded in the background.
+          - button "Hold to talk" [ref=e139] [cursor=pointer]
+        - generic [ref=e140]:
+          - button "⚡ 30-second brief What matters before walking in" [ref=e141] [cursor=pointer]:
+            - generic [ref=e142]: ⚡
+            - strong [ref=e143]: 30-second brief
+            - generic [ref=e144]: What matters before walking in
+          - button "🎯 Talking points Lead with the strongest angle" [ref=e145] [cursor=pointer]:
+            - generic [ref=e146]: 🎯
+            - strong [ref=e147]: Talking points
+            - generic [ref=e148]: Lead with the strongest angle
+          - button "🛡 Handle an objection Evidence-aware response coaching" [ref=e149] [cursor=pointer]:
+            - generic [ref=e150]: 🛡
+            - strong [ref=e151]: Handle an objection
+            - generic [ref=e152]: Evidence-aware response coaching
+          - button "✉ Draft follow-up Preview before anything is queued" [active] [ref=e153] [cursor=pointer]:
+            - generic [ref=e154]: ✉
+            - strong [ref=e155]: Draft follow-up
+            - generic [ref=e156]: Preview before anything is queued
+          - button "↩ Prior interactions Last visit, promise, and contact context" [ref=e157] [cursor=pointer]:
+            - generic [ref=e158]: ↩
+            - strong [ref=e159]: Prior interactions
+            - generic [ref=e160]: Last visit, promise, and contact context
+          - button "🎙 Capture visit note Structure the outcome before leaving" [ref=e161] [cursor=pointer]:
+            - generic [ref=e162]: 🎙
+            - strong [ref=e163]: Capture visit note
+            - generic [ref=e164]: Structure the outcome before leaving
+          - button "🔎 Run deeper research Research, digital presence, supply" [ref=e165] [cursor=pointer]:
+            - generic [ref=e166]: 🔎
+            - strong [ref=e167]: Run deeper research
+            - generic [ref=e168]: Research, digital presence, supply
+        - region "Copilot answer" [ref=e180]:
+          - generic [ref=e181]: ANSWER FOR @Apex Manufacturing Group
+          - heading "Lead with compliance readiness and local support." [level=2] [ref=e182]
+          - paragraph [ref=e183]: Largest account on territory. Board approval required for enterprise tier. Robert is a champion.
+          - group [ref=e184]:
+            - generic "Evidence" [ref=e185] [cursor=pointer]
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]: Fact
+                - strong [ref=e189]: Recent account activity supports this talking point.
+              - paragraph [ref=e190]: "Source: CRM visit history"
+              - paragraph [ref=e191]: Updated Oct 4, 2026 · High confidence
+            - generic [ref=e192]:
+              - generic [ref=e193]:
+                - generic [ref=e194]: AI inference
+                - strong [ref=e195]: The current commitment window makes this the best opening.
+              - paragraph [ref=e196]: "Source: Route commitments + account notes"
+              - paragraph [ref=e197]: Updated Oct 4, 2026 · Medium confidence
+        - region "Specialist tools" [ref=e169]:
+          - generic [ref=e170]: SPECIALIST TOOLS
+          - generic [ref=e171]:
+            - generic [ref=e172]: Research
+            - generic [ref=e173]: Digital presence
+            - generic [ref=e174]: Supply opportunity
+            - generic [ref=e175]: CRM
+            - generic [ref=e176]: Follow-up
+            - generic [ref=e177]: Route
+          - paragraph [ref=e178]: One copilot coordinates these tools. You never need to manage separate agents.
+      - dialog "Review AI draft" [ref=e199]:
+        - generic [ref=e200]: REVIEW AI DRAFT
+        - heading "Follow-up for Apex Manufacturing Group" [level=2] [ref=e201]
+        - generic [ref=e202]:
+          - generic [ref=e203]:
+            - term [ref=e204]: Destination
+            - definition [ref=e205]: CRM follow-up queue
+          - generic [ref=e206]:
+            - term [ref=e207]: Before
+            - definition [ref=e208]: No follow-up draft
+          - generic [ref=e209]:
+            - term [ref=e210]: After
+            - definition [ref=e211]: Send compliance comparison and confirm board-review timing.
+        - paragraph [ref=e212]: No automatic saves, CRM writes, or messages.
+        - generic [ref=e213]:
+          - button "Cancel" [ref=e214] [cursor=pointer]
+          - button "Approve draft" [ref=e215] [cursor=pointer]
+  - navigation "Primary" [ref=e103]:
+    - button "Territory" [ref=e104] [cursor=pointer]:
+      - generic [aria-hidden] [ref=e106]: 📍
+      - generic [ref=e107]: TERRITORY
+    - button "Route, 2/6 complete" [ref=e108] [cursor=pointer]:
+      - generic [aria-hidden] [ref=e109]: 🗺
+      - generic [ref=e110]: ROUTE · 2/6
+    - button "Field AI" [ref=e111] [cursor=pointer]:
+      - generic [aria-hidden] [ref=e112]: 🤖
+      - generic [ref=e113]: FIELD AI
+    - button "Summary, 1 unsynced" [ref=e114] [cursor=pointer]:
+      - generic [ref=e115]: "1"
+      - generic [aria-hidden] [ref=e116]: 📊
+      - generic [ref=e117]: SUMMARY

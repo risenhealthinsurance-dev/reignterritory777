@@ -1,0 +1,102 @@
+- generic [ref=f4e3]:
+  - main [ref=f4e4]:
+    - region [ref=f4e73]:
+      - generic [ref=f4e74]:
+        - generic [ref=f4e75]:
+          - generic [ref=f4e76]: ✦
+          - strong [ref=f4e77]: Reign
+          - generic [ref=f4e78]: Agent Studio
+        - generic [ref=f4e79]: Draft
+      - generic [ref=f4e80]:
+        - generic [ref=f4e81]:
+          - heading "Agent Studio" [level=1] [ref=f4e82]
+          - generic [ref=f4e83]:
+            - text: Name
+            - textbox "Name" [ref=f4e84]: Territory Copilot
+          - generic [ref=f4e85]:
+            - text: Assistant label
+            - textbox "Assistant label" [ref=f4e86]: Ask Reign
+          - generic [ref=f4e87]:
+            - text: Instructions
+            - textbox "Instructions" [ref=f4e88]: Help B2B field reps understand the next business, prepare a useful conversation, and keep every action grounded in approved field data.
+          - generic "Avatar appearance" [ref=f4e89]:
+            - button "orb" [pressed] [ref=f4e90]:
+              - generic [ref=f4e92]: ✦
+            - button "guide" [ref=f4e94]:
+              - generic [ref=f4e96]: ✦
+            - button "scout" [ref=f4e98]:
+              - generic [ref=f4e100]: ✦
+        - generic [ref=f4e102]:
+          - generic [ref=f4e103]:
+            - generic [ref=f4e105]: ✦
+            - strong [ref=f4e106]: Ask Reign
+            - paragraph [ref=f4e107]: Hi, I’m ready to help you work the territory.
+            - generic [ref=f4e108]:
+              - text: Ask your agent something…
+              - generic [ref=f4e109]: ↑
+          - generic [ref=f4e110]:
+            - strong [ref=f4e111]: Agent behavior
+            - generic [ref=f4e112]: Business-scoped · approval-aware
+        - generic [ref=f4e113]:
+          - region "Knowledge sources" [ref=f4e114]:
+            - generic [ref=f4e115]:
+              - heading "Knowledge" [level=2] [ref=f4e116]
+              - generic [ref=f4e117]: 0 sources
+            - generic [ref=f4e118]:
+              - textbox "Knowledge URL" [ref=f4e119]:
+                - /placeholder: Add a website URL
+              - button "＋" [ref=f4e120]
+            - generic [ref=f4e121]:
+              - textbox "Knowledge text" [ref=f4e122]:
+                - /placeholder: Paste instructions or playbook text
+              - button "＋" [ref=f4e123]
+            - generic [ref=f4e124] [cursor=pointer]: ＋ Upload text file
+          - region "Agent actions" [ref=f4e125]:
+            - generic [ref=f4e126]:
+              - heading "Actions" [level=2] [ref=f4e127]
+              - generic [ref=f4e128]: 7 enabled
+            - button "✦ Research business Find current business and territory evidence." [pressed] [ref=f4e129] [cursor=pointer]:
+              - generic [ref=f4e130]: ✦
+              - generic [ref=f4e131]:
+                - strong [ref=f4e132]: Research business
+                - generic [ref=f4e133]: Find current business and territory evidence.
+            - button "✦ Generate brief Prepare a source-aware pre-call brief." [pressed] [ref=f4e135] [cursor=pointer]:
+              - generic [ref=f4e136]: ✦
+              - generic [ref=f4e137]:
+                - strong [ref=f4e138]: Generate brief
+                - generic [ref=f4e139]: Prepare a source-aware pre-call brief.
+            - button "✦ Save visit note Draft and save a structured field note." [pressed] [ref=f4e141] [cursor=pointer]:
+              - generic [ref=f4e142]: ✦
+              - generic [ref=f4e143]:
+                - strong [ref=f4e144]: Save visit note
+                - generic [ref=f4e145]: Draft and save a structured field note.
+            - button "✦ Record disposition Capture the outcome of a conversation or visit." [pressed] [ref=f4e147] [cursor=pointer]:
+              - generic [ref=f4e148]: ✦
+              - generic [ref=f4e149]:
+                - strong [ref=f4e150]: Record disposition
+                - generic [ref=f4e151]: Capture the outcome of a conversation or visit.
+            - button "✦ Schedule callback or appointment Create a callback window or hard appointment draft." [pressed] [ref=f4e153] [cursor=pointer]:
+              - generic [ref=f4e154]: ✦
+              - generic [ref=f4e155]:
+                - strong [ref=f4e156]: Schedule callback or appointment
+                - generic [ref=f4e157]: Create a callback window or hard appointment draft.
+            - button "✦ Suggest route Recommend the next best sequence of stops." [pressed] [ref=f4e159] [cursor=pointer]:
+              - generic [ref=f4e160]: ✦
+              - generic [ref=f4e161]:
+                - strong [ref=f4e162]: Suggest route
+                - generic [ref=f4e163]: Recommend the next best sequence of stops.
+            - button "✦ Update pipeline Move a business to a new pipeline stage." [pressed] [ref=f4e165] [cursor=pointer]:
+              - generic [ref=f4e166]: ✦
+              - generic [ref=f4e167]:
+                - strong [ref=f4e168]: Update pipeline
+                - generic [ref=f4e169]: Move a business to a new pipeline stage.
+  - navigation "Primary" [ref=f4e63]:
+    - button [ref=f4e64] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f4e65]: ⌖
+      - strong [ref=f4e66]: Home
+    - button [active] [ref=f4e67] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f4e68]: ✦
+      - strong [ref=f4e69]: Agent Studio
+    - button [ref=f4e70] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f4e71]: ▤
+      - strong [ref=f4e72]: Pipeline

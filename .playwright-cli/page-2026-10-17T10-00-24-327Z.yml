@@ -1,0 +1,78 @@
+- generic [ref=f6e3]:
+  - main [ref=f6e4]:
+    - region "Home map and assistant" [ref=f6e5]:
+      - region "Live Mapbox territory map" [ref=f6e6]:
+        - generic [ref=f6e7]:
+          - generic [ref=f6e8]:
+            - generic [ref=f6e9]:
+              - region "Map" [ref=f6e10]
+              - img "Rep live location" [ref=f6e11]
+            - link "Mapbox homepage" [ref=f6e13] [cursor=pointer]:
+              - /url: https://www.mapbox.com/
+          - 'generic "Camera mode: walking" [ref=f6e14]': ✦ Walking view
+          - generic:
+            - generic:
+              - generic: A1 · ROUTE
+              - generic: "34950"
+              - generic: 2/6 done
+            - generic: 14.4 mi · A1 loop
+      - generic:
+        - generic [ref=f6e15]:
+          - generic [ref=f6e16]: ✦
+          - strong [ref=f6e17]: Reign
+          - generic [ref=f6e18]: Territory
+        - button "Open pipeline" [ref=f6e19]: ▤
+      - generic "Businesses on map" [ref=f6e20]:
+        - generic [ref=f6e21]:
+          - textbox "Search live businesses" [ref=f6e22]
+          - button "Search" [ref=f6e23] [cursor=pointer]
+        - generic [ref=f6e24]:
+          - generic [ref=f6e25]:
+            - checkbox "Open now" [ref=f6e26]
+            - text: Open now
+          - generic [ref=f6e27]:
+            - checkbox "My pins" [ref=f6e28]
+            - text: My pins
+          - button "＋ Add pin" [ref=f6e29] [cursor=pointer]
+        - generic "Business results" [ref=f6e30]:
+          - button "Meridian Medical Devices" [ref=f6e31]
+          - button "Pacific Rim Logistics" [ref=f6e32]
+          - button "Apex Manufacturing Group" [pressed] [ref=f6e33]
+          - button "Solano Healthcare Partners" [ref=f6e34]
+          - button "Westside Distribution Co" [ref=f6e35]
+          - button "Bravo Industrial Supply" [ref=f6e36]
+      - generic "AI assistant context":
+        - generic [ref=f6e37]:
+          - generic [ref=f6e38]: Current business
+          - strong [ref=f6e39]: Apex Manufacturing Group
+          - generic [ref=f6e40]: 800 Virginia Ave, Fort Pierce, FL 34950
+        - generic [ref=f6e41]:
+          - generic [ref=f6e42]:
+            - generic [ref=f6e44]: ✦
+            - generic [ref=f6e45]:
+              - strong [ref=f6e46]: Ask Reign
+              - generic [ref=f6e47]: AI field assistant
+            - button "Voice-ready assistant control" [ref=f6e48]: ◉
+          - generic [ref=f6e49]: I’m ready. Ask about a business, your territory, or the next best action.
+          - generic [ref=f6e51]:
+            - button "Brief" [ref=f6e52]
+            - button "Talking points" [ref=f6e53]
+            - button "Next action" [ref=f6e54]
+          - generic "Approved field actions" [ref=f6e55]:
+            - button "Schedule callback or appointment" [ref=f6e56]
+            - button "Record disposition" [ref=f6e57]
+            - button "Save visit note" [ref=f6e58]
+          - generic [ref=f6e59]:
+            - textbox "Ask the AI assistant" [ref=f6e60]:
+              - /placeholder: Ask anything about this territory…
+            - button "Send message" [ref=f6e61]: ↑
+  - navigation "Primary" [ref=f6e62]:
+    - button [ref=f6e63] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f6e64]: ⌖
+      - strong [ref=f6e65]: Home
+    - button [ref=f6e66] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f6e67]: ✦
+      - strong [ref=f6e68]: Agent Studio
+    - button [ref=f6e69] [cursor=pointer]:
+      - generic [aria-hidden] [ref=f6e70]: ▤
+      - strong [ref=f6e71]: Pipeline

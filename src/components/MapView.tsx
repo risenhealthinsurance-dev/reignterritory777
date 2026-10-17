@@ -8,6 +8,7 @@ import { NextBusinessCard } from "./NextBusinessCard";
 import { FieldActionSheet } from "./FieldActionSheet";
 import type { GeoJsonFeatureCollection } from "../lib/gis";
 import { dispositionColor } from "../lib/dispositionColor";
+import type { LocationContext } from "../lib/fieldContext";
 
 const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
 if (mapboxAccessToken) mapboxgl.accessToken = mapboxAccessToken;
@@ -20,6 +21,7 @@ export interface MapViewProps {
   onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
   onEntitySelect?: (entity: MapEntitySelection) => void;
   onLocationChange?: (location: { lat: number; lng: number; accuracyMeters?: number }) => void;
+  onLocationStateChange?: (context: LocationContext) => void;
   doneAccountIds: string[];
   routeStopIds?: string[];
   showTerritoryMode?: boolean;
@@ -88,6 +90,7 @@ export function MapView({
   onMapClick,
   onEntitySelect,
   onLocationChange,
+  onLocationStateChange,
   doneAccountIds,
   routeStopIds,
   showTerritoryMode,
@@ -115,6 +118,7 @@ export function MapView({
         onPinTap={onPinTap}
         onMapClick={onMapClick}
         onEntitySelect={onEntitySelect}
+        onLocationStateChange={onLocationStateChange}
         showTerritoryMode={showTerritoryMode}
         minimalChrome={minimalChrome}
         cockpitAccount={cockpitAccount}
@@ -149,7 +153,11 @@ export function MapView({
   }, []);
 
   useEffect(() => {
-    if (!navigator.geolocation) { setLocationState("unavailable"); return; }
+    if (!navigator.geolocation) {
+      setLocationState("unavailable");
+      onLocationStateChange?.({ state: "unavailable" });
+      return;
+    }
     const compassHeadingRef = { current: null as number | null };
     const onOrientation = (event: DeviceOrientationEvent) => {
       if (event.alpha != null) compassHeadingRef.current = normalizeHeading(360 - event.alpha);
@@ -166,7 +174,9 @@ export function MapView({
           ? compassHeadingRef.current
           : gpsHeading;
         latestLocationRef.current = { lat: position.coords.latitude, lng: position.coords.longitude, heading, speedKmh };
-        onLocationChange?.({ lat: position.coords.latitude, lng: position.coords.longitude, accuracyMeters: position.coords.accuracy });
+        const location = { lat: position.coords.latitude, lng: position.coords.longitude, accuracyMeters: position.coords.accuracy };
+        onLocationChange?.(location);
+        onLocationStateChange?.({ state: "available", ...location, updatedAt: Date.now() });
         setMovementMode(nextMode);
         setLocationState("available");
         if (isFollowing) applyCamera(latestLocationRef.current, nextMode);
@@ -175,7 +185,10 @@ export function MapView({
         const liveElement = liveMarker?.getElement();
         if (liveElement) liveElement.style.setProperty("--map-heading", `${heading}deg`);
       },
-      () => setLocationState("unavailable"),
+      () => {
+        setLocationState("unavailable");
+        onLocationStateChange?.({ state: "unavailable" });
+      },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
     return () => {
@@ -183,7 +196,7 @@ export function MapView({
       window.removeEventListener("deviceorientationabsolute", onOrientation as EventListener);
       window.removeEventListener("deviceorientation", onOrientation as EventListener);
     };
-  }, [applyCamera, isFollowing, onLocationChange]);
+  }, [applyCamera, isFollowing, onLocationChange, onLocationStateChange]);
 
   const updatePins = useCallback(
     (hidePins: boolean) => {
