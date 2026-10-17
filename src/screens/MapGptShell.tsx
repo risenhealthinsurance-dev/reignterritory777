@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Account } from "../data/accounts";
 import { accounts } from "../data/accounts";
 import { MapView } from "../components/MapView";
-import { getAIResponse } from "../lib/ai";
+import { buildLocalAssistantResponse } from "../lib/localAssistant";
 import { createFieldAiClient, type FieldAiClient } from "../lib/fieldAi";
 import type { AppScreen } from "../types";
 import type { AgentConfig, AgentKnowledgeSource, PipelineOpportunity, PipelineStage } from "../contracts/mapGpt";
@@ -64,9 +64,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         const result = await fieldAiClient.ask({ scope: { type: "account", accountId: selectedAccount.id }, intent, idempotencyKey: crypto.randomUUID() });
         setMessages((current) => [...current, { role: "assistant", text: result.answer }]);
       } else {
-        const result = getAIResponse(prompt, []);
-        let text = "I can help with that in the field. ";
-        for await (const part of result.textGen) text += part;
+        const text = buildLocalAssistantResponse(prompt, selectedAccount);
         setMessages((current) => [...current, { role: "assistant", text }]);
       }
     } catch {
