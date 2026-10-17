@@ -11,7 +11,7 @@ export interface MapFallbackProps {
   doneAccountIds: string[];
   routeStopIds?: string[];
   onPinTap: (id: string) => void;
-  onMapClick?: (point: { lat: number; lng: number }) => void;
+  onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
   showTerritoryMode?: boolean;
   minimalChrome?: boolean;
   cockpitAccount?: Account;

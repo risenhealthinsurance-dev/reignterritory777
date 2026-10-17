@@ -17,7 +17,7 @@ export interface MapViewProps {
   accounts: Account[];
   activeAccountId: string | null;
   onPinTap: (id: string) => void;
-  onMapClick?: (point: { lat: number; lng: number }) => void;
+  onMapClick?: (point: { lat: number; lng: number; suggestedName?: string; note?: string }) => void;
   doneAccountIds: string[];
   routeStopIds?: string[];
   showTerritoryMode?: boolean;
@@ -427,7 +427,25 @@ export function MapView({
           .addTo(map);
         markersRef.current.set(acc.id, marker);
       }
-      map.on("click", (event) => onMapClick?.({ lat: event.lngLat.lat, lng: event.lngLat.lng }));
+      map.on("click", (event) => {
+        if (!onMapClick) return;
+        const building = map.queryRenderedFeatures(event.point, { layers: ["building"] })[0];
+        if (building) {
+          const properties = (building as { properties?: Record<string, unknown> }).properties ?? {};
+          const name = String(properties.name ?? properties.name_en ?? properties.address ?? properties.house_num ?? "Mapbox building");
+          const details = [properties.address, properties.unit, properties.house_num]
+            .filter((value) => typeof value === "string" && value.trim())
+            .join(" · ");
+          onMapClick({
+            lat: event.lngLat.lat,
+            lng: event.lngLat.lng,
+            suggestedName: name,
+            note: `Selected from the Mapbox building footprint${details ? ` (${details})` : ""}. Review and confirm before saving.`,
+          });
+          return;
+        }
+        onMapClick({ lat: event.lngLat.lat, lng: event.lngLat.lng });
+      });
     });
 
     const ro = new ResizeObserver(() => mapRef.current?.resize());
