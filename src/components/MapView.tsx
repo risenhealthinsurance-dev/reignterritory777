@@ -449,7 +449,12 @@ export function MapView({
           });
           return;
         }
-        onMapClick({ lat: event.lngLat.lat, lng: event.lngLat.lng });
+        onMapClick({
+          lat: event.lngLat.lat,
+          lng: event.lngLat.lng,
+          suggestedName: "Mapbox location",
+          note: "Selected from the map. Review the location and update the business or unit name before saving.",
+        });
       });
     });
 
