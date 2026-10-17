@@ -319,6 +319,13 @@ body,
   .pipeline-board { padding-inline: 14px 22px; }
   .pipeline-stage { width: calc(100vw - 50px); flex-basis: calc(100vw - 50px); }
   .studio-layout { padding-bottom: 28px; }
+  .mapgpt-home__business-picker { z-index: 4; }
+  .mapgpt-home__assistant { z-index: 3; }
+  .mapgpt-messages { max-height: 88px; padding-block: 8px; }
+  .mapgpt-chat-window__header { padding-block: 10px; }
+  .mapgpt-prompts { padding-bottom: 7px; }
+  .mapgpt-action-chips { padding-bottom: 7px; }
+  .mapgpt-composer { padding-bottom: 8px; }
 }
 
 @keyframes pin-pulse {
