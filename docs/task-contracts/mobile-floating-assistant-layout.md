@@ -2,11 +2,11 @@
 
 ## Scope
 
-Refocus the map experience on mobile viewports. The map remains the primary surface; Reign's floating card defaults to the AI's next recommended action and switches to the selected business when a business is focused. Remove obsolete route/status and overlapping saved-territory overlays from the map surface.
+Refocus the map experience on mobile viewports. The map remains the primary surface; Reign's floating card defaults to the AI's next recommended action and switches to the selected business when a business is focused. Add a visible, square territory setup flow: freely resize a square, save it permanently, automatically enter fitted sky-view quadrant setup, require quadrant placement and save, then return to normal map navigation.
 
 ## Non-goals
 
-- No changes to territory geometry, quadrant numbering, locking rules, or pipeline data behavior.
+- No changes to pipeline data behavior or backend persistence.
 - No changes to authentication, backend APIs, or business data.
 - No desktop redesign beyond preserving a usable responsive fallback.
 
@@ -27,15 +27,20 @@ Refocus the map experience on mobile viewports. The map remains the primary surf
 - Closing the business card deselects the business and restores the default AI recommendation.
 - The floating card has an explicit close control and does not permanently occupy the lower half of the viewport.
 - Drawing territory keeps its focused editing controls usable on mobile.
+- Drawing starts with a visible resizable square rather than invisible map points.
+- Saving the boundary permanently locks a translucent territory square and forces quadrant setup.
+- Quadrant setup uses visible numbered squares and a fitted overview camera; saving quadrants returns to normal navigation.
+- Locked territory overlays are hidden while the rep is working inside a quadrant so the map remains unobstructed.
 - Existing relevant tests, type-checking, and production visual QA pass.
 
 ## Ordered execution plan
 
-1. Add failing component tests for default recommendation state, business-focused state, close/reset behavior, and mobile overlay visibility.
+1. Add failing component tests for default recommendation state, business-focused state, close/reset behavior, and the territory setup state machine.
 2. Implement the mobile-first shell and floating card state transitions.
 3. Remove obsolete route/status and overlapping saved-territory map overlays while preserving access to territory management.
-4. Add responsive styling for compact controls, card positioning, close affordance, and mobile spacing.
-5. Run focused tests, type-check, diff checks, and live browser QA at a mobile viewport.
+4. Replace point-only boundary capture with a visible resizable square and forced quadrant setup using the existing map territory layer/camera hooks.
+5. Add responsive styling for compact controls, square handles, quadrant setup, card positioning, close affordance, and mobile spacing.
+6. Run focused tests, type-check, diff checks, and live browser QA at a mobile viewport.
 
 ## QA commands
 

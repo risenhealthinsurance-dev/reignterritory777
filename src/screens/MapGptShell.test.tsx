@@ -28,6 +28,18 @@ test("keeps saved territory status off the map surface", () => {
   expect(screen.queryByText(/Overlapping boundaries are blocked/i)).not.toBeInTheDocument();
 });
 
+test("forces the locked territory into quadrant setup before returning to the map", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+
+  await user.click(screen.getByRole("button", { name: /Draw boundary/i }));
+  expect(screen.getByRole("dialog", { name: /Draw territory/i })).toHaveTextContent(/Drag the corner handle/i);
+  await user.click(screen.getByRole("button", { name: /Save boundary/i }));
+  expect(screen.getByRole("dialog", { name: /Set territory quadrants/i })).toHaveTextContent(/16 numbered squares/i);
+  await user.click(screen.getByRole("button", { name: /Save quadrants/i }));
+  expect(screen.queryByRole("dialog", { name: /Set territory quadrants/i })).not.toBeInTheDocument();
+});
+
 test("selecting a business on Home scopes the assistant context", async () => {
   const user = userEvent.setup();
   render(<MapGptShell />);

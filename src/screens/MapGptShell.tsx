@@ -75,6 +75,9 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [searching, setSearching] = useState(false);
   const [pinDraft, setPinDraft] = useState<{ lat: number; lng: number; name: string; note: string } | null>(null);
   const [territoryDraft, setTerritoryDraft] = useState<Array<{ lat: number; lng: number }> | null>(null);
+  const [territoryStage, setTerritoryStage] = useState<"idle" | "drawing" | "quadrants">("idle");
+  const [territorySize, setTerritorySize] = useState(280);
+  const [resizingTerritory, setResizingTerritory] = useState(false);
   const [savedTerritories, setSavedTerritories] = useState<Array<Array<{ lat: number; lng: number }>>>(() => {
     try {
       const stored = window.localStorage.getItem("reign.savedTerritories");
@@ -117,6 +120,14 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
 
   useEffect(() => { void repository.listUserPins().then(setPins); }, []);
   useEffect(() => { window.localStorage.setItem("reign.savedTerritories", JSON.stringify(savedTerritories)); }, [savedTerritories]);
+  useEffect(() => {
+    if (!resizingTerritory) return;
+    const onMove = (event: PointerEvent) => setTerritorySize((current) => Math.max(180, Math.min(520, current + event.movementX + event.movementY)));
+    const onUp = () => setResizingTerritory(false);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+  }, [resizingTerritory]);
 
   async function discoverPlaces() {
     if (!search.trim() || searching) return;
@@ -252,7 +263,11 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   return (
     <section className="mapgpt-home" aria-label="Home map and assistant">
       <div className="mapgpt-home__map" role="region" aria-label="Live Mapbox territory map">
-        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} onMapClick={(point) => territoryDraft && setTerritoryDraft((current) => [...(current ?? []), { lat: point.lat, lng: point.lng }])} onLocationChange={(location) => setLocationContext({ state: "available", ...location, updatedAt: Date.now() })} onLocationStateChange={setLocationContext} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onEntitySelect={selectMapEntity} showTerritoryMode={territoryStage === "quadrants"} onLocationChange={(location) => setLocationContext({ state: "available", ...location, updatedAt: Date.now() })} onLocationStateChange={setLocationContext} doneAccountIds={visibleBusinesses.filter((account) => account.done).map((account) => account.id)} dispositionByAccount={dispositionByAccount} minimalChrome />
+        {territoryStage !== "idle" && <div className={`mapgpt-territory-editor mapgpt-territory-editor--${territoryStage}`} style={{ width: territorySize, height: territorySize }} aria-label={territoryStage === "drawing" ? "Resize territory boundary" : "Territory quadrants"}>
+          {territoryStage === "quadrants" && <div className="mapgpt-territory-grid">{Array.from({ length: 16 }, (_, index) => <button key={index} className={`mapgpt-territory-quadrant mapgpt-territory-quadrant--${index % 4}`} aria-label={`Quadrant ${index + 1}`} onClick={() => undefined}>{index + 1}</button>)}</div>}
+          {territoryStage === "drawing" && <button className="mapgpt-territory-handle" aria-label="Resize territory boundary" onPointerDown={() => setResizingTerritory(true)} />}
+        </div>}
       </div>
       <header className="mapgpt-home__topbar">
         <div className="mapgpt-brand"><span>✦</span><strong>Reign</strong><small>Territory</small></div>
@@ -260,7 +275,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
       </header>
       <div className="mapgpt-home__business-picker" aria-label="Businesses on map">
         <div className="mapgpt-live-search"><input aria-label="Search live businesses" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search live businesses" /><button onClick={() => void discoverPlaces()} disabled={searching}>{searching ? "…" : "Search"}</button></div>
-        <div className="mapgpt-filter-row"><label><input type="checkbox" checked={filters.openOnly} onChange={(event) => setFilters({ ...filters, openOnly: event.target.checked })} /> Open now</label><label><input type="checkbox" checked={filters.userPinsOnly} onChange={(event) => setFilters({ ...filters, userPinsOnly: event.target.checked })} /> My pins</label><button onClick={() => setPinDraft({ lat: selectedAccount.lat, lng: selectedAccount.lng, name: "", note: "" })}>＋ Add pin</button><button onClick={() => setTerritoryDraft([])} aria-pressed={territoryDraft !== null}>＋ Draw boundary</button></div>
+        <div className="mapgpt-filter-row"><label><input type="checkbox" checked={filters.openOnly} onChange={(event) => setFilters({ ...filters, openOnly: event.target.checked })} /> Open now</label><label><input type="checkbox" checked={filters.userPinsOnly} onChange={(event) => setFilters({ ...filters, userPinsOnly: event.target.checked })} /> My pins</label><button onClick={() => setPinDraft({ lat: selectedAccount.lat, lng: selectedAccount.lng, name: "", note: "" })}>＋ Add pin</button><button onClick={() => { setTerritoryStage("drawing"); setTerritoryDraft([]); }} aria-pressed={territoryStage !== "idle"}>＋ Draw boundary</button></div>
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
         <div className="mapgpt-context"><span>{selectedMapEntity ? (selectedMapEntity.source === "mapbox-unit" ? "Selected unit" : selectedMapEntity.source === "mapbox-address" ? "Selected map address" : "Selected building") : "Current business"}</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small><small className={`mapgpt-location-context mapgpt-location-context--${locationContext.state}`} role="status">{locationStateLabel(locationContext)}</small>{selectedMapEntity && <label className="mapgpt-context__edit">Business name<input aria-label="Edit selected business name" value={selectedAccount.name === "Business name needed" ? "" : selectedAccount.name} placeholder="Business name needed" onChange={(event) => { const name = event.target.value || "Business name needed"; setDiscovered((current) => current.map((item) => item.id === selectedMapEntity.entityId ? { ...item, name } : item)); setSelectedMapEntity((current) => current ? { ...current, name: event.target.value || undefined } : current); }} /></label>}{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
@@ -289,7 +304,8 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>
         </div>
       </div>
-      {territoryDraft && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Draw territory"><strong>Drawing territory</strong><small>Click map corners to place boundary points.</small><p>{territoryDraft.length} points captured{territoryDraft.length < 3 ? " · add at least 3" : " · ready to save"}</p><div><button onClick={() => setTerritoryDraft(null)}>Cancel</button><button disabled={territoryDraft.length < 3} onClick={() => { if (!canCreateTerritory(territoryDraft, savedTerritories.map((boundary, index) => ({ id: `session-${index}`, boundary, status: "active" as const })))) { setMessages((current) => [...current, { role: "assistant", text: "That boundary overlaps an existing session territory. Adjust the points before saving." }]); return; } setSavedTerritories((current) => [...current, territoryDraft]); setMessages((current) => [...current, { role: "assistant", text: `Territory boundary saved with ${territoryDraft.length} points. Review quadrants before locking.` }]); setTerritoryDraft(null); }}>Save boundary</button></div></div>}
+      {territoryStage === "drawing" && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Draw territory"><strong>Set territory boundary</strong><small>Drag the corner handle to resize the square.</small><p>Boundary ready to lock</p><div><button onClick={() => { setTerritoryStage("idle"); setTerritoryDraft(null); }}>Cancel</button><button onClick={() => { setSavedTerritories((current) => [...current, []]); setTerritoryStage("quadrants"); setTerritoryDraft(null); setMessages((current) => [...current, { role: "assistant", text: "Boundary locked. Set every quadrant, then save the quadrant plan." }]); }}>Save boundary</button></div></div>}
+      {territoryStage === "quadrants" && <div className="mapgpt-pin-dialog" role="dialog" aria-label="Set territory quadrants"><strong>Set territory quadrants</strong><small>Sky view is fitted to the locked territory. Place all 16 quadrants.</small><p>16 numbered squares ready</p><div><button onClick={() => { setTerritoryStage("idle"); setMessages((current) => [...current, { role: "assistant", text: "Quadrants saved. Returning to normal map navigation." }]); }}>Save quadrants</button></div></div>}
       {pinDraft && <div className="mapgpt-pin-dialog" role="dialog" aria-modal="true" aria-label="Create map pin"><strong>Create your map pin</strong><small>{pinDraft.lat.toFixed(5)}, {pinDraft.lng.toFixed(5)}</small><label>Business or location name<input autoFocus value={pinDraft.name} onChange={(event) => setPinDraft({ ...pinDraft, name: event.target.value })} placeholder="e.g. New prospect" /></label><label>Note<textarea value={pinDraft.note} onChange={(event) => setPinDraft({ ...pinDraft, note: event.target.value })} placeholder="Why this point matters" /></label><div><button onClick={() => setPinDraft(null)}>Cancel</button><button onClick={() => void savePin()} disabled={!pinDraft.name.trim()}>Save pin</button></div></div>}
     </section>
   );

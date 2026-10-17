@@ -179,6 +179,15 @@ body,
 .mapgpt-home { position: relative; height: 100%; overflow: hidden; background: #081221; }
 .mapgpt-home__map { position: absolute; inset: 0; }
 .mapgpt-home__map > div { height: 100% !important; }
+.mapgpt-territory-editor { position: absolute; z-index: 6; top: 44%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(226,232,240,.92); background: rgba(15,23,42,.42); box-shadow: 0 0 0 9999px rgba(2,6,23,.16), 0 0 26px rgba(15,23,42,.45); pointer-events: auto; }
+.mapgpt-territory-editor--quadrants { border-color: rgba(148,163,184,.72); background: rgba(15,23,42,.52); }
+.mapgpt-territory-handle { position: absolute; right: -13px; bottom: -13px; width: 26px; height: 26px; border: 2px solid #fff; border-radius: 50%; background: #287bf0; box-shadow: 0 3px 14px rgba(0,0,0,.42); cursor: nwse-resize; }
+.mapgpt-territory-grid { display: grid; width: 100%; height: 100%; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+.mapgpt-territory-quadrant { min-width: 0; border: 1px solid rgba(226,232,240,.65); color: #fff; background: rgba(37,99,235,.28); font: 700 13px "DM Mono", monospace; cursor: pointer; }
+.mapgpt-territory-quadrant:nth-child(4n + 2) { background: rgba(16,185,129,.28); }
+.mapgpt-territory-quadrant:nth-child(4n + 3) { background: rgba(245,158,11,.3); }
+.mapgpt-territory-quadrant:nth-child(4n + 4) { background: rgba(168,85,247,.3); }
+.mapgpt-territory-quadrant:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 .mapgpt-home__topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: max(16px, env(safe-area-inset-top, 0px)) 16px 12px; background: linear-gradient(180deg, rgba(5,12,24,.92), rgba(5,12,24,0)); pointer-events: none; }
 .mapgpt-home__topbar > * { pointer-events: auto; }
 .mapgpt-brand { display: flex; align-items: baseline; gap: 7px; color: #fff; letter-spacing: -.02em; }
