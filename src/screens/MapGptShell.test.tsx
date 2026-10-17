@@ -35,9 +35,11 @@ test("forces the locked territory into quadrant setup before returning to the ma
   await user.click(screen.getByRole("button", { name: /Draw boundary/i }));
   expect(screen.getByRole("dialog", { name: /Draw territory/i })).toHaveTextContent(/Drag the corner handle/i);
   await user.click(screen.getByRole("button", { name: /Save boundary/i }));
-  expect(screen.getByRole("dialog", { name: /Set territory quadrants/i })).toHaveTextContent(/16 numbered squares/i);
+  expect(screen.getByRole("dialog", { name: /Set territory quadrants/i })).toHaveTextContent(/0\/16 quadrants set/i);
+  for (const quadrant of screen.getAllByRole("button", { name: /Quadrant/ })) await user.click(quadrant);
   await user.click(screen.getByRole("button", { name: /Save quadrants/i }));
   expect(screen.queryByRole("dialog", { name: /Set territory quadrants/i })).not.toBeInTheDocument();
+  expect(JSON.parse(localStorage.getItem("reign.territoryPlan") ?? "{}")).toEqual(expect.objectContaining({ locked: true, quadrantsSaved: true, completedQuadrants: expect.arrayContaining([1, 16]) }));
 });
 
 test("selecting a business on Home scopes the assistant context", async () => {

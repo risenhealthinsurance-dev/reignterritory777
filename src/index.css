@@ -190,6 +190,7 @@ body,
 .mapgpt-territory-quadrant:nth-child(4n + 2) { background: rgba(16,185,129,.28); }
 .mapgpt-territory-quadrant:nth-child(4n + 3) { background: rgba(245,158,11,.3); }
 .mapgpt-territory-quadrant:nth-child(4n + 4) { background: rgba(168,85,247,.3); }
+.mapgpt-territory-quadrant--complete { box-shadow: inset 0 0 0 3px rgba(255,255,255,.92); filter: brightness(1.25); }
 .mapgpt-territory-quadrant:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 .mapgpt-home__topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: max(16px, env(safe-area-inset-top, 0px)) 16px 12px; background: linear-gradient(180deg, rgba(5,12,24,.92), rgba(5,12,24,0)); pointer-events: none; }
 .mapgpt-home__topbar > * { pointer-events: auto; }
