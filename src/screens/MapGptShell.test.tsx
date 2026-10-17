@@ -52,6 +52,7 @@ test("forces the locked territory into quadrant setup before returning to the ma
   expect(screen.getByRole("dialog", { name: /Draw territory/i })).toHaveTextContent(/Drag the corner handle/i);
   await user.click(screen.getByRole("button", { name: /Save boundary/i }));
   expect(screen.getByRole("dialog", { name: /Set territory quadrants/i })).toHaveTextContent(/0\/16 quadrants set/i);
+  expect(screen.getAllByRole("button", { name: /Quadrant/ }).slice(0, 8).map((button) => button.getAttribute("aria-label"))).toEqual(["Quadrant 1", "Quadrant 2", "Quadrant 3", "Quadrant 4", "Quadrant 8", "Quadrant 7", "Quadrant 6", "Quadrant 5"]);
   for (const quadrant of screen.getAllByRole("button", { name: /Quadrant/ })) await user.click(quadrant);
   await user.click(screen.getByRole("button", { name: /Save quadrants/i }));
   expect(screen.queryByRole("dialog", { name: /Set territory quadrants/i })).not.toBeInTheDocument();

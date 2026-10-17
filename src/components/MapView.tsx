@@ -146,6 +146,7 @@ export function MapView({
   const locationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const [movementMode, setMovementMode] = useState<MovementMode>("walking");
   const [locationState, setLocationState] = useState<"pending" | "available" | "unavailable">("pending");
+  const locationResolvedRef = useRef(false);
   const [isFollowing, setIsFollowing] = useState(true);
   const latestLocationRef = useRef<{ lat: number; lng: number; heading: number; speedKmh: number | null } | null>(null);
   const movementModeRef = useRef<MovementMode>("walking");
@@ -172,6 +173,7 @@ export function MapView({
     window.addEventListener("deviceorientation", onOrientation as EventListener);
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        locationResolvedRef.current = true;
         const speedKmh = position.coords.speed == null ? null : Math.max(0, position.coords.speed * 3.6);
         const nextMode = getMovementMode(speedKmh, movementModeRef.current);
         movementModeRef.current = nextMode;
@@ -197,8 +199,15 @@ export function MapView({
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
+    const fallbackTimer = window.setTimeout(() => {
+      if (!locationResolvedRef.current) {
+        setLocationState("unavailable");
+        onLocationStateChange?.({ state: "unavailable" });
+      }
+    }, 16000);
     return () => {
       navigator.geolocation.clearWatch(watchId);
+      window.clearTimeout(fallbackTimer);
       window.removeEventListener("deviceorientationabsolute", onOrientation as EventListener);
       window.removeEventListener("deviceorientation", onOrientation as EventListener);
     };
@@ -206,8 +215,10 @@ export function MapView({
 
   const requestLocation = () => {
     if (!navigator.geolocation) return;
+    locationResolvedRef.current = false;
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        locationResolvedRef.current = true;
         const speedKmh = position.coords.speed == null ? null : Math.max(0, position.coords.speed * 3.6);
         const nextMode = getMovementMode(speedKmh, movementModeRef.current);
         const heading = normalizeHeading(position.coords.heading);
