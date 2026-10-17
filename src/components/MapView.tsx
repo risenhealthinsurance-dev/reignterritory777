@@ -147,10 +147,24 @@ export function MapView({
   const [movementMode, setMovementMode] = useState<MovementMode>("walking");
   const [locationState, setLocationState] = useState<"pending" | "available" | "unavailable">("pending");
   const locationResolvedRef = useRef(false);
+  const onLocationStateChangeRef = useRef(onLocationStateChange);
   const [isFollowing, setIsFollowing] = useState(true);
   const latestLocationRef = useRef<{ lat: number; lng: number; heading: number; speedKmh: number | null } | null>(null);
   const movementModeRef = useRef<MovementMode>("walking");
   const programmaticCameraRef = useRef(false);
+  useEffect(() => {
+    onLocationStateChangeRef.current = onLocationStateChange;
+  }, [onLocationStateChange]);
+
+  useEffect(() => {
+    const fallbackTimer = window.setTimeout(() => {
+      if (!locationResolvedRef.current) {
+        setLocationState("unavailable");
+        onLocationStateChangeRef.current?.({ state: "unavailable" });
+      }
+    }, 16000);
+    return () => window.clearTimeout(fallbackTimer);
+  }, []);
   const applyCamera = useCallback((location: { lat: number; lng: number; heading: number }, mode: MovementMode) => {
     const map = mapRef.current as (mapboxgl.Map & { easeTo?: (options: Record<string, unknown>) => void }) | null;
     if (!map?.easeTo) return;
@@ -199,15 +213,8 @@ export function MapView({
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
-    const fallbackTimer = window.setTimeout(() => {
-      if (!locationResolvedRef.current) {
-        setLocationState("unavailable");
-        onLocationStateChange?.({ state: "unavailable" });
-      }
-    }, 16000);
     return () => {
       navigator.geolocation.clearWatch(watchId);
-      window.clearTimeout(fallbackTimer);
       window.removeEventListener("deviceorientationabsolute", onOrientation as EventListener);
       window.removeEventListener("deviceorientation", onOrientation as EventListener);
     };
