@@ -204,6 +204,28 @@ export function MapView({
     };
   }, [applyCamera, isFollowing, onLocationChange, onLocationStateChange]);
 
+  const requestLocation = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const speedKmh = position.coords.speed == null ? null : Math.max(0, position.coords.speed * 3.6);
+        const nextMode = getMovementMode(speedKmh, movementModeRef.current);
+        const heading = normalizeHeading(position.coords.heading);
+        const location = { lat: position.coords.latitude, lng: position.coords.longitude, accuracyMeters: position.coords.accuracy };
+        latestLocationRef.current = { lat: location.lat, lng: location.lng, heading, speedKmh };
+        movementModeRef.current = nextMode;
+        setMovementMode(nextMode);
+        setLocationState("available");
+        onLocationChange?.(location);
+        onLocationStateChange?.({ state: "available", ...location, updatedAt: Date.now() });
+        locationMarkerRef.current?.setLngLat([location.lng, location.lat]);
+        if (isFollowing) applyCamera(latestLocationRef.current, nextMode);
+      },
+      () => { setLocationState("unavailable"); onLocationStateChange?.({ state: "unavailable" }); },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+    );
+  };
+
   const updatePins = useCallback(
     (hidePins: boolean) => {
       for (const acc of accounts) {
@@ -630,7 +652,7 @@ export function MapView({
     <div style={{ position: "relative", width: "100%", height }}>
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
       {locationState === "unavailable" && (
-        <div className="map-location-status" role="status">Live location unavailable</div>
+        <div className="map-location-status" role="status"><span>Live location unavailable</span><button type="button" onClick={requestLocation}>Enable live location</button></div>
       )}
       {!isFollowing && (
         <button className="map-recenter-button" type="button" onClick={recenter} aria-label="Recenter on live location">
