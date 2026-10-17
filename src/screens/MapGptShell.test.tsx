@@ -12,7 +12,7 @@ vi.mock("../components/MapView", () => ({
 beforeEach(() => localStorage.clear());
 
 test("exposes exactly Home, Agent Studio, and Pipeline as primary navigation", () => {
-  render(<MapGptShell />);
+  render(<MapGptShell initialAccountId="apex" />);
   const navigation = screen.getByRole("navigation", { name: /Primary/i });
   expect(screen.getAllByRole("button").filter((button) => navigation.contains(button))).toHaveLength(3);
   expect(screen.getByRole("button", { name: /Home/i })).toBeInTheDocument();
@@ -26,6 +26,15 @@ test("keeps saved territory status off the map surface", () => {
   render(<MapGptShell />);
   expect(screen.queryByRole("region", { name: /Saved territories/i })).not.toBeInTheDocument();
   expect(screen.queryByText(/Overlapping boundaries are blocked/i)).not.toBeInTheDocument();
+});
+
+test("starts with the AI recommendation and scopes after business selection", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+  expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/AI recommended next action/i);
+  expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/highest-priority reloop/i);
+  await user.click(screen.getByRole("button", { name: /Open Apex Manufacturing Group/i }));
+  expect(screen.getByLabelText(/assistant context/i)).toHaveTextContent(/Selected business/);
 });
 
 test("forces the locked territory into quadrant setup before returning to the map", async () => {
@@ -63,7 +72,7 @@ test("selecting a building creates an assistant entity context without a pin dia
 
 test("chat returns a local answer when the live agent is unavailable", async () => {
   const user = userEvent.setup();
-  render(<MapGptShell />);
+  render(<MapGptShell initialAccountId="apex" />);
   await user.type(screen.getByRole("textbox", { name: /Ask the AI assistant/i }), "Give me a brief");
   await user.click(screen.getByRole("button", { name: /Send message/i }));
   expect(await screen.findByText(/Here’s Apex Manufacturing Group/i)).toBeInTheDocument();
@@ -71,7 +80,7 @@ test("chat returns a local answer when the live agent is unavailable", async () 
 
 test("keeps a useful multi-turn conversation window visible", async () => {
   const user = userEvent.setup();
-  render(<MapGptShell />);
+  render(<MapGptShell initialAccountId="apex" />);
   await user.click(screen.getByRole("button", { name: "Talking points" }));
   expect(await screen.findByText(/Here’s Apex Manufacturing Group/i)).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Next action" }));
@@ -93,7 +102,7 @@ test("opens Studio and Pipeline from the primary navigation", async () => {
 
 test("requires confirmation before creating a callback draft", async () => {
   const user = userEvent.setup();
-  render(<MapGptShell />);
+  render(<MapGptShell initialAccountId="apex" />);
 
   await user.click(screen.getByRole("button", { name: /Schedule callback or appointment/i }));
 
@@ -127,7 +136,7 @@ test("requires confirmation before creating a callback draft", async () => {
 
 test("shows a confirmed disposition on the selected business and Pipeline card", async () => {
   const user = userEvent.setup();
-  render(<MapGptShell />);
+  render(<MapGptShell initialAccountId="apex" />);
 
   await user.click(screen.getByRole("button", { name: /Record disposition/i }));
   await user.selectOptions(screen.getByLabelText("Outcome"), "Connected");
