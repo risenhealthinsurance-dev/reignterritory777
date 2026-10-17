@@ -177,7 +177,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         <MapView height={window.innerHeight} accounts={visibleBusinesses} routeStopIds={routeStopIds} activeAccountId={selectedAccount.id} onPinTap={onSelectAccount} onMapClick={(point) => {
           if (point.suggestedName && point.suggestedName !== "Mapbox location") {
             const id = `map-selection-${point.lat.toFixed(5)}-${point.lng.toFixed(5)}`;
-            const contextualAccount: Account = { id, name: point.suggestedName, address: point.note ?? "Selected from the map", lat: point.lat, lng: point.lng, source: "mapbox" };
+            const contextualAccount: Account = { id, name: point.suggestedName, industry: "Technology", tier: "SMB", contact: { name: "Unknown", title: "Unknown", phone: "" }, address: point.note ?? "Selected from the map", lat: point.lat, lng: point.lng, revenue: 0, lastVisit: "", lastVisitDaysAgo: 0, activities: [], notes: "Selected from the map.", routeOrder: 0, done: false, source: "mapbox" };
             setDiscovered((current) => [...current.filter((item) => item.id !== id), contextualAccount]);
             onSelectAccount(id);
             void reverseMapboxPlace(point).then((place) => {
