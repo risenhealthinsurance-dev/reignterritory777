@@ -10,10 +10,12 @@ import { PIPELINE_STAGES } from "../contracts/mapGpt";
 import { createAgentStudioRepository, type AgentStudioRepository } from "../lib/agentStudioRepository";
 import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
 import { saveAgentAction } from "../lib/agentStore";
-import { supabase } from "../lib/supabase";
+import { createFieldActionClient } from "../lib/fieldAction";
+import { authBypass, supabase } from "../lib/supabase";
 
 const repository = createAgentStudioRepository(supabase);
 const fieldAiClient: FieldAiClient | null = supabase ? createFieldAiClient(supabase) : null;
+const fieldActionClient = supabase && !authBypass ? createFieldActionClient(supabase) : null;
 
 function formatMoney(value: number) {
   return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -59,6 +61,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   ]);
   const [loading, setLoading] = useState(false);
   const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
+  const [actionSyncing, setActionSyncing] = useState(false);
   const selectedAccount = businesses.find((account) => account.id === selectedAccountId) ?? businesses[0];
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +96,9 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
     setActionDraft({ kind, appointmentType: "window", date: "", time: "", endTime: "", outcome: "", note: "" });
   }
 
-  function confirmDraft() {
+  async function confirmDraft() {
     if (!actionDraft) return;
+    setActionSyncing(true);
     const label = actionDraft.kind === "schedule" ? "Follow-up draft" : actionDraft.kind === "disposition" ? "Disposition draft" : "Visit note draft";
     const type = actionDraft.kind === "schedule" ? "schedule_follow_up" : actionDraft.kind === "disposition" ? "record_disposition" : "save_visit_note";
     const payload = actionDraft.kind === "schedule"
@@ -105,6 +109,19 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
     const action = queueAgentAction(createAgentAction({ type, accountId: selectedAccount.id, payload, sourceMessageId: crypto.randomUUID() }));
     saveAgentAction(action);
     setActionDraft(null);
+    try {
+      const session = fieldActionClient && supabase ? (await supabase.auth.getSession()).data.session : null;
+      if (fieldActionClient && session) {
+        const accepted = await fieldActionClient.replay(action);
+        saveAgentAction(accepted);
+        setMessages((current) => [...current, { role: "assistant", text: `${label} accepted by the secure sync queue for ${selectedAccount.name}.` }]);
+        return;
+      }
+    } catch {
+      // Keep the confirmed action queued locally when the live writer is unavailable.
+    } finally {
+      setActionSyncing(false);
+    }
     setMessages((current) => [...current, { role: "assistant", text: `${label} queued locally for ${selectedAccount.name}. It is ready to sync when the live CRM/calendar writer is connected.` }]);
   }
 
@@ -148,7 +165,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
             {actionDraft.kind === "disposition" && <label>Outcome<select aria-label="Outcome" value={actionDraft.outcome} onChange={(event) => setActionDraft({ ...actionDraft, outcome: event.target.value })}><option value="">Choose outcome</option><option>Connected</option><option>Callback requested</option><option>Qualified</option><option>Not interested</option><option>No answer</option></select></label>}
             {actionDraft.kind !== "schedule" && <label>Notes<textarea aria-label="Notes" value={actionDraft.note} onChange={(event) => setActionDraft({ ...actionDraft, note: event.target.value })} placeholder="Capture what happened…" /></label>}
             <small>Review required. This queues locally until the live CRM/calendar action is connected.</small>
-            <div className="mapgpt-action-draft__buttons"><button onClick={() => setActionDraft(null)}>Cancel draft</button><button onClick={confirmDraft} disabled={!draftReady}>Confirm draft</button></div>
+            <div className="mapgpt-action-draft__buttons"><button onClick={() => setActionDraft(null)} disabled={actionSyncing}>Cancel draft</button><button onClick={() => void confirmDraft()} disabled={!draftReady || actionSyncing}>{actionSyncing ? "Saving…" : "Confirm draft"}</button></div>
           </div>}
           <form className="mapgpt-composer" onSubmit={(event) => { event.preventDefault(); void ask(input); }}><input aria-label="Ask the AI assistant" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about this territory…" /><button aria-label="Send message" type="submit">↑</button></form>
         </div>
