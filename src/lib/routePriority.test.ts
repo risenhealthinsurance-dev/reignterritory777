@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AgentAction } from "../contracts/fieldAgent";
 import { accounts } from "../data/accounts";
-import { prioritizeRouteStopIds } from "./routePriority";
+import { findNextScheduledAction, prioritizeRouteStopIds } from "./routePriority";
 
 const action = (accountId: string, date: string, time: string, status: AgentAction["status"] = "queued"): AgentAction => ({
   id: `${accountId}-${date}-${time}`,
@@ -34,5 +34,11 @@ describe("route priority", () => {
       "westside",
       "bravo",
     ]);
+  });
+
+  it("returns the next scheduled action for Pipeline display", () => {
+    expect(findNextScheduledAction([action("apex", "2026-10-21", "14:00"), action("apex", "2026-10-20", "09:30")], "apex")).toMatchObject({
+      payload: { date: "2026-10-20", time: "09:30" },
+    });
   });
 });

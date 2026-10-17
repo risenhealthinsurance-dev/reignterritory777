@@ -63,6 +63,8 @@ test("requires confirmation before creating a callback draft", async () => {
   expect(screen.queryByRole("dialog", { name: /Schedule callback or appointment/i })).not.toBeInTheDocument();
   expect(screen.getByText(/Queued locally/i)).toBeInTheDocument();
   expect(screen.getByLabelText("Live territory map")).toHaveAttribute("data-route-stop-ids", "apex,meridian,pacific,solano,westside,bravo");
+  await user.click(screen.getByRole("button", { name: /^Pipeline$/i }));
+  expect(screen.getByText(/Callback window: 2026-10-20 · 10:30–11:00/i)).toBeInTheDocument();
   const actions = listAgentActions();
   expect(actions).toEqual(expect.arrayContaining([
     expect.objectContaining({

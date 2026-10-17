@@ -9,6 +9,12 @@ function scheduledAt(action: AgentAction) {
   return Number.isNaN(value) ? Number.POSITIVE_INFINITY : value;
 }
 
+export function findNextScheduledAction(actions: AgentAction[], accountId: string) {
+  return actions
+    .filter((action) => action.accountId === accountId && scheduledAt(action) !== Number.POSITIVE_INFINITY)
+    .sort((first, second) => scheduledAt(first) - scheduledAt(second))[0] ?? null;
+}
+
 export function prioritizeRouteStopIds(businesses: Account[], actions: AgentAction[]) {
   const scheduleByAccount = new Map<string, number>();
   for (const action of actions) {
