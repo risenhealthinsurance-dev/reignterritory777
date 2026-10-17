@@ -15,6 +15,12 @@ export function findNextScheduledAction(actions: AgentAction[], accountId: strin
     .sort((first, second) => scheduledAt(first) - scheduledAt(second))[0] ?? null;
 }
 
+export function findLatestDispositionAction(actions: AgentAction[], accountId: string) {
+  return actions
+    .filter((action) => action.accountId === accountId && action.type === "record_disposition" && (action.status === "queued" || action.status === "completed"))
+    .sort((first, second) => second.createdAt.localeCompare(first.createdAt))[0] ?? null;
+}
+
 export function prioritizeRouteStopIds(businesses: Account[], actions: AgentAction[]) {
   const scheduleByAccount = new Map<string, number>();
   for (const action of actions) {

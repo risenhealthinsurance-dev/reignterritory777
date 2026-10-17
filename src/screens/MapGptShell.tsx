@@ -11,7 +11,7 @@ import { createAgentStudioRepository, type AgentStudioRepository } from "../lib/
 import { createAgentAction, queueAgentAction } from "../lib/fieldAgent";
 import { listAgentActions, saveAgentAction } from "../lib/agentStore";
 import { createFieldActionClient } from "../lib/fieldAction";
-import { findNextScheduledAction, prioritizeRouteStopIds } from "../lib/routePriority";
+import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteStopIds } from "../lib/routePriority";
 import { authBypass, supabase } from "../lib/supabase";
 
 const repository = createAgentStudioRepository(supabase);
@@ -64,6 +64,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
   const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
   const [actionSyncing, setActionSyncing] = useState(false);
   const selectedAccount = businesses.find((account) => account.id === selectedAccountId) ?? businesses[0];
+  const latestDisposition = findLatestDispositionAction(listAgentActions(), selectedAccount.id);
   const routeStopIds = useMemo(() => prioritizeRouteStopIds(businesses, listAgentActions()), [businesses, routeRevision]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -147,7 +148,7 @@ function HomeScreen({ accounts: businesses, selectedAccountId, onSelectAccount, 
         {businesses.map((account) => <button key={account.id} aria-label={account.name} aria-pressed={account.id === selectedAccount.id} onClick={() => onSelectAccount(account.id)}>{account.name}</button>)}
       </div>
       <div className="mapgpt-home__assistant" aria-label="AI assistant context">
-        <div className="mapgpt-context"><span>Current business</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small></div>
+        <div className="mapgpt-context"><span>Current business</span><strong>{selectedAccount.name}</strong><small>{selectedAccount.address}</small>{latestDisposition && <small className="mapgpt-context__disposition">Disposition: {String((latestDisposition.payload as { outcome?: unknown }).outcome ?? "Recorded")}</small>}</div>
         <div className="mapgpt-chat-window">
           <div className="mapgpt-chat-window__header"><AssistantAvatar /><div><strong>Ask Reign</strong><small>AI field assistant</small></div><button aria-label="Voice-ready assistant control">◉</button></div>
           <div className="mapgpt-messages">{messages.slice(-3).map((message, index) => <div key={`${message.role}-${index}`} className={`mapgpt-message mapgpt-message--${message.role}`}>{message.text}</div>)}{loading && <div className="mapgpt-message mapgpt-message--assistant">Thinking with your business context…</div>}<div ref={bottomRef} /></div>
@@ -212,7 +213,11 @@ function PipelineScreen({ repo, onOpenHome }: { repo: AgentStudioRepository; onO
     const range = payload.endTime ? `${payload.time}–${payload.endTime}` : payload.time;
     return `${payload.appointmentType === "hard" ? "Hard appointment" : "Callback window"}: ${payload.date} · ${range}`;
   };
-  return <section className="pipeline-screen" aria-labelledby="pipeline-title"><header className="pipeline-header"><div><span className="studio-kicker">CURRENT PIPELINE</span><h1 id="pipeline-title">Current pipeline</h1><p>Keep every next action visible.</p></div><div className="pipeline-total">{formatMoney(opportunities.reduce((sum, item) => sum + item.estimatedValue, 0))}<small>territory value</small></div></header><div className="pipeline-board">{PIPELINE_STAGES.map((stage) => <section className="pipeline-stage" key={stage.id} aria-label={`${stage.label} pipeline stage`}><div className="pipeline-stage__title"><strong>{stage.label}</strong><span>{opportunities.filter((item) => item.stage === stage.id).length}</span></div>{opportunities.filter((item) => item.stage === stage.id).map((opportunity) => <article className="pipeline-card" key={opportunity.id}><button className="pipeline-card__name" onClick={() => onOpenHome(opportunity.account.id)}>{opportunity.account.name}</button><span>{opportunity.account.contact.name} · {opportunity.account.contact.title}</span><strong>{formatMoney(opportunity.estimatedValue)}</strong><p>{opportunity.nextAction}</p>{formatAppointment(opportunity.account.id) && <small className="pipeline-card__appointment">● {formatAppointment(opportunity.account.id)}</small>}{opportunity.commitment && <small>● {opportunity.commitment}</small>}<label>Move to<select value={opportunity.stage} onChange={(event) => setPending({ id: opportunity.id, stage: event.target.value as PipelineStage })}>{PIPELINE_STAGES.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>{pending?.id === opportunity.id && <div className="pipeline-card__confirm"><button onClick={() => setPending(null)}>Cancel</button><button onClick={() => void confirmMove()}>Confirm move</button></div>}</article>)}</section>)}</div></section>;
+  const formatDisposition = (accountId: string) => {
+    const action = findLatestDispositionAction(scheduledActions, accountId);
+    return action ? String((action.payload as { outcome?: unknown }).outcome ?? "Recorded") : null;
+  };
+  return <section className="pipeline-screen" aria-labelledby="pipeline-title"><header className="pipeline-header"><div><span className="studio-kicker">CURRENT PIPELINE</span><h1 id="pipeline-title">Current pipeline</h1><p>Keep every next action visible.</p></div><div className="pipeline-total">{formatMoney(opportunities.reduce((sum, item) => sum + item.estimatedValue, 0))}<small>territory value</small></div></header><div className="pipeline-board">{PIPELINE_STAGES.map((stage) => <section className="pipeline-stage" key={stage.id} aria-label={`${stage.label} pipeline stage`}><div className="pipeline-stage__title"><strong>{stage.label}</strong><span>{opportunities.filter((item) => item.stage === stage.id).length}</span></div>{opportunities.filter((item) => item.stage === stage.id).map((opportunity) => <article className="pipeline-card" key={opportunity.id}><button className="pipeline-card__name" onClick={() => onOpenHome(opportunity.account.id)}>{opportunity.account.name}</button><span>{opportunity.account.contact.name} · {opportunity.account.contact.title}</span><strong>{formatMoney(opportunity.estimatedValue)}</strong><p>{opportunity.nextAction}</p>{formatAppointment(opportunity.account.id) && <small className="pipeline-card__appointment">● {formatAppointment(opportunity.account.id)}</small>}{formatDisposition(opportunity.account.id) && <small className="pipeline-card__disposition">● Disposition: {formatDisposition(opportunity.account.id)}</small>}{opportunity.commitment && <small>● {opportunity.commitment}</small>}<label>Move to<select value={opportunity.stage} onChange={(event) => setPending({ id: opportunity.id, stage: event.target.value as PipelineStage })}>{PIPELINE_STAGES.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>{pending?.id === opportunity.id && <div className="pipeline-card__confirm"><button onClick={() => setPending(null)}>Cancel</button><button onClick={() => void confirmMove()}>Confirm move</button></div>}</article>)}</section>)}</div></section>;
 }
 
 export function MapGptShell({ initialScreen = "home", initialAccountId = "apex" }: { initialScreen?: AppScreen; initialAccountId?: string | null }) {

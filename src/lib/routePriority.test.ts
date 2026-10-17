@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AgentAction } from "../contracts/fieldAgent";
 import { accounts } from "../data/accounts";
-import { findNextScheduledAction, prioritizeRouteStopIds } from "./routePriority";
+import { findLatestDispositionAction, findNextScheduledAction, prioritizeRouteStopIds } from "./routePriority";
 
 const action = (accountId: string, date: string, time: string, status: AgentAction["status"] = "queued"): AgentAction => ({
   id: `${accountId}-${date}-${time}`,
@@ -40,5 +40,11 @@ describe("route priority", () => {
     expect(findNextScheduledAction([action("apex", "2026-10-21", "14:00"), action("apex", "2026-10-20", "09:30")], "apex")).toMatchObject({
       payload: { date: "2026-10-20", time: "09:30" },
     });
+  });
+
+  it("returns the latest visible disposition for a business", () => {
+    const older = { ...action("apex", "2026-10-20", "09:30"), id: "older", type: "record_disposition" as const, createdAt: "2026-10-20T10:00:00.000Z", payload: { outcome: "No answer" } };
+    const newer = { ...older, id: "newer", createdAt: "2026-10-20T12:00:00.000Z", payload: { outcome: "Connected" } };
+    expect(findLatestDispositionAction([older, newer], "apex")).toMatchObject({ id: "newer", payload: { outcome: "Connected" } });
   });
 });

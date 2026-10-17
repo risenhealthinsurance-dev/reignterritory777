@@ -75,3 +75,17 @@ test("requires confirmation before creating a callback draft", async () => {
     }),
   ]));
 });
+
+test("shows a confirmed disposition on the selected business and Pipeline card", async () => {
+  const user = userEvent.setup();
+  render(<MapGptShell />);
+
+  await user.click(screen.getByRole("button", { name: /Record disposition/i }));
+  await user.selectOptions(screen.getByLabelText("Outcome"), "Connected");
+  await user.type(screen.getByLabelText("Notes"), "Spoke with operations lead");
+  await user.click(screen.getByRole("button", { name: /Confirm draft/i }));
+
+  expect(screen.getByText(/Disposition: Connected/i)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: /^Pipeline$/i }));
+  expect(screen.getByText(/Disposition: Connected/i)).toBeInTheDocument();
+});
